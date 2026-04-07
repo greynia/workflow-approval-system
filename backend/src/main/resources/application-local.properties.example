@@ -1,0 +1,7 @@
+# Copy this file to application-local.properties for local development.
+# Do not commit application-local.properties.
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/mydatabase
+spring.datasource.username=user
+spring.datasource.password=psw
+spring.datasource.driver-class-name=org.postgresql.Driver
