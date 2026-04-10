@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "workflow_rules")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WorkflowRuleJpaEntity {
+public class WorkflowRuleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,7 @@ public class WorkflowRuleJpaEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workflow_definition_id", nullable = false)
-    private WorkflowDefinitionJpaEntity workflowDefinition;
+    private WorkflowDefinitionEntity workflowDefinition;
 
     @Column(nullable = false)
     private Integer priority;

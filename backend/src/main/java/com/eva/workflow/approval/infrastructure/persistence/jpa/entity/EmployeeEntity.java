@@ -2,7 +2,7 @@ package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
 import java.time.LocalDateTime;
 
-import com.eva.workflow.approval.common.enums.ActionType;
+import com.eva.workflow.approval.common.enums.UserRole;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,28 +21,40 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "approval_actions")
+@Table(name = "employees")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ApprovalActionJpaEntity {
+public class EmployeeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approval_step_id", nullable = false)
-    private ApprovalStepJpaEntity approvalStep;
+    @Column(name = "employee_no", nullable = false, unique = true, length = 20)
+    private String employeeNo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id", nullable = false)
-    private EmployeeJpaEntity actor;
+    @Column(nullable = false, length = 100)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "action_type", nullable = false, length = 20)
-    private ActionType actionType;
+    @Column(nullable = false, length = 20)
+    private UserRole role;
 
-    @Column
-    private String comment;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
+    private DepartmentEntity department;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private EmployeeEntity manager;
+
+    @Column(nullable = false)
+    private Boolean active;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
