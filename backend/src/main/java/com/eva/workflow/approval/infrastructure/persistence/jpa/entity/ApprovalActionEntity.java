@@ -1,10 +1,8 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.eva.workflow.approval.common.enums.LeaveType;
-import com.eva.workflow.approval.common.enums.RequestStatus;
+import com.eva.workflow.approval.common.enums.ActionType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,45 +21,29 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "leave_requests")
+@Table(name = "approval_actions")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LeaveRequestJpaEntity {
+public class ApprovalActionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "applicant_id", nullable = false)
-    private EmployeeJpaEntity applicant;
+    @JoinColumn(name = "approval_step_id", nullable = false)
+    private ApprovalStepEntity approvalStep;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "deputy_id")
-    private EmployeeJpaEntity deputy;
+    @JoinColumn(name = "actor_id", nullable = false)
+    private EmployeeEntity actor;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 20)
-    private LeaveType type;
-
-    @Column(name = "start_date", nullable = false)
-    private LocalDate startDate;
-
-    @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;
-
-    @Column(nullable = false)
-    private Integer days;
+    @Column(name = "action_type", nullable = false, length = 20)
+    private ActionType actionType;
 
     @Column
-    private String reason;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private RequestStatus status;
+    private String comment;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 }

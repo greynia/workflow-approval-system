@@ -17,29 +17,20 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "audit_logs")
+@Table(name = "departments")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AuditLogJpaEntity {
+public class DepartmentEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "entity_type", nullable = false, length = 50)
-    private String entityType;
-
-    @Column(name = "entity_id", nullable = false)
-    private Long entityId;
-
-    @Column(nullable = false, length = 50)
-    private String action;
+    @Column(nullable = false, length = 100)
+    private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id", nullable = false)
-    private EmployeeJpaEntity actor;
-
-    @Column(name = "detail_json", columnDefinition = "jsonb")
-    private String detailJson;
+    @JoinColumn(name = "parent_id")
+    private DepartmentEntity parentDepartment;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
