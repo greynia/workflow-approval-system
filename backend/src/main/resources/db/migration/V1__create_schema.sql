@@ -41,6 +41,8 @@ CREATE TABLE workflow_rules (
     priority                INTEGER         NOT NULL,
     condition_json          JSONB           NOT NULL,   -- e.g. {"maxDays": 3}
     approver_type           VARCHAR(30)     NOT NULL,   -- DIRECT_MANAGER | DEPARTMENT_MANAGER
+    CONSTRAINT uq_workflow_rules_definition_priority
+        UNIQUE (workflow_definition_id, priority),
     created_at              TIMESTAMP       NOT NULL DEFAULT NOW()
 );
 
@@ -66,6 +68,8 @@ CREATE TABLE approval_steps (
     step_order      INTEGER         NOT NULL,
     approver_id     BIGINT          NOT NULL REFERENCES employees(id),
     status          VARCHAR(20)     NOT NULL DEFAULT 'PENDING',   -- PENDING | APPROVED | REJECTED | SKIPPED
+    CONSTRAINT uq_approval_steps_request_order
+        UNIQUE (leave_request_id, step_order),
     created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMP       NOT NULL DEFAULT NOW()
 );
@@ -109,6 +113,7 @@ CREATE INDEX idx_leave_requests_created_at      ON leave_requests(created_at);
 CREATE INDEX idx_approval_steps_leave_request_id    ON approval_steps(leave_request_id);
 CREATE INDEX idx_approval_steps_approver_id         ON approval_steps(approver_id);
 CREATE INDEX idx_approval_steps_status              ON approval_steps(status);
+CREATE INDEX idx_approval_steps_approver_status     ON approval_steps(approver_id, status);
 
 -- approval_actions
 CREATE INDEX idx_approval_actions_approval_step_id  ON approval_actions(approval_step_id);
@@ -117,6 +122,3 @@ CREATE INDEX idx_approval_actions_approval_step_id  ON approval_actions(approval
 CREATE INDEX idx_audit_logs_entity_type_id  ON audit_logs(entity_type, entity_id);
 CREATE INDEX idx_audit_logs_actor_id        ON audit_logs(actor_id);
 CREATE INDEX idx_audit_logs_created_at      ON audit_logs(created_at);
-
--- workflow_rules
-CREATE INDEX idx_workflow_rules_definition_id ON workflow_rules(workflow_definition_id, priority);
