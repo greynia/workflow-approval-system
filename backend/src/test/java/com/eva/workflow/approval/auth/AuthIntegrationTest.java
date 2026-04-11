@@ -2,6 +2,7 @@ package com.eva.workflow.approval.auth;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -15,8 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.eva.workflow.approval.TestcontainersConfiguration;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.Cookie;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -26,11 +27,8 @@ class AuthIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
-    void loginReturnsJwtAndEmployeeSummary() throws Exception {
+    void loginSetsHttpOnlyCookieAndReturnsEmployeeSummary() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -40,18 +38,20 @@ class AuthIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isString())
+                .andExpect(cookie().exists("workflow-token"))
+                .andExpect(cookie().httpOnly("workflow-token", true))
+                .andExpect(jsonPath("$.token").doesNotExist())
                 .andExpect(jsonPath("$.employeeId").value(7))
                 .andExpect(jsonPath("$.name").value("黃雅婷"))
                 .andExpect(jsonPath("$.role").value("EMPLOYEE"));
     }
 
     @Test
-    void meReturnsCurrentEmployeeWhenJwtIsValid() throws Exception {
-        String token = loginAndGetToken("huang.yating@example.com", "password123");
+    void meReturnsCurrentEmployeeWhenJwtCookieIsValid() throws Exception {
+        Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
 
         mockMvc.perform(get("/api/auth/me")
-                        .header("Authorization", "Bearer " + token))
+                        .cookie(tokenCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(7))
                 .andExpect(jsonPath("$.employeeNo").value("EMP007"))
@@ -60,6 +60,16 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.role").value("EMPLOYEE"))
                 .andExpect(jsonPath("$.departmentId").value(5))
                 .andExpect(jsonPath("$.managerId").value(5));
+    }
+
+    @Test
+    void meReturnsCurrentEmployeeWhenAuthorizationHeaderIsValid() throws Exception {
+        Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + tokenCookie.getValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("黃雅婷"));
     }
 
     @Test
@@ -84,7 +94,15 @@ class AuthIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
-    private String loginAndGetToken(String email, String password) throws Exception {
+    @Test
+    void logoutClearsCookie() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("workflow-token"))
+                .andExpect(cookie().maxAge("workflow-token", 0));
+    }
+
+    private Cookie loginAndGetCookie(String email, String password) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -96,7 +114,6 @@ class AuthIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
-        return body.get("token").asText();
+        return result.getResponse().getCookie("workflow-token");
     }
 }
