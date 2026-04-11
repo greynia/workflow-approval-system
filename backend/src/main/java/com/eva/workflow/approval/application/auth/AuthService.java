@@ -45,6 +45,7 @@ public class AuthService {
         return new AuthResult(token, employee.getId(), employee.getName(), employee.getRole());
     }
 
+    @Cacheable(value = CacheNames.CURRENT_EMPLOYEE, key = "#authenticatedEmployee.employeeId()")
     @Transactional(readOnly = true)
     public EmployeeResponse getCurrentEmployee(AuthenticatedEmployee authenticatedEmployee) {
         EmployeeEntity employee = employeeRepository.findById(authenticatedEmployee.employeeId())
