@@ -1,0 +1,41 @@
+{
+  "Common": {
+    "Button": {
+      "Submit": "Submit",
+      "Cancel": "Cancel",
+      "Delete": "Delete",
+      "Edit": "Edit",
+      "Search": "Search",
+      "Clear": "Clear"
+    },
+    "Notification": {
+      "ServerError": "Server Error",
+      "NetworkError": "Network connection failed. Please check your network.",
+      "LoginSuccess": "Signed in successfully",
+      "LogoutSuccess": "Signed out"
+    }
+  },
+  "Auth": {
+    "Login": {
+      "Title": "Workflow Approval System",
+      "Subtitle": "Sign in to continue",
+      "Email": "Email",
+      "Password": "Password",
+      "EmailPlaceholder": "name@company.com",
+      "Submit": "Sign in",
+      "Loading": "Signing in..."
+    }
+  },
+  "Home": {
+    "Welcome": "Welcome back",
+    "Placeholder": "Dashboard is under construction",
+    "SignOut": "Sign out"
+  },
+  "Error": {
+    "UNAUTHORIZED": "Invalid email or password",
+    "VALIDATION_ERROR": "Validation failed",
+    "INTERNAL_SERVER_ERROR": "An unexpected error occurred. Please try again later.",
+    "RESOURCE_NOT_FOUND": "Resource not found",
+    "Default": "Operation failed"
+  }
+}
