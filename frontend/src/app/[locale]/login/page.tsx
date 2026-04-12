@@ -1,34 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useAuth, LoginFailedError } from "@/hooks/useAuth";
 import { LocaleSwitcher } from "@/components/ui/locale-switcher";
+import {
+  loginSchema,
+  type LoginFormValues,
+} from "@/lib/validations/auth.schema";
 
 export default function LoginPage() {
   const t = useTranslations("Auth.Login");
+  const tLoginErrors = useTranslations("Auth.Login.Errors");
   const tError = useTranslations("Error");
   const { signIn } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues: { email: "", password: "" },
+  });
 
-  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const clearRootError = () => {
+    if (errors.root) clearErrors("root");
+  };
+
+  const onSubmit = async (values: LoginFormValues) => {
     try {
-      await signIn({ email, password });
+      await signIn(values);
     } catch (err) {
       if (err instanceof LoginFailedError) {
-        setError(tError(err.code) || tError("Default"));
+        setError("root", {
+          type: "server",
+          message: tError(err.code) || tError("Default"),
+        });
       }
-    } finally {
-      setLoading(false);
     }
-  }
+  };
+
+  const rootError = errors.root?.message;
 
   return (
     <div className="relative flex min-h-full items-center justify-center px-4">
@@ -42,10 +60,13 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-zinc-500">{t("Subtitle")}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-              {error}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {rootError && (
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 p-3 text-sm text-red-700"
+            >
+              {rootError}
             </div>
           )}
 
@@ -59,12 +80,19 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              autoComplete="email"
+              aria-invalid={errors.email ? "true" : "false"}
+              {...register("email", { onChange: clearRootError })}
+              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 aria-[invalid=true]:border-red-400"
               placeholder={t("EmailPlaceholder")}
             />
+            {errors.email?.message && (
+              <p className="mt-1 text-xs text-red-600">
+                {tLoginErrors(
+                  errors.email.message as Parameters<typeof tLoginErrors>[0]
+                )}
+              </p>
+            )}
           </div>
 
           <div>
@@ -77,19 +105,26 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              autoComplete="current-password"
+              aria-invalid={errors.password ? "true" : "false"}
+              {...register("password", { onChange: clearRootError })}
+              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 aria-[invalid=true]:border-red-400"
             />
+            {errors.password?.message && (
+              <p className="mt-1 text-xs text-red-600">
+                {tLoginErrors(
+                  errors.password.message as Parameters<typeof tLoginErrors>[0]
+                )}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
           >
-            {loading ? t("Loading") : t("Submit")}
+            {isSubmitting ? t("Loading") : t("Submit")}
           </button>
         </form>
       </div>

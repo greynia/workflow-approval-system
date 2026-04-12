@@ -23,7 +23,13 @@
       "Password": "Password",
       "EmailPlaceholder": "name@company.com",
       "Submit": "Sign in",
-      "Loading": "Signing in..."
+      "Loading": "Signing in...",
+      "Errors": {
+        "EmailRequired": "Email is required",
+        "EmailInvalid": "Please enter a valid email address",
+        "PasswordRequired": "Password is required",
+        "PasswordTooShort": "Password must be at least 8 characters"
+      }
     }
   },
   "Home": {
