@@ -1,0 +1,41 @@
+{
+  "Common": {
+    "Button": {
+      "Submit": "送出",
+      "Cancel": "取消",
+      "Delete": "刪除",
+      "Edit": "修改",
+      "Search": "搜尋",
+      "Clear": "清除"
+    },
+    "Notification": {
+      "ServerError": "伺服器錯誤",
+      "NetworkError": "網路連線失敗，請確認網路狀態",
+      "LoginSuccess": "登入成功",
+      "LogoutSuccess": "已登出"
+    }
+  },
+  "Auth": {
+    "Login": {
+      "Title": "Workflow Approval System",
+      "Subtitle": "登入以繼續",
+      "Email": "電子郵件",
+      "Password": "密碼",
+      "EmailPlaceholder": "name@company.com",
+      "Submit": "登入",
+      "Loading": "登入中..."
+    }
+  },
+  "Home": {
+    "Welcome": "歡迎回來",
+    "Placeholder": "儀表板建置中，請稍候",
+    "SignOut": "登出"
+  },
+  "Error": {
+    "UNAUTHORIZED": "帳號或密碼錯誤",
+    "VALIDATION_ERROR": "欄位驗證失敗",
+    "INTERNAL_SERVER_ERROR": "系統發生錯誤，請稍後再試",
+    "RESOURCE_NOT_FOUND": "找不到指定資源",
+    "Default": "操作失敗"
+  }
+}
