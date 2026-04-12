@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance } from "axios";
+import axios, { isAxiosError, type AxiosInstance } from "axios";
 import { appConfig } from "@/configs/app.config";
 import {
   HEADER_ACCEPT_LANGUAGE,
@@ -13,6 +13,7 @@ import { routing } from "@/i18n/routing";
 import { useAuthStore } from "@/stores/auth-store";
 import { useToastStore } from "@/stores/toast-store";
 import type { ApiErrorResponse } from "@/types/common";
+import { getVanillaTranslator } from "./i18n-vanilla";
 
 function readLocaleCookie(): string {
   if (typeof document === "undefined") return routing.defaultLocale;
@@ -43,7 +44,11 @@ BaseService.interceptors.request.use((config) => {
 
 BaseService.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiErrorResponse>) => {
+  (error: unknown) => {
+    if (!isAxiosError<ApiErrorResponse>(error)) {
+      return Promise.reject(error);
+    }
+
     const status = error.response?.status;
     const isNetworkError = !error.response;
     const isLoginPage =
@@ -54,9 +59,11 @@ BaseService.interceptors.response.use(
       useAuthStore.getState().clearUser();
       window.location.assign(appConfig.routes.login);
     } else if (isNetworkError) {
-      useToastStore.getState().error("網路連線失敗");
+      const t = getVanillaTranslator("Common.Notification");
+      useToastStore.getState().error(t("NetworkError"));
     } else if (status && status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) {
-      useToastStore.getState().error("伺服器錯誤");
+      const t = getVanillaTranslator("Common.Notification");
+      useToastStore.getState().error(t("ServerError"));
     }
 
     return Promise.reject(error);
