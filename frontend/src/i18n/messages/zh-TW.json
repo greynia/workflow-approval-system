@@ -23,7 +23,13 @@
       "Password": "密碼",
       "EmailPlaceholder": "name@company.com",
       "Submit": "登入",
-      "Loading": "登入中..."
+      "Loading": "登入中...",
+      "Errors": {
+        "EmailRequired": "請輸入電子郵件",
+        "EmailInvalid": "電子郵件格式不正確",
+        "PasswordRequired": "請輸入密碼",
+        "PasswordTooShort": "密碼至少需 8 個字元"
+      }
     }
   },
   "Home": {
