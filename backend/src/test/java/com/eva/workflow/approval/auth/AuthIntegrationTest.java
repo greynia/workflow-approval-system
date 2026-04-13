@@ -3,6 +3,7 @@ package com.eva.workflow.approval.auth;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,6 +41,7 @@ class AuthIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists("workflow-token"))
                 .andExpect(cookie().httpOnly("workflow-token", true))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("SameSite=Lax")))
                 .andExpect(jsonPath("$.token").doesNotExist())
                 .andExpect(jsonPath("$.employeeId").value(7))
                 .andExpect(jsonPath("$.name").value("黃雅婷"))
@@ -83,7 +85,7 @@ class AuthIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
                 .andExpect(jsonPath("$.message").value("Invalid email or password"))
                 .andExpect(jsonPath("$.traceId").isString());
     }
@@ -91,7 +93,10 @@ class AuthIntegrationTest {
     @Test
     void meRejectsRequestWithoutJwt() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+                .andExpect(jsonPath("$.message").value("Authentication is required"))
+                .andExpect(jsonPath("$.traceId").isString());
     }
 
     @Test
@@ -99,6 +104,7 @@ class AuthIntegrationTest {
         mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists("workflow-token"))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("SameSite=Lax")))
                 .andExpect(cookie().maxAge("workflow-token", 0));
     }
 

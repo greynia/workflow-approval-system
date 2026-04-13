@@ -6,39 +6,32 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eva.workflow.approval.api.dto.auth.EmployeeResponse;
+import com.eva.workflow.approval.api.exception.InvalidCredentialsException;
 import com.eva.workflow.approval.api.dto.auth.LoginRequest;
 import com.eva.workflow.approval.api.exception.ResourceNotFoundException;
-import com.eva.workflow.approval.api.exception.UnauthorizedException;
 import com.eva.workflow.approval.infrastructure.cache.CacheNames;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.EmployeeRepository;
 import com.eva.workflow.approval.infrastructure.security.JwtProvider;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
-    public AuthService(
-            EmployeeRepository employeeRepository,
-            PasswordEncoder passwordEncoder,
-            JwtProvider jwtProvider
-    ) {
-        this.employeeRepository = employeeRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtProvider = jwtProvider;
-    }
-
     @Transactional(readOnly = true)
     public AuthResult login(LoginRequest request) {
         EmployeeEntity employee = employeeRepository.findByEmail(request.email())
                 .filter(EmployeeEntity::getActive)
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.password(), employee.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         String token = jwtProvider.generateToken(employee);
