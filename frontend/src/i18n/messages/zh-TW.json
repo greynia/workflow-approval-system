@@ -34,8 +34,21 @@
   },
   "Home": {
     "Welcome": "歡迎回來",
-    "Placeholder": "儀表板建置中，請稍候",
-    "SignOut": "登出"
+    "Placeholder": "儀表板建置中，請稍候"
+  },
+  "Sidebar": {
+    "MyRequests": "我的申請",
+    "PendingApprovals": "待簽核",
+    "AuditLog": "審計紀錄"
+  },
+  "Header": {
+    "OpenSidebar": "開啟側邊欄",
+    "SignOut": "登出",
+    "Role": {
+      "ADMIN": "系統管理員",
+      "MANAGER": "部門主管",
+      "EMPLOYEE": "員工"
+    }
   },
   "Error": {
     "UNAUTHORIZED": "帳號或密碼錯誤",
@@ -43,5 +56,10 @@
     "INTERNAL_SERVER_ERROR": "系統發生錯誤，請稍後再試",
     "RESOURCE_NOT_FOUND": "找不到指定資源",
     "Default": "操作失敗"
+  },
+  "NotFound": {
+    "Title": "找不到頁面",
+    "Description": "這個頁面還沒實作，或是連結失效了。",
+    "BackHome": "回首頁"
   }
 }

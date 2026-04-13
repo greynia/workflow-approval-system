@@ -34,8 +34,21 @@
   },
   "Home": {
     "Welcome": "Welcome back",
-    "Placeholder": "Dashboard is under construction",
-    "SignOut": "Sign out"
+    "Placeholder": "Dashboard is under construction"
+  },
+  "Sidebar": {
+    "MyRequests": "My Requests",
+    "PendingApprovals": "Pending Approvals",
+    "AuditLog": "Audit Log"
+  },
+  "Header": {
+    "OpenSidebar": "Open sidebar",
+    "SignOut": "Sign out",
+    "Role": {
+      "ADMIN": "Administrator",
+      "MANAGER": "Manager",
+      "EMPLOYEE": "Employee"
+    }
   },
   "Error": {
     "UNAUTHORIZED": "Invalid email or password",
@@ -43,5 +56,10 @@
     "INTERNAL_SERVER_ERROR": "An unexpected error occurred. Please try again later.",
     "RESOURCE_NOT_FOUND": "Resource not found",
     "Default": "Operation failed"
+  },
+  "NotFound": {
+    "Title": "Page not found",
+    "Description": "This page has not been implemented, or the link is broken.",
+    "BackHome": "Back to home"
   }
 }
