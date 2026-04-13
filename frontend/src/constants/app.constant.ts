@@ -1,5 +1,6 @@
 export const HEADER_ACCEPT_LANGUAGE = "Accept-Language";
 export const HEADER_REQUEST_ID = "X-Request-ID";
+export const HEADER_MOCK_EMPLOYEE_ID = "X-Mock-Employee-Id";
 
 export const LOCALE_COOKIE = "NEXT_LOCALE";
 // 對齊後端 SecurityConstants.TOKEN_COOKIE_NAME,

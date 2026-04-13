@@ -38,7 +38,13 @@
     "eslint-config-next": "16.2.3",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
+    "msw": "^2.13.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

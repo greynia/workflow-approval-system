@@ -2,6 +2,7 @@ import axios, { isAxiosError, type AxiosInstance } from "axios";
 import { appConfig } from "@/configs/app.config";
 import {
   HEADER_ACCEPT_LANGUAGE,
+  HEADER_MOCK_EMPLOYEE_ID,
   HEADER_REQUEST_ID,
   HTTP_STATUS,
   LOCALE_COOKIE,
@@ -14,6 +15,11 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useToastStore } from "@/stores/toast-store";
 import type { ApiErrorResponse } from "@/types/common";
 import { getVanillaTranslator } from "./i18n-vanilla";
+import {
+  clearMockSession,
+  isMockApiEnabled,
+  readMockEmployeeIdFromDocumentCookie,
+} from "./mock-api";
 
 function readLocaleCookie(): string {
   if (typeof document === "undefined") return routing.defaultLocale;
@@ -39,6 +45,17 @@ const BaseService: AxiosInstance = axios.create({
 BaseService.interceptors.request.use((config) => {
   config.headers.set(HEADER_ACCEPT_LANGUAGE, readLocaleCookie());
   config.headers.set(HEADER_REQUEST_ID, generateRequestId());
+
+  if (isMockApiEnabled()) {
+    const employeeId = readMockEmployeeIdFromDocumentCookie();
+
+    if (employeeId) {
+      config.headers.set(HEADER_MOCK_EMPLOYEE_ID, String(employeeId));
+    } else {
+      config.headers.delete(HEADER_MOCK_EMPLOYEE_ID);
+    }
+  }
+
   return config;
 });
 
@@ -56,6 +73,7 @@ BaseService.interceptors.response.use(
       window.location.pathname.endsWith(appConfig.routes.login);
 
     if (status === HTTP_STATUS.UNAUTHORIZED && !isLoginPage) {
+      clearMockSession();
       useAuthStore.getState().clearUser();
       window.location.assign(appConfig.routes.login);
     } else if (isNetworkError) {
