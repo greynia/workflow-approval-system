@@ -9,4 +9,6 @@ import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.ApprovalA
 public interface ApprovalActionRepository extends JpaRepository<ApprovalActionEntity, Long> {
 
     List<ApprovalActionEntity> findByApprovalStepIdOrderByCreatedAtAsc(Long approvalStepId);
+
+    List<ApprovalActionEntity> findByApprovalStepLeaveRequestIdOrderByCreatedAtAsc(Long leaveRequestId);
 }

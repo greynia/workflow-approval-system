@@ -64,4 +64,29 @@ public class LeaveRequestEntity {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public static LeaveRequestEntity create(
+            EmployeeEntity applicant,
+            EmployeeEntity deputy,
+            LeaveType type,
+            LocalDate startDate,
+            LocalDate endDate,
+            Integer days,
+            String reason,
+            RequestStatus status
+    ) {
+        LeaveRequestEntity entity = new LeaveRequestEntity();
+        LocalDateTime now = LocalDateTime.now();
+        entity.applicant = applicant;
+        entity.deputy = deputy;
+        entity.type = type;
+        entity.startDate = startDate;
+        entity.endDate = endDate;
+        entity.days = days;
+        entity.reason = reason;
+        entity.status = status;
+        entity.createdAt = now;
+        entity.updatedAt = now;
+        return entity;
+    }
 }

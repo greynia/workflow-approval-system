@@ -11,5 +11,7 @@ public interface ApprovalStepRepository extends JpaRepository<ApprovalStepEntity
 
     List<ApprovalStepEntity> findByApproverIdAndStatusOrderByCreatedAtAsc(Long approverId, StepStatus status);
 
+    List<ApprovalStepEntity> findByLeaveRequestIdOrderByStepOrderAsc(Long leaveRequestId);
+
     long countByApproverIdAndStatus(Long approverId, StepStatus status);
 }

@@ -20,18 +20,15 @@ import com.eva.workflow.approval.infrastructure.security.JwtProperties;
 import com.eva.workflow.approval.infrastructure.security.SecurityConstants;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
     private final JwtProperties jwtProperties;
-
-    public AuthController(AuthService authService, JwtProperties jwtProperties) {
-        this.authService = authService;
-        this.jwtProperties = jwtProperties;
-    }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -39,7 +36,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, result.token())
                 .httpOnly(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .path("/")
                 .maxAge(jwtProperties.expirationSeconds())
                 .build();
@@ -53,7 +50,7 @@ public class AuthController {
     public ResponseEntity<Void> logout() {
         ResponseCookie cookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .path("/")
                 .maxAge(0)
                 .build();
