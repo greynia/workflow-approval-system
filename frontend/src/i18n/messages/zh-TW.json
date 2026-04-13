@@ -51,7 +51,8 @@
     }
   },
   "Error": {
-    "UNAUTHORIZED": "帳號或密碼錯誤",
+    "INVALID_CREDENTIALS": "帳號或密碼錯誤",
+    "UNAUTHORIZED": "請先登入",
     "VALIDATION_ERROR": "欄位驗證失敗",
     "INTERNAL_SERVER_ERROR": "系統發生錯誤，請稍後再試",
     "RESOURCE_NOT_FOUND": "找不到指定資源",
@@ -61,5 +62,65 @@
     "Title": "找不到頁面",
     "Description": "這個頁面還沒實作，或是連結失效了。",
     "BackHome": "回首頁"
+  },
+  "Requests": {
+    "List": {
+      "Title": "我的申請",
+      "NewButton": "新增請假單",
+      "Empty": "目前沒有請假申請",
+      "Error": "載入失敗，請稍後再試",
+      "Table": {
+        "Type": "假別",
+        "DateRange": "日期",
+        "Days": "天數",
+        "Status": "狀態",
+        "CreatedAt": "申請日期"
+      },
+      "LeaveType": {
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "StatusLabel": {
+        "PENDING": "審核中",
+        "APPROVED": "已核准",
+        "REJECTED": "已退回",
+        "CANCELLED": "已取消"
+      }
+    },
+    "New": {
+      "Title": "新增請假單",
+      "Fields": {
+        "Type": "假別",
+        "StartDate": "起始日期",
+        "EndDate": "結束日期",
+        "Days": "天數（日曆天）",
+        "Reason": "事由",
+        "DeputyId": "代理人員工 ID"
+      },
+      "TypeOptions": {
+        "Placeholder": "請選擇假別",
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "Placeholders": {
+        "Reason": "請說明請假事由（選填，最多 1000 字）",
+        "DeputyId": "輸入代理人員工 ID（選填）"
+      },
+      "Submit": "送出",
+      "Submitting": "送出中...",
+      "Cancel": "取消",
+      "Success": "請假單已送出",
+      "Errors": {
+        "TypeRequired": "請選擇假別",
+        "StartDateRequired": "請選擇起始日期",
+        "EndDateRequired": "請選擇結束日期",
+        "EndDateBeforeStart": "結束日期不可早於起始日期",
+        "DaysMin": "天數至少需 1 天"
+      }
+    }
   }
 }

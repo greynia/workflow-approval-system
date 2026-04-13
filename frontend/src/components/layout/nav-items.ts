@@ -32,7 +32,6 @@ export function filterNavItemsByRole(
   items: NavItem[],
   role: UserRole | null | undefined,
 ): NavItem[] {
-  if(!role) return [];
-  return items.filter((item)=> item.roles.includes(role));
-
+  if (!role) return [];
+  return items.filter((item) => item.roles.includes(role));
 }

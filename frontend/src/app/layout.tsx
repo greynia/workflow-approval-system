@@ -1,15 +1,5 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { RootProviders } from "@/components/providers/root-providers";
 
 export const metadata = {
   title: "Workflow Approval System",
@@ -22,11 +12,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="zh-TW"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="zh-TW" className="h-full antialiased">
+      <body className="min-h-full flex flex-col">
+        <RootProviders>{children}</RootProviders>
+      </body>
     </html>
   );
 }

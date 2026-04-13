@@ -7,6 +7,7 @@ import { useToastStore } from "@/stores/toast-store";
 import { HTTP_STATUS } from "@/constants/app.constant";
 import { appConfig } from "@/configs/app.config";
 import type { LoginRequest } from "@/types/auth";
+import { clearMockSession, persistMockSession } from "@/lib/mock-api";
 
 export class LoginFailedError extends Error {
   constructor(public readonly code: string) {
@@ -25,6 +26,7 @@ export function useAuth() {
   const signIn = async (credentials: LoginRequest) => {
     try {
       const data = await AuthService.signIn(credentials);
+      persistMockSession(data.employeeId);
       setUser(data);
       useToastStore.getState().success(tNotification("LoginSuccess"));
       router.push("/");
@@ -44,6 +46,7 @@ export function useAuth() {
     try {
       await AuthService.signOut();
     } finally {
+      clearMockSession();
       clearUser();
       useToastStore.getState().info(tNotification("LogoutSuccess"));
       router.push(appConfig.routes.login);

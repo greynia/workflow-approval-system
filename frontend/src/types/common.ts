@@ -4,9 +4,15 @@ export interface ApiErrorResponse {
   traceId: string;
 }
 
-export interface PaginationFormat {
+export interface PageResponse<T> {
+  items: T[];
   currentPage: number;
   totalCount: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface EmployeeSummary {
+  id: number;
+  name: string;
 }
