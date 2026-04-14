@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -49,4 +50,26 @@ public class ApprovalStepEntity {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public static ApprovalStepEntity create(
+            LeaveRequestEntity leaveRequest,
+            Integer stepOrder,
+            EmployeeEntity approver,
+            StepStatus status
+    ) {
+        ApprovalStepEntity entity = new ApprovalStepEntity();
+        LocalDateTime now = LocalDateTime.now();
+        entity.leaveRequest = leaveRequest;
+        entity.stepOrder = stepOrder;
+        entity.approver = approver;
+        entity.status = status;
+        entity.createdAt = now;
+        entity.updatedAt = now;
+        return entity;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

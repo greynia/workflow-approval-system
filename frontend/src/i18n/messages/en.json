@@ -41,6 +41,28 @@
     "PendingApprovals": "Pending Approvals",
     "AuditLog": "Audit Log"
   },
+  "Approvals": {
+    "List": {
+      "Title": "Pending Approvals",
+      "Description": "Items currently waiting for your review",
+      "Empty": "No pending approvals",
+      "Error": "Failed to load pending approvals",
+      "Table": {
+        "Applicant": "Applicant",
+        "LeaveType": "Leave Type",
+        "DateRange": "Date Range",
+        "Days": "Days",
+        "Step": "Step"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "StepLabel": "Step {step}"
+    }
+  },
   "Header": {
     "OpenSidebar": "Open sidebar",
     "SignOut": "Sign out",
@@ -97,7 +119,7 @@
         "EndDate": "End Date",
         "Days": "Days (calendar)",
         "Reason": "Reason",
-        "DeputyId": "Deputy Employee ID"
+        "DeputyId": "Deputy"
       },
       "TypeOptions": {
         "Placeholder": "Select leave type",
@@ -108,7 +130,7 @@
       },
       "Placeholders": {
         "Reason": "Describe the reason (optional, max 1000 characters)",
-        "DeputyId": "Enter deputy employee ID (optional)"
+        "DeputyId": "Select deputy (optional)"
       },
       "Submit": "Submit",
       "Submitting": "Submitting...",
@@ -121,6 +143,41 @@
         "EndDateBeforeStart": "End date cannot be before start date",
         "DaysMin": "Days must be at least 1"
       }
+    },
+    "Detail": {
+      "Title": "Request Detail",
+      "Error": "Failed to load request detail",
+      "Days": "days",
+      "TimelineTitle": "Approval Timeline",
+      "TimelineEmpty": "No approval steps yet",
+      "NoDeputy": "No deputy assigned",
+      "NoReason": "No reason provided",
+      "Fields": {
+        "Applicant": "Applicant",
+        "DateRange": "Leave Dates",
+        "Deputy": "Deputy",
+        "SubmittedAt": "Submitted At",
+        "Reason": "Reason"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "StatusLabel": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled"
+      },
+      "StepStatus": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SKIPPED": "Skipped"
+      },
+      "StepLabel": "Step {step}"
     }
   }
 }

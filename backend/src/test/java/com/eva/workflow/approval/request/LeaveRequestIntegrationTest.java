@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.jayway.jsonpath.JsonPath;
 import com.eva.workflow.approval.TestcontainersConfiguration;
 
 import jakarta.servlet.http.Cookie;
@@ -51,14 +52,43 @@ class LeaveRequestIntegrationTest {
                 .andExpect(jsonPath("$.type").value("ANNUAL"))
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.approvalSteps").isArray())
-                .andExpect(jsonPath("$.approvalSteps").isEmpty())
+                .andExpect(jsonPath("$.approvalSteps.length()").value(1))
+                .andExpect(jsonPath("$.approvalSteps[0].stepOrder").value(1))
+                .andExpect(jsonPath("$.approvalSteps[0].approverId").value(5))
+                .andExpect(jsonPath("$.approvalSteps[0].approverName").value("張美玲"))
+                .andExpect(jsonPath("$.approvalSteps[0].status").value("PENDING"))
                 .andExpect(jsonPath("$.approvalActions").isArray())
                 .andExpect(jsonPath("$.approvalActions").isEmpty());
     }
 
     @Test
+    void createRequestGeneratesTwoApprovalStepsWhenDaysExceedsThree() throws Exception {
+        Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
+
+        mockMvc.perform(post("/api/requests")
+                        .cookie(tokenCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "ANNUAL",
+                                  "startDate": "2026-04-20",
+                                  "endDate": "2026-04-24",
+                                  "days": 5,
+                                  "reason": "Long trip"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.approvalSteps.length()").value(2))
+                .andExpect(jsonPath("$.approvalSteps[0].stepOrder").value(1))
+                .andExpect(jsonPath("$.approvalSteps[0].approverId").value(5))
+                .andExpect(jsonPath("$.approvalSteps[1].stepOrder").value(2))
+                .andExpect(jsonPath("$.approvalSteps[1].approverId").value(2));
+    }
+
+    @Test
     void listReturnsOnlyCurrentApplicantsRequestsWithPagination() throws Exception {
         Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
+        long initialCount = getRequestCount(tokenCookie);
 
         createRequest(tokenCookie, """
                 {
@@ -86,12 +116,11 @@ class LeaveRequestIntegrationTest {
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items.length()").value(initialCount + 2))
                 .andExpect(jsonPath("$.items[0].status").value("PENDING"))
                 .andExpect(jsonPath("$.currentPage").value(0))
                 .andExpect(jsonPath("$.pageSize").value(10))
-                .andExpect(jsonPath("$.totalCount").value(2))
-                .andExpect(jsonPath("$.totalPages").value(1));
+                .andExpect(jsonPath("$.totalCount").value(initialCount + 2));
     }
 
     @Test
@@ -114,7 +143,8 @@ class LeaveRequestIntegrationTest {
                 .andExpect(jsonPath("$.id").value(requestId))
                 .andExpect(jsonPath("$.applicantId").value(7))
                 .andExpect(jsonPath("$.reason").value("Administrative leave"))
-                .andExpect(jsonPath("$.approvalSteps").isEmpty())
+                .andExpect(jsonPath("$.approvalSteps.length()").value(1))
+                .andExpect(jsonPath("$.approvalSteps[0].approverId").value(5))
                 .andExpect(jsonPath("$.approvalActions").isEmpty());
     }
 
@@ -181,10 +211,8 @@ class LeaveRequestIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        String json = result.getResponse().getContentAsString();
-        int idStart = json.indexOf("\"id\":") + 5;
-        int idEnd = json.indexOf(",", idStart);
-        return Long.parseLong(json.substring(idStart, idEnd));
+        Number requestId = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
+        return requestId.longValue();
     }
 
     private Cookie loginAndGetCookie(String email, String password) throws Exception {
@@ -200,5 +228,17 @@ class LeaveRequestIntegrationTest {
                 .andReturn();
 
         return result.getResponse().getCookie("workflow-token");
+    }
+
+    private long getRequestCount(Cookie tokenCookie) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/requests")
+                        .cookie(tokenCookie)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Number totalCount = JsonPath.read(result.getResponse().getContentAsString(), "$.totalCount");
+        return totalCount.longValue();
     }
 }

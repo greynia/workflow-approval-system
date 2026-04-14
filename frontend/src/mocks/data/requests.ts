@@ -135,6 +135,14 @@ export function createMockLeaveRequest(input: {
   return request;
 }
 
+export function listPendingStepsByApprover(approverId: number) {
+  return requestsDb.flatMap((request) =>
+    request.approvalSteps
+      .filter((step) => step.approverId === approverId && step.status === "PENDING")
+      .map((step) => ({ step, request }))
+  );
+}
+
 export function toLeaveRequestSummary(
   request: MockLeaveRequestRecord
 ): LeaveRequestSummary {

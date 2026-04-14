@@ -41,6 +41,28 @@
     "PendingApprovals": "待簽核",
     "AuditLog": "審計紀錄"
   },
+  "Approvals": {
+    "List": {
+      "Title": "待簽核清單",
+      "Description": "顯示目前需要你處理的簽核項目",
+      "Empty": "目前沒有待簽核項目",
+      "Error": "載入待簽核資料失敗",
+      "Table": {
+        "Applicant": "申請人",
+        "LeaveType": "假別",
+        "DateRange": "日期",
+        "Days": "天數",
+        "Step": "簽核關卡"
+      },
+      "LeaveType": {
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "StepLabel": "第 {step} 關"
+    }
+  },
   "Header": {
     "OpenSidebar": "開啟側邊欄",
     "SignOut": "登出",
@@ -97,7 +119,7 @@
         "EndDate": "結束日期",
         "Days": "天數（日曆天）",
         "Reason": "事由",
-        "DeputyId": "代理人員工 ID"
+        "DeputyId": "代理人"
       },
       "TypeOptions": {
         "Placeholder": "請選擇假別",
@@ -108,7 +130,7 @@
       },
       "Placeholders": {
         "Reason": "請說明請假事由（選填，最多 1000 字）",
-        "DeputyId": "輸入代理人員工 ID（選填）"
+        "DeputyId": "選擇代理人（選填）"
       },
       "Submit": "送出",
       "Submitting": "送出中...",
@@ -121,6 +143,41 @@
         "EndDateBeforeStart": "結束日期不可早於起始日期",
         "DaysMin": "天數至少需 1 天"
       }
+    },
+    "Detail": {
+      "Title": "申請詳情",
+      "Error": "載入申請詳情失敗",
+      "Days": "天",
+      "TimelineTitle": "簽核歷程",
+      "TimelineEmpty": "目前尚未建立簽核步驟",
+      "NoDeputy": "未指定代理人",
+      "NoReason": "未填寫事由",
+      "Fields": {
+        "Applicant": "申請人",
+        "DateRange": "請假日期",
+        "Deputy": "代理人",
+        "SubmittedAt": "送出時間",
+        "Reason": "事由"
+      },
+      "LeaveType": {
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "StatusLabel": {
+        "PENDING": "審核中",
+        "APPROVED": "已核准",
+        "REJECTED": "已退回",
+        "CANCELLED": "已取消"
+      },
+      "StepStatus": {
+        "PENDING": "待簽核",
+        "APPROVED": "已核准",
+        "REJECTED": "已退回",
+        "SKIPPED": "已略過"
+      },
+      "StepLabel": "第 {step} 關"
     }
   }
 }

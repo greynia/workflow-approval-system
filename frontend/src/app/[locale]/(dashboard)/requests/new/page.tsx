@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -39,31 +38,28 @@ export default function RequestsNewPage() {
   const toast = useToastStore();
 
   const {
-    control,
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<CreateLeaveFormValues>({
     resolver: zodResolver(createLeaveSchema),
     defaultValues: { days: 1 },
   });
 
-  const [startDate, endDate] = useWatch({
-    control,
-    name: ["startDate", "endDate"],
-  });
-
-  useEffect(() => {
-    if (startDate && endDate && endDate >= startDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+  function recalcDays() {
+    const [start, end] = getValues(["startDate", "endDate"]);
+    if (start && end && end >= start) {
       const diff =
-        Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
-        1;
+        Math.round(
+          (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)
+        ) + 1;
       setValue("days", diff, { shouldValidate: true });
+    } else {
+      setValue("days", 1, { shouldValidate: false });
     }
-  }, [startDate, endDate, setValue]);
+  }
 
   const { data: employees = [] } = useQuery({
     queryKey: ["employees"],
@@ -118,7 +114,7 @@ export default function RequestsNewPage() {
               </label>
               <input
                 type="date"
-                {...register("startDate")}
+                {...register("startDate", { onChange: recalcDays })}
                 className={fieldClassName}
               />
               <FieldError message={errors.startDate?.message} t={t} />
@@ -129,7 +125,7 @@ export default function RequestsNewPage() {
               </label>
               <input
                 type="date"
-                {...register("endDate")}
+                {...register("endDate", { onChange: recalcDays })}
                 className={fieldClassName}
               />
               <FieldError message={errors.endDate?.message} t={t} />
