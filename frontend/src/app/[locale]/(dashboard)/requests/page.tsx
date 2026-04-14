@@ -130,7 +130,12 @@ function RequestsTable({
               className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
             >
               <td className="px-4 py-3 font-medium text-zinc-900">
-                {leaveTypeLabel[item.type]}
+                <Link
+                  href={`/requests/${item.id}`}
+                  className="transition-colors hover:text-zinc-600"
+                >
+                  {leaveTypeLabel[item.type]}
+                </Link>
               </td>
               <td className="px-4 py-3 text-zinc-600">
                 {formatDate(item.startDate)} – {formatDate(item.endDate)}

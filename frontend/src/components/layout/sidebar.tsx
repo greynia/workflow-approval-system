@@ -1,7 +1,9 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import ApprovalService from "@/services/approval.service";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore } from "@/stores/ui-store";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +15,13 @@ export function Sidebar() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const closeSidebar = useUIStore((s) => s.closeSidebar);
   const pathname = usePathname();
+  const shouldLoadPendingCount =
+    user?.role === "MANAGER" || user?.role === "ADMIN";
+  const { data: pendingCount } = useQuery({
+    queryKey: ["approvals", "pending-count"],
+    queryFn: ApprovalService.getPendingCount,
+    enabled: shouldLoadPendingCount,
+  });
 
   const visibleItems = filterNavItemsByRole(NAV_ITEMS, user?.role);
 
@@ -60,7 +69,12 @@ export function Sidebar() {
                       : "text-zinc-700 hover:bg-zinc-100"
                   }`}
                 >
-                  {t(item.labelKey as Parameters<typeof t>[0])}
+                  <span>{t(item.labelKey as Parameters<typeof t>[0])}</span>
+                  {item.href === "/approvals" && pendingCount?.count ? (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs text-current">
+                      {pendingCount.count}
+                    </span>
+                  ) : null}
                 </Link>
               );
             })

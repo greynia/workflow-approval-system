@@ -18,7 +18,11 @@ import com.eva.workflow.approval.api.dto.leave.LeaveRequestSummaryResponse;
 import com.eva.workflow.approval.api.exception.BadRequestException;
 import com.eva.workflow.approval.api.exception.ResourceNotFoundException;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
+import com.eva.workflow.approval.common.enums.StepStatus;
 import com.eva.workflow.approval.common.enums.RequestStatus;
+import com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep;
+import com.eva.workflow.approval.domain.approval.service.ApprovalFlowEngine;
+import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.ApprovalStepEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.LeaveRequestEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalActionRepository;
@@ -45,6 +49,7 @@ public class LeaveRequestApplicationService {
     private final AuditLogRepository auditLogRepository;
     private final LeaveRequestMapper leaveRequestMapper;
     private final ObjectMapper objectMapper;
+    private final ApprovalFlowEngine approvalFlowEngine;
 
     @Transactional
     public LeaveRequestDetailResponse createRequest(AuthenticatedEmployee authenticatedEmployee, CreateLeaveRequest request) {
@@ -64,6 +69,11 @@ public class LeaveRequestApplicationService {
                 RequestStatus.PENDING
         ));
 
+        List<ApprovalStepEntity> approvalSteps = createApprovalSteps(saved, applicant);
+        List<ApprovalStepResponse> stepResponses = approvalSteps.stream()
+                .map(leaveRequestMapper::toStepResponse)
+                .toList();
+
         auditLogRepository.save(com.eva.workflow.approval.infrastructure.persistence.jpa.entity.AuditLogEntity.create(
                 LEAVE_REQUEST_ENTITY_TYPE,
                 saved.getId(),
@@ -72,7 +82,7 @@ public class LeaveRequestApplicationService {
                 buildCreateAuditDetail(saved)
         ));
 
-        return leaveRequestMapper.toDetailResponse(saved, List.of(), List.of());
+        return leaveRequestMapper.toDetailResponse(saved, stepResponses, List.of());
     }
 
     @Transactional(readOnly = true)
@@ -145,5 +155,29 @@ public class LeaveRequestApplicationService {
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Failed to serialize audit detail", exception);
         }
+    }
+
+    private List<ApprovalStepEntity> createApprovalSteps(LeaveRequestEntity leaveRequest, EmployeeEntity applicant) {
+        List<ApprovalFlowStep> generatedSteps = approvalFlowEngine.generateSteps(applicant, leaveRequest.getDays());
+        List<Long> approverIds = generatedSteps.stream().map(ApprovalFlowStep::approverId).toList();
+        Map<Long, EmployeeEntity> approversById = employeeRepository.findAllById(approverIds).stream()
+                .collect(java.util.stream.Collectors.toMap(EmployeeEntity::getId, employee -> employee));
+
+        List<ApprovalStepEntity> approvalSteps = generatedSteps.stream()
+                .map(step -> {
+                    EmployeeEntity approver = approversById.get(step.approverId());
+                    if (approver == null || !Boolean.TRUE.equals(approver.getActive())) {
+                        throw new ResourceNotFoundException("Approver not found");
+                    }
+                    return ApprovalStepEntity.create(
+                            leaveRequest,
+                            step.stepOrder(),
+                            approver,
+                            StepStatus.PENDING
+                    );
+                })
+                .toList();
+
+        return approvalStepRepository.saveAll(approvalSteps);
     }
 }
