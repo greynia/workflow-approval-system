@@ -1,5 +1,6 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.eva.workflow.approval.common.enums.UserRole;
@@ -55,6 +56,9 @@ public class EmployeeEntity {
 
     @Column(nullable = false)
     private Boolean active;
+
+    @Column(name = "hire_date", nullable = false)
+    private LocalDate hireDate;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

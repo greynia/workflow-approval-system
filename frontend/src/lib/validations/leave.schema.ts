@@ -2,21 +2,31 @@ import { z } from "zod";
 
 const LEAVE_TYPES = ["ANNUAL", "SICK", "PERSONAL", "OTHER"] as const;
 
+function isHalfHourAligned(val: string): boolean {
+  if (!val) return true;
+  const date = new Date(val);
+  if (isNaN(date.getTime())) return true;
+  return date.getMinutes() === 0 || date.getMinutes() === 30;
+}
+
 const baseSchema = z.object({
   type: z.enum(LEAVE_TYPES, { error: "TypeRequired" }),
-  startDate: z.string().min(1, { message: "StartDateRequired" }),
-  endDate: z.string().min(1, { message: "EndDateRequired" }),
-  days: z
-    .number({ error: "DaysMin" })
-    .int()
-    .min(1, { message: "DaysMin" }),
+  startTime: z
+    .string()
+    .min(1, { message: "StartDateRequired" })
+    .refine(isHalfHourAligned, { message: "InvalidTimeUnit" }),
+  endTime: z
+    .string()
+    .min(1, { message: "EndDateRequired" })
+    .refine(isHalfHourAligned, { message: "InvalidTimeUnit" }),
+  durationMinutes: z.number().int().min(30, { message: "DaysMin" }),
   reason: z.string().max(1000).optional(),
-  deputyId: z.number().int().positive().optional().nullable(),
+  deputyId: z.number().int().positive({ message: "DeputyRequired" }),
 });
 
 export const createLeaveSchema = baseSchema.refine(
-  (data) => !data.endDate || !data.startDate || data.endDate >= data.startDate,
-  { message: "EndDateBeforeStart", path: ["endDate"] }
+  (data) => !data.endTime || !data.startTime || data.endTime > data.startTime,
+  { message: "EndDateBeforeStart", path: ["endTime"] }
 );
 
 export type CreateLeaveFormValues = z.infer<typeof createLeaveSchema>;

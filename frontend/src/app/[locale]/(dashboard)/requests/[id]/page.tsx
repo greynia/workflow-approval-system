@@ -4,10 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import LeaveService from "@/services/leave.service";
-import type {
-  ApprovalActionResponse,
-  ApprovalStepResponse,
-} from "@/types/leave";
+import type { ApprovalActionResponse, ApprovalStepResponse } from "@/types/leave";
+import { useFormatDurationAsHours } from "@/lib/use-format-duration";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-700",
@@ -24,6 +22,7 @@ function formatDate(date: string): string {
 export default function RequestDetailPage() {
   const params = useParams<{ id: string }>();
   const t = useTranslations("Requests.Detail");
+  const formatDuration = useFormatDurationAsHours();
   const requestId = Number(params.id);
 
   const { data, isLoading, isError } = useQuery({
@@ -47,35 +46,20 @@ export default function RequestDetailPage() {
           <div>
             <h1 className="text-xl font-semibold text-zinc-900">{t("Title")}</h1>
             <p className="mt-1 text-sm text-zinc-500">
-              {t(`LeaveType.${data.type}`)} · {data.days} {t("Days")}
+              {t(`LeaveType.${data.type}`)} · {formatDuration(data.durationMinutes)}
             </p>
           </div>
-          <span
-            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[data.status]}`}
-          >
+          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[data.status]}`}>
             {t(`StatusLabel.${data.status}`)}
           </span>
         </div>
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2">
           <DetailItem label={t("Fields.Applicant")} value={data.applicantName} />
-          <DetailItem
-            label={t("Fields.DateRange")}
-            value={`${data.startDate} - ${data.endDate}`}
-          />
-          <DetailItem
-            label={t("Fields.Deputy")}
-            value={data.deputyName ?? t("NoDeputy")}
-          />
-          <DetailItem
-            label={t("Fields.SubmittedAt")}
-            value={formatDate(data.createdAt)}
-          />
-          <DetailItem
-            label={t("Fields.Reason")}
-            value={data.reason ?? t("NoReason")}
-            fullWidth
-          />
+          <DetailItem label={t("Fields.DateRange")} value={`${formatDate(data.startTime)} - ${formatDate(data.endTime)}`} />
+          <DetailItem label={t("Fields.Deputy")} value={data.deputyName ?? t("NoDeputy")} />
+          <DetailItem label={t("Fields.SubmittedAt")} value={formatDate(data.createdAt)} />
+          <DetailItem label={t("Fields.Reason")} value={data.reason ?? t("NoReason")} fullWidth />
         </dl>
       </section>
 
@@ -132,28 +116,21 @@ function Timeline({
         const action = actions.find((item) => item.actorId === step.approverId);
 
         return (
-          <li
-            key={step.id}
-            className="relative rounded-lg border border-zinc-200 bg-zinc-50 p-4"
-          >
+          <li key={step.id} className="relative rounded-lg border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-zinc-900">
-                  {t("StepLabel", { step: step.stepOrder })} · {step.approverName}
+                  {step.stepType === "DEPUTY" ? t("DeputyLabel") : t("ManagerLabel")} · {step.approverName}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500">
                   {t(`StepStatus.${step.status}`)} · {formatDate(step.updatedAt)}
                 </p>
               </div>
-              <span
-                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[step.status]}`}
-              >
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[step.status]}`}>
                 {t(`StepStatus.${step.status}`)}
               </span>
             </div>
-            {action?.comment ? (
-              <p className="mt-3 text-sm text-zinc-600">{action.comment}</p>
-            ) : null}
+            {action?.comment ? <p className="mt-3 text-sm text-zinc-600">{action.comment}</p> : null}
           </li>
         );
       })}

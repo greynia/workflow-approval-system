@@ -1,114 +1,69 @@
 package com.eva.workflow.approval.domain.approval.service;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.eva.workflow.approval.api.exception.BusinessRuleException;
-import com.eva.workflow.approval.common.enums.ApproverType;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeEntity;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.WorkflowDefinitionEntity;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.WorkflowRuleEntity;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.EmployeeRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.WorkflowDefinitionRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.WorkflowRuleRepository;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
+import com.eva.workflow.approval.common.enums.ApprovalStepType;
+import com.eva.workflow.approval.domain.approval.exception.BusinessRuleException;
+import com.eva.workflow.approval.domain.approval.model.ApprovalFlowContext;
+import com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep;
+import com.eva.workflow.approval.domain.approval.model.ApprovalRule;
 
 @Service
-@RequiredArgsConstructor
 public class ApprovalFlowEngine {
 
-    private final WorkflowDefinitionRepository workflowDefinitionRepository;
-    private final WorkflowRuleRepository workflowRuleRepository;
-    private final EmployeeRepository employeeRepository;
-    private final ObjectMapper objectMapper;
-
-    @Transactional(readOnly = true)
-    public List<com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep> generateSteps(
-            EmployeeEntity applicant,
-            int days
-    ) {
-        WorkflowDefinitionEntity workflowDefinition = workflowDefinitionRepository.findFirstByActiveTrueOrderByIdAsc()
-                .orElseThrow(() -> new BusinessRuleException("No active workflow definition found"));
-
-        List<WorkflowRuleEntity> matchedRules = workflowRuleRepository
-                .findByWorkflowDefinitionIdOrderByPriorityAsc(workflowDefinition.getId()).stream()
-                .filter(rule -> matchesDays(rule, days))
+    public List<ApprovalFlowStep> generateSteps(ApprovalFlowContext context) {
+        List<ApprovalRule> matchedRules = context.workflowRules().stream()
+                .filter(rule -> rule.matches(context.durationMinutes()))
+                .sorted(Comparator.comparingInt(ApprovalRule::stepOrder))
                 .toList();
 
         if (matchedRules.isEmpty()) {
             throw new BusinessRuleException("No workflow rule matched the leave request");
         }
 
-        List<com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep> steps = new ArrayList<>();
+        List<ApprovalFlowStep> steps = new ArrayList<>();
         Set<Long> selectedApproverIds = new LinkedHashSet<>();
 
-        for (WorkflowRuleEntity rule : matchedRules) {
-            EmployeeEntity approver = switch (rule.getApproverType()) {
-                case DIRECT_MANAGER -> resolveApproverFromManagerChain(applicant, selectedApproverIds);
-                // Phase 1 keeps DEPARTMENT_MANAGER on the same manager chain and relies on
-                // previously selected approvers to force escalation to the next distinct manager.
-                case DEPARTMENT_MANAGER -> resolveApproverFromManagerChain(applicant, selectedApproverIds);
+        if (context.deputyId() == null || context.deputyId().equals(context.applicantId())) {
+            throw new BusinessRuleException("No valid deputy selected");
+        }
+        selectedApproverIds.add(context.deputyId());
+        steps.add(new ApprovalFlowStep(1, context.deputyId(), ApprovalStepType.DEPUTY));
+
+        for (ApprovalRule rule : matchedRules) {
+            Long approverId = switch (rule.approverType()) {
+                case DIRECT_MANAGER -> resolveDirectManager(context, selectedApproverIds);
+                case DEPARTMENT_MANAGER -> resolveDepartmentManager(context, selectedApproverIds);
             };
 
-            if (!selectedApproverIds.add(approver.getId())) {
-                continue;
-            }
-
-            steps.add(new com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep(
-                    steps.size() + 1,
-                    approver.getId()
-            ));
-        }
-
-        if (steps.isEmpty()) {
-            throw new BusinessRuleException("No valid approval steps generated");
+            selectedApproverIds.add(approverId);
+            steps.add(new ApprovalFlowStep(steps.size() + 1, approverId, ApprovalStepType.MANAGER));
         }
 
         return steps;
     }
 
-    private boolean matchesDays(WorkflowRuleEntity rule, int days) {
-        try {
-            JsonNode condition = objectMapper.readTree(rule.getConditionJson());
-            if (condition.has("minDays") && days < condition.get("minDays").asInt()) {
-                return false;
-            }
-            if (condition.has("maxDays") && days > condition.get("maxDays").asInt()) {
-                return false;
-            }
-            return true;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Invalid workflow rule condition JSON", exception);
-        }
+    private Long resolveDirectManager(ApprovalFlowContext context, Set<Long> excludedApproverIds) {
+        return resolveNextManagerInChain(context, excludedApproverIds);
     }
 
-    private EmployeeEntity resolveApproverFromManagerChain(EmployeeEntity applicant, Set<Long> excludedApproverIds) {
-        EmployeeEntity current = applicant;
+    // Current Phase 1 semantics keep department manager on the same manager chain
+    // and escalate to the next distinct approver that has not already been selected.
+    private Long resolveDepartmentManager(ApprovalFlowContext context, Set<Long> excludedApproverIds) {
+        return resolveNextManagerInChain(context, excludedApproverIds);
+    }
 
-        while (current.getManager() != null) {
-            Long managerId = current.getManager().getId();
-            EmployeeEntity manager = employeeRepository.findById(managerId)
-                    .orElseThrow(() -> new BusinessRuleException("Approver not found in manager chain"));
-
-            if (Boolean.TRUE.equals(manager.getActive())
-                    && !manager.getId().equals(applicant.getId())
-                    && !excludedApproverIds.contains(manager.getId())) {
-                return manager;
-            }
-
-            current = manager;
-        }
-
-        throw new BusinessRuleException("No valid approver found in manager chain");
+    private Long resolveNextManagerInChain(ApprovalFlowContext context, Set<Long> excludedApproverIds) {
+        return context.eligibleManagerChainIds().stream()
+                .filter(approverId -> !approverId.equals(context.applicantId()))
+                .filter(approverId -> !excludedApproverIds.contains(approverId))
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleException("No valid approver found in manager chain"));
     }
 }

@@ -1,10 +1,8 @@
 import type {
-  ApprovalActionResponse,
   ApprovalStepResponse,
   CreateLeaveRequest,
   LeaveRequestDetail,
   LeaveRequestSummary,
-  RequestStatus,
 } from "@/types/leave";
 
 type MockLeaveRequestRecord = LeaveRequestDetail;
@@ -17,19 +15,29 @@ const initialMockLeaveRequests: MockLeaveRequestRecord[] = [
     deputyId: 4,
     deputyName: "Bob Wang",
     type: "ANNUAL",
-    startDate: "2026-04-15",
-    endDate: "2026-04-16",
-    days: 2,
+    startTime: "2026-04-15T09:00",
+    endTime: "2026-04-16T18:00",
+    durationMinutes: 960,
     reason: "Family trip",
     status: "PENDING",
+    currentStage: "WAITING_DEPUTY",
     createdAt: "2026-04-10T09:00:00.000Z",
     updatedAt: "2026-04-10T09:00:00.000Z",
     approvalSteps: [
       {
         id: 5001,
-        stepOrder: 1,
+        approverId: 4,
+        approverName: "Bob Wang",
+        stepType: "DEPUTY",
+        status: "PENDING",
+        createdAt: "2026-04-10T09:00:00.000Z",
+        updatedAt: "2026-04-10T09:00:00.000Z",
+      },
+      {
+        id: 5002,
         approverId: 2,
         approverName: "Mina Manager",
+        stepType: "MANAGER",
         status: "PENDING",
         createdAt: "2026-04-10T09:00:00.000Z",
         updatedAt: "2026-04-10T09:00:00.000Z",
@@ -37,47 +45,12 @@ const initialMockLeaveRequests: MockLeaveRequestRecord[] = [
     ],
     approvalActions: [],
   },
-  {
-    id: 1002,
-    applicantId: 3,
-    applicantName: "Alice Chen",
-    deputyId: null,
-    deputyName: null,
-    type: "SICK",
-    startDate: "2026-03-28",
-    endDate: "2026-03-28",
-    days: 1,
-    reason: "Clinic visit",
-    status: "APPROVED",
-    createdAt: "2026-03-27T08:30:00.000Z",
-    updatedAt: "2026-03-27T12:00:00.000Z",
-    approvalSteps: [
-      {
-        id: 5002,
-        stepOrder: 1,
-        approverId: 2,
-        approverName: "Mina Manager",
-        status: "APPROVED",
-        createdAt: "2026-03-27T08:30:00.000Z",
-        updatedAt: "2026-03-27T12:00:00.000Z",
-      },
-    ],
-    approvalActions: [
-      {
-        id: 7001,
-        actorId: 2,
-        actorName: "Mina Manager",
-        actionType: "APPROVE",
-        comment: "Take care",
-        createdAt: "2026-03-27T12:00:00.000Z",
-      },
-    ],
-  },
 ];
 
 let requestsDb: MockLeaveRequestRecord[] = structuredClone(initialMockLeaveRequests);
 let requestSequence = 2000;
 let approvalStepSequence = 6000;
+let approvalActionSequence = 8000;
 
 export function listRequestsByApplicant(applicantId: number): MockLeaveRequestRecord[] {
   return requestsDb
@@ -89,29 +62,50 @@ export function findRequestById(id: number): MockLeaveRequestRecord | undefined 
   return requestsDb.find((request) => request.id === id);
 }
 
+export function hasOverlappingActiveLeave(
+  applicantId: number,
+  startTime: string,
+  endTime: string,
+): boolean {
+  return requestsDb.some((request) =>
+    request.applicantId === applicantId &&
+    (request.status === "PENDING" || request.status === "APPROVED") &&
+    request.startTime < endTime &&
+    request.endTime > startTime
+  );
+}
+
 export function createMockLeaveRequest(input: {
   applicantId: number;
   applicantName: string;
-  approverId: number;
-  approverName: string;
-  deputyId: number | null;
-  deputyName: string | null;
+  managerId: number;
+  managerName: string;
+  deputyId: number;
+  deputyName: string;
   data: CreateLeaveRequest;
 }): MockLeaveRequestRecord {
   const now = new Date().toISOString();
-  const status: RequestStatus = "PENDING";
+  const durationMinutes = calculateDurationMinutes(input.data.startTime, input.data.endTime);
   const approvalSteps: ApprovalStepResponse[] = [
     {
       id: approvalStepSequence++,
-      stepOrder: 1,
-      approverId: input.approverId,
-      approverName: input.approverName,
+      approverId: input.deputyId,
+      approverName: input.deputyName,
+      stepType: "DEPUTY",
+      status: "PENDING",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: approvalStepSequence++,
+      approverId: input.managerId,
+      approverName: input.managerName,
+      stepType: "MANAGER",
       status: "PENDING",
       createdAt: now,
       updatedAt: now,
     },
   ];
-  const approvalActions: ApprovalActionResponse[] = [];
 
   const request: MockLeaveRequestRecord = {
     id: requestSequence++,
@@ -120,39 +114,138 @@ export function createMockLeaveRequest(input: {
     deputyId: input.deputyId,
     deputyName: input.deputyName,
     type: input.data.type,
-    startDate: input.data.startDate,
-    endDate: input.data.endDate,
-    days: input.data.days,
+    startTime: input.data.startTime,
+    endTime: input.data.endTime,
+    durationMinutes,
     reason: input.data.reason ?? null,
-    status,
+    status: "PENDING",
+    currentStage: "WAITING_DEPUTY",
     createdAt: now,
     updatedAt: now,
     approvalSteps,
-    approvalActions,
+    approvalActions: [],
   };
 
   requestsDb = [request, ...requestsDb];
   return request;
 }
 
+export function approveStep(
+  stepId: number,
+  actorId: number,
+  actorName: string,
+  comment?: string,
+): { success: boolean; notFound?: boolean; alreadyProcessed?: boolean } {
+  for (const request of requestsDb) {
+    const stepIndex = request.approvalSteps.findIndex((s) => s.id === stepId);
+    if (stepIndex === -1) continue;
+
+    const step = request.approvalSteps[stepIndex];
+    if (step.status !== "PENDING") return { success: false, alreadyProcessed: true };
+    if (request.approvalSteps.slice(0, stepIndex).some((s) => s.status !== "APPROVED")) {
+      return { success: false, alreadyProcessed: true };
+    }
+
+    const now = new Date().toISOString();
+    step.status = "APPROVED";
+    step.updatedAt = now;
+    request.approvalActions.push({
+      id: approvalActionSequence++,
+      actorId,
+      actorName,
+      actionType: "APPROVE",
+      comment: comment ?? null,
+      createdAt: now,
+    });
+
+    if (request.approvalSteps.every((s) => s.status === "APPROVED")) {
+      request.status = "APPROVED";
+      request.currentStage = "APPROVED";
+    } else {
+      request.currentStage = "WAITING_MANAGER";
+    }
+    request.updatedAt = now;
+    return { success: true };
+  }
+  return { success: false, notFound: true };
+}
+
+export function rejectStep(
+  stepId: number,
+  actorId: number,
+  actorName: string,
+  comment: string,
+): { success: boolean; notFound?: boolean; alreadyProcessed?: boolean } {
+  for (const request of requestsDb) {
+    const step = request.approvalSteps.find((s) => s.id === stepId);
+    if (!step) continue;
+    if (step.status !== "PENDING") return { success: false, alreadyProcessed: true };
+
+    const now = new Date().toISOString();
+    step.status = "REJECTED";
+    step.updatedAt = now;
+    request.status = "REJECTED";
+    request.currentStage = "REJECTED";
+    request.updatedAt = now;
+    request.approvalActions.push({
+      id: approvalActionSequence++,
+      actorId,
+      actorName,
+      actionType: "REJECT",
+      comment,
+      createdAt: now,
+    });
+    request.approvalSteps.forEach((s) => {
+      if (s.id !== stepId && s.status === "PENDING") {
+        s.status = "SKIPPED";
+        s.updatedAt = now;
+      }
+    });
+    return { success: true };
+  }
+  return { success: false, notFound: true };
+}
+
 export function listPendingStepsByApprover(approverId: number) {
   return requestsDb.flatMap((request) =>
     request.approvalSteps
-      .filter((step) => step.approverId === approverId && step.status === "PENDING")
+      .filter((step, index) =>
+        step.approverId === approverId &&
+        step.status === "PENDING" &&
+        request.approvalSteps.slice(0, index).every((previous) => previous.status === "APPROVED"))
       .map((step) => ({ step, request }))
   );
 }
 
-export function toLeaveRequestSummary(
-  request: MockLeaveRequestRecord
-): LeaveRequestSummary {
+export function computeUsedMinutesByType(
+  applicantId: number,
+  leaveType: string,
+): number {
+  return requestsDb
+    .filter(
+      (r) =>
+        r.applicantId === applicantId &&
+        r.type === leaveType &&
+        (r.status === "PENDING" || r.status === "APPROVED"),
+    )
+    .reduce((sum, r) => sum + r.durationMinutes, 0);
+}
+
+export function toLeaveRequestSummary(request: MockLeaveRequestRecord): LeaveRequestSummary {
   return {
     id: request.id,
     type: request.type,
-    startDate: request.startDate,
-    endDate: request.endDate,
-    days: request.days,
+    startTime: request.startTime,
+    endTime: request.endTime,
+    durationMinutes: request.durationMinutes,
     status: request.status,
+    currentStage: request.currentStage,
     createdAt: request.createdAt,
   };
+}
+
+function calculateDurationMinutes(startTime: string, endTime: string): number {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  return Math.max(30, Math.round((end.getTime() - start.getTime()) / 60000));
 }

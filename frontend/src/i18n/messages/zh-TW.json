@@ -13,6 +13,11 @@
       "NetworkError": "網路連線失敗，請確認網路狀態",
       "LoginSuccess": "登入成功",
       "LogoutSuccess": "已登出"
+    },
+    "Duration": {
+      "day": " 天",
+      "hour": " 小時",
+      "min": " 分"
     }
   },
   "Auth": {
@@ -39,6 +44,7 @@
   "Sidebar": {
     "MyRequests": "我的申請",
     "PendingApprovals": "待簽核",
+    "LeaveBalances": "我的假別餘額",
     "AuditLog": "審計紀錄"
   },
   "Approvals": {
@@ -51,8 +57,28 @@
         "Applicant": "申請人",
         "LeaveType": "假別",
         "DateRange": "日期",
-        "Days": "天數",
-        "Step": "簽核關卡"
+        "Days": "時數",
+        "Actions": "操作"
+      },
+      "ApproveButton": "核准",
+      "RejectButton": "退回",
+      "ApproveSuccess": "已核准",
+      "RejectSuccess": "已退回",
+      "ActionError": "操作失敗，請稍後再試",
+      "ApproveDialog": {
+        "Title": "確認核准",
+        "Description": "確定要核准此請假申請嗎？",
+        "Confirm": "確認核准",
+        "Cancel": "取消"
+      },
+      "RejectDialog": {
+        "Title": "退回申請",
+        "Description": "請填寫退回原因，申請人會看到此說明。",
+        "CommentLabel": "退回原因",
+        "CommentPlaceholder": "請說明退回原因（必填）",
+        "CommentRequired": "請填寫退回原因",
+        "Confirm": "確認退回",
+        "Cancel": "取消"
       },
       "LeaveType": {
         "ANNUAL": "特休",
@@ -60,7 +86,8 @@
         "PERSONAL": "事假",
         "OTHER": "其他"
       },
-      "StepLabel": "第 {step} 關"
+      "DeputyStep": "代理人確認",
+      "ManagerStep": "主管審核"
     }
   },
   "Header": {
@@ -78,6 +105,12 @@
     "VALIDATION_ERROR": "欄位驗證失敗",
     "INTERNAL_SERVER_ERROR": "系統發生錯誤，請稍後再試",
     "RESOURCE_NOT_FOUND": "找不到指定資源",
+    "DEPUTY_ON_LEAVE": "代理人在請假期間內已有請假申請，請重新選擇",
+    "APPLICANT_ON_LEAVE": "你在相同期間內已有請假申請，無法重複送出",
+    "INVALID_DURATION_UNIT": "請假時間需以 30 分鐘為單位",
+    "UNSUPPORTED_EMPLOYEE_SCHEDULE": "目前尚未支援此班表類型的自動請假試算",
+    "BAD_REQUEST": "欄位驗證失敗，請確認輸入",
+    "INSUFFICIENT_LEAVE_BALANCE": "假期餘額不足，無法送出申請",
     "Default": "操作失敗"
   },
   "NotFound": {
@@ -94,7 +127,7 @@
       "Table": {
         "Type": "假別",
         "DateRange": "日期",
-        "Days": "天數",
+        "Days": "時數",
         "Status": "狀態",
         "CreatedAt": "申請日期"
       },
@@ -117,7 +150,7 @@
         "Type": "假別",
         "StartDate": "起始日期",
         "EndDate": "結束日期",
-        "Days": "天數（日曆天）",
+        "Days": "合計時數",
         "Reason": "事由",
         "DeputyId": "代理人"
       },
@@ -130,24 +163,29 @@
       },
       "Placeholders": {
         "Reason": "請說明請假事由（選填，最多 1000 字）",
-        "DeputyId": "選擇代理人（選填）"
+        "DeputyId": "選擇代理人",
+        "DeputyDateRequired": "請先選擇起訖日期",
+        "DeputyLoading": "可選代理人查詢中..."
       },
       "Submit": "送出",
       "Submitting": "送出中...",
+      "AllDay": "套用全天 09:00-18:00",
       "Cancel": "取消",
       "Success": "請假單已送出",
+      "AnnualBalanceHint": "目前特休剩餘 {remaining}，已使用 {used} / 年度額度 {quota}",
       "Errors": {
         "TypeRequired": "請選擇假別",
         "StartDateRequired": "請選擇起始日期",
         "EndDateRequired": "請選擇結束日期",
         "EndDateBeforeStart": "結束日期不可早於起始日期",
-        "DaysMin": "天數至少需 1 天"
+        "DaysMin": "請假時間至少需 30 分鐘",
+        "DeputyRequired": "請選擇代理人",
+        "InvalidTimeUnit": "時間需設定在整點或半點（:00 或 :30）"
       }
     },
     "Detail": {
       "Title": "申請詳情",
       "Error": "載入申請詳情失敗",
-      "Days": "天",
       "TimelineTitle": "簽核歷程",
       "TimelineEmpty": "目前尚未建立簽核步驟",
       "NoDeputy": "未指定代理人",
@@ -177,7 +215,19 @@
         "REJECTED": "已退回",
         "SKIPPED": "已略過"
       },
-      "StepLabel": "第 {step} 關"
+      "DeputyLabel": "代理人",
+      "ManagerLabel": "主管"
+    }
+  },
+  "Balances": {
+    "Title": "我的假別餘額",
+    "Description": "查看 {year} 年各假別的總額度、已使用與剩餘時數",
+    "Error": "載入假別餘額失敗",
+    "Table": {
+      "LeaveType": "假別",
+      "Quota": "年度額度",
+      "Used": "已使用",
+      "Remaining": "剩餘"
     }
   }
 }

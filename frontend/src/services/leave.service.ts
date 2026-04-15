@@ -1,6 +1,8 @@
 import ApiService from "@/lib/api-service";
 import type {
   CreateLeaveRequest,
+  LeaveBalanceResponse,
+  LeaveCalculationResponse,
   LeaveRequestDetail,
   LeaveRequestSummary,
 } from "@/types/leave";
@@ -26,10 +28,33 @@ const LeaveService = {
     });
   },
 
+  calculate(startTime: string, endTime: string): Promise<LeaveCalculationResponse> {
+    return ApiService.fetchData<LeaveCalculationResponse, { startTime: string; endTime: string }>({
+      url: "/requests/calculate",
+      method: "POST",
+      data: { startTime, endTime },
+    });
+  },
+
   getDetail(id: number): Promise<LeaveRequestDetail> {
     return ApiService.fetchData({
       url: `/requests/${id}`,
       method: "GET",
+    });
+  },
+
+  cancel(id: number): Promise<void> {
+    return ApiService.fetchData({
+      url: `/requests/${id}/cancel`,
+      method: "PATCH",
+    });
+  },
+
+  getBalances(year?: number): Promise<LeaveBalanceResponse[]> {
+    return ApiService.fetchData({
+      url: "/requests/balance",
+      method: "GET",
+      params: year ? { year } : undefined,
     });
   },
 };

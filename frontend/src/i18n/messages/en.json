@@ -13,6 +13,11 @@
       "NetworkError": "Network connection failed. Please check your network.",
       "LoginSuccess": "Signed in successfully",
       "LogoutSuccess": "Signed out"
+    },
+    "Duration": {
+      "day": "d",
+      "hour": "h",
+      "min": "m"
     }
   },
   "Auth": {
@@ -39,6 +44,7 @@
   "Sidebar": {
     "MyRequests": "My Requests",
     "PendingApprovals": "Pending Approvals",
+    "LeaveBalances": "Leave Balances",
     "AuditLog": "Audit Log"
   },
   "Approvals": {
@@ -51,8 +57,28 @@
         "Applicant": "Applicant",
         "LeaveType": "Leave Type",
         "DateRange": "Date Range",
-        "Days": "Days",
-        "Step": "Step"
+        "Days": "Duration",
+        "Actions": "Actions"
+      },
+      "ApproveButton": "Approve",
+      "RejectButton": "Reject",
+      "ApproveSuccess": "Approved",
+      "RejectSuccess": "Rejected",
+      "ActionError": "Action failed. Please try again.",
+      "ApproveDialog": {
+        "Title": "Confirm Approval",
+        "Description": "Are you sure you want to approve this leave request?",
+        "Confirm": "Approve",
+        "Cancel": "Cancel"
+      },
+      "RejectDialog": {
+        "Title": "Reject Request",
+        "Description": "Please provide a reason. The applicant will see this comment.",
+        "CommentLabel": "Reason",
+        "CommentPlaceholder": "Enter rejection reason (required)",
+        "CommentRequired": "Please enter a rejection reason",
+        "Confirm": "Reject",
+        "Cancel": "Cancel"
       },
       "LeaveType": {
         "ANNUAL": "Annual Leave",
@@ -60,7 +86,8 @@
         "PERSONAL": "Personal Leave",
         "OTHER": "Other"
       },
-      "StepLabel": "Step {step}"
+      "DeputyStep": "Deputy Confirmation",
+      "ManagerStep": "Manager Review"
     }
   },
   "Header": {
@@ -78,6 +105,12 @@
     "VALIDATION_ERROR": "Validation failed",
     "INTERNAL_SERVER_ERROR": "An unexpected error occurred. Please try again later.",
     "RESOURCE_NOT_FOUND": "Resource not found",
+    "DEPUTY_ON_LEAVE": "The selected deputy has overlapping leave. Please choose someone else.",
+    "APPLICANT_ON_LEAVE": "You already have a leave request during the selected period.",
+    "INVALID_DURATION_UNIT": "Leave duration must use 30-minute increments.",
+    "UNSUPPORTED_EMPLOYEE_SCHEDULE": "This employee schedule type is not supported yet.",
+    "BAD_REQUEST": "Validation failed. Please check your input.",
+    "INSUFFICIENT_LEAVE_BALANCE": "Insufficient leave balance for this request.",
     "Default": "Operation failed"
   },
   "NotFound": {
@@ -94,7 +127,7 @@
       "Table": {
         "Type": "Type",
         "DateRange": "Date Range",
-        "Days": "Days",
+        "Days": "Duration",
         "Status": "Status",
         "CreatedAt": "Submitted"
       },
@@ -117,7 +150,7 @@
         "Type": "Leave Type",
         "StartDate": "Start Date",
         "EndDate": "End Date",
-        "Days": "Days (calendar)",
+        "Days": "Calculated Duration",
         "Reason": "Reason",
         "DeputyId": "Deputy"
       },
@@ -130,24 +163,29 @@
       },
       "Placeholders": {
         "Reason": "Describe the reason (optional, max 1000 characters)",
-        "DeputyId": "Select deputy (optional)"
+        "DeputyId": "Select deputy",
+        "DeputyDateRequired": "Select the date range first",
+        "DeputyLoading": "Loading available deputies..."
       },
       "Submit": "Submit",
       "Submitting": "Submitting...",
+      "AllDay": "Apply full day 09:00-18:00",
       "Cancel": "Cancel",
       "Success": "Leave request submitted",
+      "AnnualBalanceHint": "Annual leave remaining: {remaining}, used {used} / quota {quota}",
       "Errors": {
         "TypeRequired": "Please select a leave type",
         "StartDateRequired": "Please select a start date",
         "EndDateRequired": "Please select an end date",
         "EndDateBeforeStart": "End date cannot be before start date",
-        "DaysMin": "Days must be at least 1"
+        "DaysMin": "Leave duration must be at least 30 minutes",
+        "DeputyRequired": "Please select a deputy",
+        "InvalidTimeUnit": "Time must be on a :00 or :30 boundary"
       }
     },
     "Detail": {
       "Title": "Request Detail",
       "Error": "Failed to load request detail",
-      "Days": "days",
       "TimelineTitle": "Approval Timeline",
       "TimelineEmpty": "No approval steps yet",
       "NoDeputy": "No deputy assigned",
@@ -177,7 +215,19 @@
         "REJECTED": "Rejected",
         "SKIPPED": "Skipped"
       },
-      "StepLabel": "Step {step}"
+      "DeputyLabel": "Deputy",
+      "ManagerLabel": "Manager"
+    }
+  },
+  "Balances": {
+    "Title": "Leave Balances",
+    "Description": "View quota, used time, and remaining balance for {year}",
+    "Error": "Failed to load leave balances",
+    "Table": {
+      "LeaveType": "Leave Type",
+      "Quota": "Quota",
+      "Used": "Used",
+      "Remaining": "Remaining"
     }
   }
 }
