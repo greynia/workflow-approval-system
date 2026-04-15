@@ -1,10 +1,10 @@
 package com.eva.workflow.approval.api.dto.leave;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import com.eva.workflow.approval.common.enums.LeaveType;
+import com.eva.workflow.approval.common.enums.LeaveRequestStage;
 import com.eva.workflow.approval.common.enums.RequestStatus;
 
 public record LeaveRequestDetailResponse(
@@ -14,11 +14,12 @@ public record LeaveRequestDetailResponse(
         Long deputyId,
         String deputyName,
         LeaveType type,
-        LocalDate startDate,
-        LocalDate endDate,
-        Integer days,
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        Integer durationMinutes,
         String reason,
         RequestStatus status,
+        LeaveRequestStage currentStage,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         List<ApprovalStepResponse> approvalSteps,

@@ -8,6 +8,14 @@ const EmployeeService = {
       method: "GET",
     });
   },
+
+  getAvailableDeputies(startTime: string, endTime: string): Promise<EmployeeSummary[]> {
+    return ApiService.fetchData({
+      url: "/employees/available-deputies",
+      method: "GET",
+      params: { startTime, endTime },
+    });
+  },
 };
 
 export default EmployeeService;

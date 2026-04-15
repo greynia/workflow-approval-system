@@ -24,7 +24,8 @@ public class ApprovalQueryService {
     public List<PendingApprovalResponse> getPendingApprovals(AuthenticatedEmployee authenticatedEmployee) {
         return approvalStepRepository.findPendingStepsWithRequestAndApplicant(
                         authenticatedEmployee.employeeId(),
-                        StepStatus.PENDING
+                        StepStatus.PENDING,
+                        StepStatus.APPROVED
                 ).stream()
                 .map(this::toPendingApprovalResponse)
                 .toList();
@@ -32,9 +33,10 @@ public class ApprovalQueryService {
 
     @Transactional(readOnly = true)
     public PendingApprovalCountResponse getPendingApprovalCount(AuthenticatedEmployee authenticatedEmployee) {
-        long count = approvalStepRepository.countByApproverIdAndStatus(
+        long count = approvalStepRepository.countActionablePendingStepsByApproverId(
                 authenticatedEmployee.employeeId(),
-                StepStatus.PENDING
+                StepStatus.PENDING,
+                StepStatus.APPROVED
         );
         return new PendingApprovalCountResponse(count);
     }
@@ -42,14 +44,14 @@ public class ApprovalQueryService {
     private PendingApprovalResponse toPendingApprovalResponse(ApprovalStepEntity step) {
         return new PendingApprovalResponse(
                 step.getId(),
-                step.getStepOrder(),
+                step.getStepType(),
                 step.getLeaveRequest().getId(),
                 step.getLeaveRequest().getApplicant().getId(),
                 step.getLeaveRequest().getApplicant().getName(),
                 step.getLeaveRequest().getType(),
-                step.getLeaveRequest().getDays(),
-                step.getLeaveRequest().getStartDate(),
-                step.getLeaveRequest().getEndDate(),
+                step.getLeaveRequest().getDurationMinutes(),
+                step.getLeaveRequest().getStartTime(),
+                step.getLeaveRequest().getEndTime(),
                 step.getStatus(),
                 step.getCreatedAt()
         );

@@ -46,4 +46,19 @@ public class ApprovalActionEntity {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public static ApprovalActionEntity create(
+            ApprovalStepEntity approvalStep,
+            EmployeeEntity actor,
+            ActionType actionType,
+            String comment
+    ) {
+        ApprovalActionEntity entity = new ApprovalActionEntity();
+        entity.approvalStep = approvalStep;
+        entity.actor = actor;
+        entity.actionType = actionType;
+        entity.comment = comment;
+        entity.createdAt = LocalDateTime.now();
+        return entity;
+    }
 }

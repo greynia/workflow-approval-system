@@ -7,6 +7,7 @@ import LeaveService from "@/services/leave.service";
 import { appConfig } from "@/configs/app.config";
 import type { LeaveRequestSummary, LeaveType, RequestStatus } from "@/types/leave";
 import type { PageResponse } from "@/types/common";
+import { useFormatDurationAsHours } from "@/lib/use-format-duration";
 
 const STATUS_STYLES: Record<RequestStatus, string> = {
   PENDING: "bg-amber-100 text-amber-700",
@@ -16,7 +17,7 @@ const STATUS_STYLES: Record<RequestStatus, string> = {
 };
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr + "T00:00:00").toLocaleDateString();
+  return new Date(dateStr).toLocaleString();
 }
 
 export default function RequestsPage() {
@@ -40,14 +41,8 @@ export default function RequestsPage() {
       </div>
 
       {isLoading && <LoadingSkeleton />}
-
-      {isError && (
-        <p className="py-10 text-center text-sm text-zinc-500">{t("Error")}</p>
-      )}
-
-      {!isLoading && !isError && data && (
-        <RequestsTable items={data.items} t={t} />
-      )}
+      {isError && <p className="py-10 text-center text-sm text-zinc-500">{t("Error")}</p>}
+      {!isLoading && !isError && data && <RequestsTable items={data.items} t={t} />}
     </div>
   );
 }
@@ -81,10 +76,9 @@ function RequestsTable({
   items: LeaveRequestSummary[];
   t: ListTranslations;
 }) {
+  const formatDuration = useFormatDurationAsHours();
   if (items.length === 0) {
-    return (
-      <p className="py-16 text-center text-sm text-zinc-400">{t("Empty")}</p>
-    );
+    return <p className="py-16 text-center text-sm text-zinc-400">{t("Empty")}</p>;
   }
 
   const leaveTypeLabel: Record<LeaveType, string> = {
@@ -106,51 +100,29 @@ function RequestsTable({
       <table className="w-full text-sm">
         <thead className="border-b border-zinc-200 bg-zinc-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-              {t("Table.Type")}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-              {t("Table.DateRange")}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-              {t("Table.Days")}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-              {t("Table.Status")}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-              {t("Table.CreatedAt")}
-            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Type")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.DateRange")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Days")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Status")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.CreatedAt")}</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr
-              key={item.id}
-              className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
-            >
+            <tr key={item.id} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
               <td className="px-4 py-3 font-medium text-zinc-900">
-                <Link
-                  href={`/requests/${item.id}`}
-                  className="transition-colors hover:text-zinc-600"
-                >
+                <Link href={`/requests/${item.id}`} className="transition-colors hover:text-zinc-600">
                   {leaveTypeLabel[item.type]}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-zinc-600">
-                {formatDate(item.startDate)} – {formatDate(item.endDate)}
-              </td>
-              <td className="px-4 py-3 text-zinc-600">{item.days}</td>
+              <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
+              <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
               <td className="px-4 py-3">
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}
-                >
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}>
                   {statusLabel[item.status]}
                 </span>
               </td>
-              <td className="px-4 py-3 text-zinc-500">
-                {new Date(item.createdAt).toLocaleDateString()}
-              </td>
+              <td className="px-4 py-3 text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
             </tr>
           ))}
         </tbody>

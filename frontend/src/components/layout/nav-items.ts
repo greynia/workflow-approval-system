@@ -15,7 +15,12 @@ export const NAV_ITEMS: NavItem[] = [
   {
     labelKey: "Sidebar.PendingApprovals",
     href: "/approvals",
-    roles: ["MANAGER", "ADMIN"],
+    roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
+  },
+  {
+    labelKey: "Sidebar.LeaveBalances",
+    href: "/balances",
+    roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
   },
   {
     labelKey: "Sidebar.AuditLog",

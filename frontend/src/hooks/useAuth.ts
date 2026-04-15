@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/i18n/navigation";
 import AuthService from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -19,6 +20,7 @@ export class LoginFailedError extends Error {
 export function useAuth() {
   const router = useRouter();
   const tNotification = useTranslations("Common.Notification");
+  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const clearUser = useAuthStore((s) => s.clearUser);
@@ -47,6 +49,7 @@ export function useAuth() {
       await AuthService.signOut();
     } finally {
       clearMockSession();
+      queryClient.clear();
       clearUser();
       useToastStore.getState().info(tNotification("LogoutSuccess"));
       router.push(appConfig.routes.login);

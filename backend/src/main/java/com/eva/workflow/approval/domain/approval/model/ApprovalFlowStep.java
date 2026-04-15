@@ -1,7 +1,10 @@
 package com.eva.workflow.approval.domain.approval.model;
 
+import com.eva.workflow.approval.common.enums.ApprovalStepType;
+
 public record ApprovalFlowStep(
         int stepOrder,
-        Long approverId
+        Long approverId,
+        ApprovalStepType stepType
 ) {
 }

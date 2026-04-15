@@ -1,6 +1,5 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.eva.workflow.approval.common.enums.LeaveType;
@@ -44,14 +43,14 @@ public class LeaveRequestEntity {
     @Column(name = "type", nullable = false, length = 20)
     private LeaveType type;
 
-    @Column(name = "start_date", nullable = false)
-    private LocalDate startDate;
+    @Column(name = "start_time", nullable = false)
+    private LocalDateTime startTime;
 
-    @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;
+    @Column(name = "end_time", nullable = false)
+    private LocalDateTime endTime;
 
-    @Column(nullable = false)
-    private Integer days;
+    @Column(name = "duration_minutes", nullable = false)
+    private Integer durationMinutes;
 
     @Column
     private String reason;
@@ -70,9 +69,9 @@ public class LeaveRequestEntity {
             EmployeeEntity applicant,
             EmployeeEntity deputy,
             LeaveType type,
-            LocalDate startDate,
-            LocalDate endDate,
-            Integer days,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            Integer durationMinutes,
             String reason,
             RequestStatus status
     ) {
@@ -81,14 +80,18 @@ public class LeaveRequestEntity {
         entity.applicant = applicant;
         entity.deputy = deputy;
         entity.type = type;
-        entity.startDate = startDate;
-        entity.endDate = endDate;
-        entity.days = days;
+        entity.startTime = startTime;
+        entity.endTime = endTime;
+        entity.durationMinutes = durationMinutes;
         entity.reason = reason;
         entity.status = status;
         entity.createdAt = now;
         entity.updatedAt = now;
         return entity;
+    }
+
+    public void updateStatus(RequestStatus status) {
+        this.status = status;
     }
 
     @PreUpdate

@@ -1,10 +1,13 @@
 package com.eva.workflow.approval.api.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,5 +28,15 @@ public class EmployeeController {
     public ResponseEntity<List<EmployeeSummaryResponse>> list(Authentication authentication) {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
         return ResponseEntity.ok(employeeQueryService.getSelectableEmployees(authenticatedEmployee));
+    }
+
+    @GetMapping("/available-deputies")
+    public ResponseEntity<List<EmployeeSummaryResponse>> availableDeputies(
+            Authentication authentication,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+    ) {
+        AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
+        return ResponseEntity.ok(employeeQueryService.getAvailableDeputies(authenticatedEmployee, startTime, endTime));
     }
 }

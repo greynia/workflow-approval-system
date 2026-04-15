@@ -2,6 +2,7 @@ package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
 import java.time.LocalDateTime;
 
+import com.eva.workflow.approval.common.enums.ApprovalStepType;
 import com.eva.workflow.approval.common.enums.StepStatus;
 
 import jakarta.persistence.Column;
@@ -42,6 +43,10 @@ public class ApprovalStepEntity {
     private EmployeeEntity approver;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "step_type", nullable = false, length = 20)
+    private ApprovalStepType stepType;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StepStatus status;
 
@@ -55,6 +60,7 @@ public class ApprovalStepEntity {
             LeaveRequestEntity leaveRequest,
             Integer stepOrder,
             EmployeeEntity approver,
+            ApprovalStepType stepType,
             StepStatus status
     ) {
         ApprovalStepEntity entity = new ApprovalStepEntity();
@@ -62,10 +68,15 @@ public class ApprovalStepEntity {
         entity.leaveRequest = leaveRequest;
         entity.stepOrder = stepOrder;
         entity.approver = approver;
+        entity.stepType = stepType;
         entity.status = status;
         entity.createdAt = now;
         entity.updatedAt = now;
         return entity;
+    }
+
+    public void updateStatus(StepStatus status) {
+        this.status = status;
     }
 
     @PreUpdate

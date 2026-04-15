@@ -7,6 +7,7 @@ export const appConfig = {
     home: "/",
     requests: "/requests",
     requestsNew: "/requests/new",
+    balances: "/balances",
     approvals: "/approvals",
     auditLogs: "/admin/audit-logs",
   },

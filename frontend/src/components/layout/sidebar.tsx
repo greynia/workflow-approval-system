@@ -15,10 +15,9 @@ export function Sidebar() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const closeSidebar = useUIStore((s) => s.closeSidebar);
   const pathname = usePathname();
-  const shouldLoadPendingCount =
-    user?.role === "MANAGER" || user?.role === "ADMIN";
+  const shouldLoadPendingCount = user?.role != null;
   const { data: pendingCount } = useQuery({
-    queryKey: ["approvals", "pending-count"],
+    queryKey: ["approvals", "pending", "count"],
     queryFn: ApprovalService.getPendingCount,
     enabled: shouldLoadPendingCount,
   });
