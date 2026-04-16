@@ -96,37 +96,65 @@ function RequestsTable({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
-      <table className="w-full text-sm">
-        <thead className="border-b border-zinc-200 bg-zinc-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Type")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.DateRange")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Days")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Status")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.CreatedAt")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
-              <td className="px-4 py-3 font-medium text-zinc-900">
-                <Link href={`/requests/${item.id}`} className="transition-colors hover:text-zinc-600">
-                  {leaveTypeLabel[item.type]}
-                </Link>
-              </td>
-              <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
-              <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
-              <td className="px-4 py-3">
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}>
-                  {statusLabel[item.status]}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
+    <>
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-lg border border-zinc-200 bg-white md:block">
+        <table className="w-full text-sm">
+          <thead className="border-b border-zinc-200 bg-zinc-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Type")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.DateRange")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Days")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.Status")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">{t("Table.CreatedAt")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
+                <td className="px-4 py-3 font-medium text-zinc-900">
+                  <Link href={`/requests/${item.id}`} className="transition-colors hover:text-zinc-600">
+                    {leaveTypeLabel[item.type]}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
+                <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}>
+                    {statusLabel[item.status]}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card list */}
+      <div className="space-y-3 md:hidden">
+        {items.map((item) => (
+          <Link
+            key={item.id}
+            href={`/requests/${item.id}`}
+            className="block rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:bg-zinc-50"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-medium text-zinc-900">{leaveTypeLabel[item.type]}</span>
+              <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}>
+                {statusLabel[item.status]}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-zinc-500">
+              {formatDate(item.startTime)} – {formatDate(item.endTime)}
+            </p>
+            <div className="mt-2 flex items-center justify-between text-xs text-zinc-400">
+              <span>{formatDuration(item.durationMinutes)}</span>
+              <span>{new Date(item.createdAt).toLocaleString()}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </>
   );
 }

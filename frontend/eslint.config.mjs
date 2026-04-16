@@ -13,8 +13,11 @@ const eslintConfig = defineConfig([
     "build/**",
     "public/mockServiceWorker.js",
     "next-env.d.ts",
-    // Jest config uses CommonJS require() as required by Next.js docs.
+    // Jest config files use CommonJS require() as required by Next.js docs.
     "jest.config.js",
+    "jest.environment.js",
+    "jest.setup.js",
+    "jest.polyfills.js",
   ]),
 ]);
 

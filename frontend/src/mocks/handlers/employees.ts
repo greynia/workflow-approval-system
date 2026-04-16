@@ -8,6 +8,10 @@ import { hasOverlappingActiveLeave } from "@/mocks/data/requests";
 import { HEADER_MOCK_EMPLOYEE_ID } from "@/constants/app.constant";
 import { mockErrorBody } from "./utils";
 
+function matchesQuery(value: string, query: string): boolean {
+  return value.toLowerCase().includes(query.toLowerCase());
+}
+
 export const employeeHandlers = [
   http.get("/api/employees", async ({ request }) => {
     await delay(150);
@@ -32,8 +36,14 @@ export const employeeHandlers = [
       );
     }
 
+    const query = new URL(request.url).searchParams.get("query")?.trim();
     const employees = mockEmployeeAccounts
       .filter((employee) => employee.id !== currentEmployee.id)
+      .filter((employee) =>
+        !query
+          ? true
+          : matchesQuery(employee.name, query) || matchesQuery(employee.employeeNo, query)
+      )
       .map(toEmployeeSummary);
 
     return HttpResponse.json(employees, { status: 200 });
@@ -65,6 +75,7 @@ export const employeeHandlers = [
     const url = new URL(request.url);
     const startTime = url.searchParams.get("startTime");
     const endTime = url.searchParams.get("endTime");
+    const query = url.searchParams.get("query")?.trim();
 
     if (!startTime || !endTime) {
       return HttpResponse.json(
@@ -82,6 +93,11 @@ export const employeeHandlers = [
 
     const employees = mockEmployeeAccounts
       .filter((employee) => employee.id !== currentEmployee.id)
+      .filter((employee) =>
+        !query
+          ? true
+          : matchesQuery(employee.name, query) || matchesQuery(employee.employeeNo, query)
+      )
       .filter((employee) => !hasOverlappingActiveLeave(employee.id, startTime, endTime))
       .map(toEmployeeSummary);
 

@@ -16,8 +16,10 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestEntity
 
     Page<LeaveRequestEntity> findByApplicantIdOrderByCreatedAtDesc(Long applicantId, Pageable pageable);
 
+    long countByApplicantIdAndStatus(Long applicantId, RequestStatus status);
+
     @Query("""
-            select count(r) > 0
+            select case when count(r) > 0 then true else false end
             from LeaveRequestEntity r
             where r.applicant.id = :employeeId
             and r.status in :statuses

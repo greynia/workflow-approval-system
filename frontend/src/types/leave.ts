@@ -71,6 +71,10 @@ export interface LeaveCalculationResponse {
   durationMinutes: number;
 }
 
+export interface PendingRequestCountResponse {
+  count: number;
+}
+
 export interface LeaveBalanceResponse {
   leaveType: LeaveType;
   quotaMinutes: number;

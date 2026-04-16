@@ -30,6 +30,8 @@ function ApproveDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["approvals", "pending"] });
       queryClient.invalidateQueries({ queryKey: ["approvals", "pending", "count"] });
+      // Invalidate all request detail caches so the timeline reflects the new approval step
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
       toast.success(t("ApproveSuccess"));
       onClose();
     },
@@ -80,6 +82,8 @@ function RejectDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["approvals", "pending"] });
       queryClient.invalidateQueries({ queryKey: ["approvals", "pending", "count"] });
+      // Invalidate all request detail caches so the timeline reflects the rejection
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
       toast.success(t("RejectSuccess"));
       onClose();
     },
@@ -169,43 +173,72 @@ function ApprovalsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
-      <table className="w-full text-sm">
-        <thead className="border-b border-zinc-200 bg-zinc-50">
-          <tr>
-            {(["Applicant", "LeaveType", "DateRange", "Days", "Actions"] as const).map((col) => (
-              <th key={col} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                {t(`Table.${col}`)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.stepId} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
-              <td className="px-4 py-3 font-medium text-zinc-900">
-                <Link href={`/requests/${item.requestId}`} className="transition-colors hover:text-zinc-600">
-                  {item.applicantName}
-                </Link>
-              </td>
-              <td className="px-4 py-3 text-zinc-600">{t(`LeaveType.${item.leaveType}`)}</td>
-              <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
-              <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
-              <td className="px-4 py-3">
-                <div className="flex gap-2">
-                  <button onClick={() => onApprove(item)} className="rounded-md bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
-                    {t("ApproveButton")}
-                  </button>
-                  <button onClick={() => onReject(item)} className="rounded-md bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100">
-                    {t("RejectButton")}
-                  </button>
-                </div>
-              </td>
+    <>
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-lg border border-zinc-200 bg-white md:block">
+        <table className="w-full text-sm">
+          <thead className="border-b border-zinc-200 bg-zinc-50">
+            <tr>
+              {(["Applicant", "LeaveType", "DateRange", "Days", "Actions"] as const).map((col) => (
+                <th key={col} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  {t(`Table.${col}`)}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.stepId} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
+                <td className="px-4 py-3 font-medium text-zinc-900">
+                  <Link href={`/requests/${item.requestId}`} className="transition-colors hover:text-zinc-600">
+                    {item.applicantName}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-zinc-600">{t(`LeaveType.${item.leaveType}`)}</td>
+                <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
+                <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <button onClick={() => onApprove(item)} className="rounded-md bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
+                      {t("ApproveButton")}
+                    </button>
+                    <button onClick={() => onReject(item)} className="rounded-md bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100">
+                      {t("RejectButton")}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card list */}
+      <div className="space-y-3 md:hidden">
+        {items.map((item) => (
+          <div key={item.stepId} className="rounded-lg border border-zinc-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-2">
+              <Link href={`/requests/${item.requestId}`} className="font-medium text-zinc-900 hover:text-zinc-600">
+                {item.applicantName}
+              </Link>
+              <span className="shrink-0 text-sm text-zinc-500">{t(`LeaveType.${item.leaveType}`)}</span>
+            </div>
+            <p className="mt-1 text-sm text-zinc-500">
+              {formatDate(item.startTime)} – {formatDate(item.endTime)}
+            </p>
+            <p className="mt-0.5 text-xs text-zinc-400">{formatDuration(item.durationMinutes)}</p>
+            <div className="mt-3 flex gap-2">
+              <button onClick={() => onApprove(item)} className="flex-1 rounded-md bg-emerald-50 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+                {t("ApproveButton")}
+              </button>
+              <button onClick={() => onReject(item)} className="flex-1 rounded-md bg-red-50 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
+                {t("RejectButton")}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

@@ -17,6 +17,7 @@ import java.util.List;
 import com.eva.workflow.approval.api.dto.common.PageResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveBalanceResponse;
+import com.eva.workflow.approval.api.dto.leave.PendingRequestCountResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
@@ -80,6 +81,12 @@ public class LeaveRequestController {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
         leaveRequestApplicationService.cancelRequest(authenticatedEmployee, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/pending/count")
+    public ResponseEntity<PendingRequestCountResponse> pendingCount(Authentication authentication) {
+        AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
+        return ResponseEntity.ok(leaveRequestApplicationService.getPendingRequestCount(authenticatedEmployee));
     }
 
     @GetMapping("/balance")

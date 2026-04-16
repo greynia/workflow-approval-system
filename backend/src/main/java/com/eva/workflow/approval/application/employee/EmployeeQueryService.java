@@ -21,15 +21,25 @@ public class EmployeeQueryService {
     private final EmployeeRepository employeeRepository;
 
     @Transactional(readOnly = true)
-    public List<EmployeeSummaryResponse> getSelectableEmployees(AuthenticatedEmployee authenticatedEmployee) {
+    public List<EmployeeSummaryResponse> getSelectableEmployees(
+            AuthenticatedEmployee authenticatedEmployee,
+            String query
+    ) {
+        String normalizedQuery = trimToNull(query);
         return employeeRepository.findByActiveTrueAndIdNotOrderByNameAsc(authenticatedEmployee.employeeId()).stream()
-                .map(employee -> new EmployeeSummaryResponse(employee.getId(), employee.getName()))
+                .filter(employee -> matchesQuery(employee.getName(), employee.getEmployeeNo(), normalizedQuery))
+                .map(employee -> new EmployeeSummaryResponse(
+                        employee.getId(),
+                        employee.getEmployeeNo(),
+                        employee.getName()
+                ))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<EmployeeSummaryResponse> getAvailableDeputies(
             AuthenticatedEmployee authenticatedEmployee,
+            String query,
             LocalDateTime startTime,
             LocalDateTime endTime
     ) {
@@ -37,13 +47,36 @@ public class EmployeeQueryService {
             throw new BadRequestApplicationException("endTime must be after startTime");
         }
 
+        String normalizedQuery = trimToNull(query);
         return employeeRepository.findAvailableDeputies(
                         authenticatedEmployee.employeeId(),
                         startTime,
                         endTime,
                         List.of(RequestStatus.APPROVED, RequestStatus.PENDING)
                 ).stream()
-                .map(employee -> new EmployeeSummaryResponse(employee.getId(), employee.getName()))
+                .filter(employee -> matchesQuery(employee.getName(), employee.getEmployeeNo(), normalizedQuery))
+                .map(employee -> new EmployeeSummaryResponse(
+                        employee.getId(),
+                        employee.getEmployeeNo(),
+                        employee.getName()
+                ))
                 .toList();
+    }
+
+    private boolean matchesQuery(String name, String employeeNo, String query) {
+        if (query == null) {
+            return true;
+        }
+        String lowered = query.toLowerCase();
+        return name.toLowerCase().contains(lowered)
+                || employeeNo.toLowerCase().contains(lowered);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

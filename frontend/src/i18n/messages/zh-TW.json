@@ -12,7 +12,8 @@
       "ServerError": "伺服器錯誤",
       "NetworkError": "網路連線失敗，請確認網路狀態",
       "LoginSuccess": "登入成功",
-      "LogoutSuccess": "已登出"
+      "LogoutSuccess": "已登出",
+      "Forbidden": "您沒有權限執行此操作"
     },
     "Duration": {
       "day": " 天",
@@ -164,15 +165,18 @@
       "Placeholders": {
         "Reason": "請說明請假事由（選填，最多 1000 字）",
         "DeputyId": "選擇代理人",
+        "DeputySearch": "輸入姓名或工號搜尋代理人",
         "DeputyDateRequired": "請先選擇起訖日期",
-        "DeputyLoading": "可選代理人查詢中..."
+        "DeputyLoading": "可選代理人查詢中...",
+        "DeputyNoResults": "找不到符合條件的代理人"
       },
+      "SelectedDeputy": "已選代理人：{deputy}",
       "Submit": "送出",
       "Submitting": "送出中...",
       "AllDay": "套用全天 09:00-18:00",
       "Cancel": "取消",
       "Success": "請假單已送出",
-      "AnnualBalanceHint": "目前特休剩餘 {remaining}，已使用 {used} / 年度額度 {quota}",
+      "BalanceHint": "目前{leaveType}剩餘 {remaining}，已使用 {used} / 年度額度 {quota}",
       "Errors": {
         "TypeRequired": "請選擇假別",
         "StartDateRequired": "請選擇起始日期",
@@ -217,6 +221,50 @@
       },
       "DeputyLabel": "代理人",
       "ManagerLabel": "主管"
+    }
+  },
+  "AuditLog": {
+    "Title": "審計紀錄",
+    "Description": "查詢系統所有重要操作的完整歷史",
+    "Empty": "目前沒有符合條件的審計紀錄",
+    "Error": "載入審計紀錄失敗",
+    "Filter": {
+      "EntityType": "資源類型",
+      "Action": "操作行為",
+      "ActorName": "操作者姓名",
+      "CreatedFrom": "操作開始時間",
+      "CreatedTo": "操作結束時間",
+      "Placeholder": {
+        "EntityType": "全部類型",
+        "Action": "全部行為",
+        "ActorName": "輸入姓名關鍵字..."
+      }
+    },
+    "Table": {
+      "Time": "操作時間",
+      "Actor": "操作人",
+      "Action": "操作行為",
+      "EntityType": "資源類型",
+      "EntityId": "資源 ID",
+      "Detail": "詳情"
+    },
+    "Drawer": {
+      "Title": "操作詳情",
+      "Close": "關閉",
+      "Fields": {
+        "Time": "操作時間",
+        "Actor": "操作人",
+        "Action": "操作行為",
+        "EntityType": "資源類型",
+        "EntityId": "資源 ID",
+        "Detail": "詳細資訊"
+      },
+      "ViewRequest": "查看申請單"
+    },
+    "Pagination": {
+      "Previous": "上一頁",
+      "Next": "下一頁",
+      "PageInfo": "第 {current} 頁，共 {total} 頁（{count} 筆）"
     }
   },
   "Balances": {

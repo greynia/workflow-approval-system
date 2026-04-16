@@ -12,7 +12,8 @@
       "ServerError": "Server Error",
       "NetworkError": "Network connection failed. Please check your network.",
       "LoginSuccess": "Signed in successfully",
-      "LogoutSuccess": "Signed out"
+      "LogoutSuccess": "Signed out",
+      "Forbidden": "You don't have permission to perform this action"
     },
     "Duration": {
       "day": "d",
@@ -164,15 +165,18 @@
       "Placeholders": {
         "Reason": "Describe the reason (optional, max 1000 characters)",
         "DeputyId": "Select deputy",
+        "DeputySearch": "Search by name or employee no.",
         "DeputyDateRequired": "Select the date range first",
-        "DeputyLoading": "Loading available deputies..."
+        "DeputyLoading": "Loading available deputies...",
+        "DeputyNoResults": "No matching deputies found"
       },
+      "SelectedDeputy": "Selected deputy: {deputy}",
       "Submit": "Submit",
       "Submitting": "Submitting...",
       "AllDay": "Apply full day 09:00-18:00",
       "Cancel": "Cancel",
       "Success": "Leave request submitted",
-      "AnnualBalanceHint": "Annual leave remaining: {remaining}, used {used} / quota {quota}",
+      "BalanceHint": "Remaining {leaveType}: {remaining}, used {used} / annual quota {quota}",
       "Errors": {
         "TypeRequired": "Please select a leave type",
         "StartDateRequired": "Please select a start date",
@@ -217,6 +221,50 @@
       },
       "DeputyLabel": "Deputy",
       "ManagerLabel": "Manager"
+    }
+  },
+  "AuditLog": {
+    "Title": "Audit Log",
+    "Description": "View the complete history of all system operations",
+    "Empty": "No audit records match the current filters",
+    "Error": "Failed to load audit log",
+    "Filter": {
+      "EntityType": "Entity Type",
+      "Action": "Action",
+      "ActorName": "Actor Name",
+      "CreatedFrom": "From (Operation Time)",
+      "CreatedTo": "To (Operation Time)",
+      "Placeholder": {
+        "EntityType": "All types",
+        "Action": "All actions",
+        "ActorName": "Search by name..."
+      }
+    },
+    "Table": {
+      "Time": "Time",
+      "Actor": "Actor",
+      "Action": "Action",
+      "EntityType": "Entity Type",
+      "EntityId": "Entity ID",
+      "Detail": "Detail"
+    },
+    "Drawer": {
+      "Title": "Operation Detail",
+      "Close": "Close",
+      "Fields": {
+        "Time": "Timestamp",
+        "Actor": "Actor",
+        "Action": "Action",
+        "EntityType": "Entity Type",
+        "EntityId": "Entity ID",
+        "Detail": "Detail"
+      },
+      "ViewRequest": "View Request"
+    },
+    "Pagination": {
+      "Previous": "Previous",
+      "Next": "Next",
+      "PageInfo": "Page {current} of {total} ({count} records)"
     }
   },
   "Balances": {
