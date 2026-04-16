@@ -1,0 +1,281 @@
+{
+  "Common": {
+    "Button": {
+      "Submit": "Submit",
+      "Cancel": "Cancel",
+      "Delete": "Delete",
+      "Edit": "Edit",
+      "Search": "Search",
+      "Clear": "Clear"
+    },
+    "Notification": {
+      "ServerError": "Server Error",
+      "NetworkError": "Network connection failed. Please check your network.",
+      "LoginSuccess": "Signed in successfully",
+      "LogoutSuccess": "Signed out",
+      "Forbidden": "You don't have permission to perform this action"
+    },
+    "Duration": {
+      "day": "d",
+      "hour": "h",
+      "min": "m"
+    }
+  },
+  "Auth": {
+    "Login": {
+      "Title": "Workflow Approval System",
+      "Subtitle": "Sign in to continue",
+      "Email": "Email",
+      "Password": "Password",
+      "EmailPlaceholder": "name@company.com",
+      "Submit": "Sign in",
+      "Loading": "Signing in...",
+      "Errors": {
+        "EmailRequired": "Email is required",
+        "EmailInvalid": "Please enter a valid email address",
+        "PasswordRequired": "Password is required",
+        "PasswordTooShort": "Password must be at least 8 characters"
+      }
+    }
+  },
+  "Home": {
+    "Welcome": "Welcome back",
+    "Placeholder": "Dashboard is under construction"
+  },
+  "Sidebar": {
+    "MyRequests": "My Requests",
+    "PendingApprovals": "Pending Approvals",
+    "LeaveBalances": "Leave Balances",
+    "AuditLog": "Audit Log"
+  },
+  "Approvals": {
+    "List": {
+      "Title": "Pending Approvals",
+      "Description": "Items currently waiting for your review",
+      "Empty": "No pending approvals",
+      "Error": "Failed to load pending approvals",
+      "Table": {
+        "Applicant": "Applicant",
+        "LeaveType": "Leave Type",
+        "DateRange": "Date Range",
+        "Days": "Duration",
+        "Actions": "Actions"
+      },
+      "ApproveButton": "Approve",
+      "RejectButton": "Reject",
+      "ApproveSuccess": "Approved",
+      "RejectSuccess": "Rejected",
+      "ActionError": "Action failed. Please try again.",
+      "ApproveDialog": {
+        "Title": "Confirm Approval",
+        "Description": "Are you sure you want to approve this leave request?",
+        "Confirm": "Approve",
+        "Cancel": "Cancel"
+      },
+      "RejectDialog": {
+        "Title": "Reject Request",
+        "Description": "Please provide a reason. The applicant will see this comment.",
+        "CommentLabel": "Reason",
+        "CommentPlaceholder": "Enter rejection reason (required)",
+        "CommentRequired": "Please enter a rejection reason",
+        "Confirm": "Reject",
+        "Cancel": "Cancel"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "DeputyStep": "Deputy Confirmation",
+      "ManagerStep": "Manager Review"
+    }
+  },
+  "Header": {
+    "OpenSidebar": "Open sidebar",
+    "SignOut": "Sign out",
+    "Role": {
+      "ADMIN": "Administrator",
+      "MANAGER": "Manager",
+      "EMPLOYEE": "Employee"
+    }
+  },
+  "Error": {
+    "INVALID_CREDENTIALS": "Invalid email or password",
+    "UNAUTHORIZED": "Please sign in first",
+    "VALIDATION_ERROR": "Validation failed",
+    "INTERNAL_SERVER_ERROR": "An unexpected error occurred. Please try again later.",
+    "RESOURCE_NOT_FOUND": "Resource not found",
+    "DEPUTY_ON_LEAVE": "The selected deputy has overlapping leave. Please choose someone else.",
+    "APPLICANT_ON_LEAVE": "You already have a leave request during the selected period.",
+    "INVALID_DURATION_UNIT": "Leave duration must use 30-minute increments.",
+    "UNSUPPORTED_EMPLOYEE_SCHEDULE": "This employee schedule type is not supported yet.",
+    "BAD_REQUEST": "Validation failed. Please check your input.",
+    "INSUFFICIENT_LEAVE_BALANCE": "Insufficient leave balance for this request.",
+    "Default": "Operation failed"
+  },
+  "NotFound": {
+    "Title": "Page not found",
+    "Description": "This page has not been implemented, or the link is broken.",
+    "BackHome": "Back to home"
+  },
+  "Requests": {
+    "List": {
+      "Title": "My Requests",
+      "NewButton": "New Request",
+      "Empty": "No leave requests yet",
+      "Error": "Failed to load. Please try again.",
+      "Table": {
+        "Type": "Type",
+        "DateRange": "Date Range",
+        "Days": "Duration",
+        "Status": "Status",
+        "CreatedAt": "Submitted"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "StatusLabel": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled"
+      }
+    },
+    "New": {
+      "Title": "New Leave Request",
+      "Fields": {
+        "Type": "Leave Type",
+        "StartDate": "Start Date",
+        "EndDate": "End Date",
+        "Days": "Calculated Duration",
+        "Reason": "Reason",
+        "DeputyId": "Deputy"
+      },
+      "TypeOptions": {
+        "Placeholder": "Select leave type",
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "Placeholders": {
+        "Reason": "Describe the reason (optional, max 1000 characters)",
+        "DeputyId": "Select deputy",
+        "DeputySearch": "Search by name or employee no.",
+        "DeputyDateRequired": "Select the date range first",
+        "DeputyLoading": "Loading available deputies...",
+        "DeputyNoResults": "No matching deputies found"
+      },
+      "SelectedDeputy": "Selected deputy: {deputy}",
+      "Submit": "Submit",
+      "Submitting": "Submitting...",
+      "AllDay": "Apply full day 09:00-18:00",
+      "Cancel": "Cancel",
+      "Success": "Leave request submitted",
+      "BalanceHint": "Remaining {leaveType}: {remaining}, used {used} / annual quota {quota}",
+      "Errors": {
+        "TypeRequired": "Please select a leave type",
+        "StartDateRequired": "Please select a start date",
+        "EndDateRequired": "Please select an end date",
+        "EndDateBeforeStart": "End date cannot be before start date",
+        "DaysMin": "Leave duration must be at least 30 minutes",
+        "DeputyRequired": "Please select a deputy",
+        "InvalidTimeUnit": "Time must be on a :00 or :30 boundary"
+      }
+    },
+    "Detail": {
+      "Title": "Request Detail",
+      "Error": "Failed to load request detail",
+      "TimelineTitle": "Approval Timeline",
+      "TimelineEmpty": "No approval steps yet",
+      "NoDeputy": "No deputy assigned",
+      "NoReason": "No reason provided",
+      "Fields": {
+        "Applicant": "Applicant",
+        "DateRange": "Leave Dates",
+        "Deputy": "Deputy",
+        "SubmittedAt": "Submitted At",
+        "Reason": "Reason"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "StatusLabel": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled"
+      },
+      "StepStatus": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SKIPPED": "Skipped"
+      },
+      "DeputyLabel": "Deputy",
+      "ManagerLabel": "Manager"
+    }
+  },
+  "AuditLog": {
+    "Title": "Audit Log",
+    "Description": "View the complete history of all system operations",
+    "Empty": "No audit records match the current filters",
+    "Error": "Failed to load audit log",
+    "Filter": {
+      "EntityType": "Entity Type",
+      "Action": "Action",
+      "ActorName": "Actor Name",
+      "CreatedFrom": "From (Operation Time)",
+      "CreatedTo": "To (Operation Time)",
+      "Placeholder": {
+        "EntityType": "All types",
+        "Action": "All actions",
+        "ActorName": "Search by name..."
+      }
+    },
+    "Table": {
+      "Time": "Time",
+      "Actor": "Actor",
+      "Action": "Action",
+      "EntityType": "Entity Type",
+      "EntityId": "Entity ID",
+      "Detail": "Detail"
+    },
+    "Drawer": {
+      "Title": "Operation Detail",
+      "Close": "Close",
+      "Fields": {
+        "Time": "Timestamp",
+        "Actor": "Actor",
+        "Action": "Action",
+        "EntityType": "Entity Type",
+        "EntityId": "Entity ID",
+        "Detail": "Detail"
+      },
+      "ViewRequest": "View Request"
+    },
+    "Pagination": {
+      "Previous": "Previous",
+      "Next": "Next",
+      "PageInfo": "Page {current} of {total} ({count} records)"
+    }
+  },
+  "Balances": {
+    "Title": "Leave Balances",
+    "Description": "View quota, used time, and remaining balance for {year}",
+    "Error": "Failed to load leave balances",
+    "Table": {
+      "LeaveType": "Leave Type",
+      "Quota": "Quota",
+      "Used": "Used",
+      "Remaining": "Remaining"
+    }
+  }
+}
