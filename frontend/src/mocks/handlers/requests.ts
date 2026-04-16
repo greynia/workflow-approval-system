@@ -3,6 +3,7 @@ import {
   computeUsedMinutesByType,
   createMockLeaveRequest,
   findRequestById,
+  hasOverlappingActiveLeave,
   listRequestsByApplicant,
   toLeaveRequestSummary,
 } from "@/mocks/data/requests";
@@ -127,6 +128,25 @@ export const requestHandlers = [
     });
 
     return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.get("/api/requests/pending/count", async ({ request }) => {
+    await delay(100);
+
+    const employeeId = Number(request.headers.get(HEADER_MOCK_EMPLOYEE_ID));
+
+    if (!Number.isInteger(employeeId) || employeeId <= 0) {
+      return HttpResponse.json(
+        mockErrorBody("UNAUTHORIZED", "Mock session is missing"),
+        { status: 401 }
+      );
+    }
+
+    const count = listRequestsByApplicant(employeeId).filter(
+      (r) => r.status === "PENDING"
+    ).length;
+
+    return HttpResponse.json({ count }, { status: 200 });
   }),
 
   http.get("/api/requests/balance", async ({ request }) => {

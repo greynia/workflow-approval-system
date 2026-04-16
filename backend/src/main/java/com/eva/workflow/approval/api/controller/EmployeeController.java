@@ -25,18 +25,22 @@ public class EmployeeController {
     private final EmployeeQueryService employeeQueryService;
 
     @GetMapping
-    public ResponseEntity<List<EmployeeSummaryResponse>> list(Authentication authentication) {
+    public ResponseEntity<List<EmployeeSummaryResponse>> list(
+            Authentication authentication,
+            @RequestParam(required = false) String query
+    ) {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
-        return ResponseEntity.ok(employeeQueryService.getSelectableEmployees(authenticatedEmployee));
+        return ResponseEntity.ok(employeeQueryService.getSelectableEmployees(authenticatedEmployee, query));
     }
 
     @GetMapping("/available-deputies")
     public ResponseEntity<List<EmployeeSummaryResponse>> availableDeputies(
             Authentication authentication,
+            @RequestParam(required = false) String query,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
     ) {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
-        return ResponseEntity.ok(employeeQueryService.getAvailableDeputies(authenticatedEmployee, startTime, endTime));
+        return ResponseEntity.ok(employeeQueryService.getAvailableDeputies(authenticatedEmployee, query, startTime, endTime));
     }
 }

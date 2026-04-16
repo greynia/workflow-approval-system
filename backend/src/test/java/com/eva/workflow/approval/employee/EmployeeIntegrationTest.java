@@ -41,6 +41,27 @@ class EmployeeIntegrationTest {
     }
 
     @Test
+    void employeesListSupportsQueryByNameAndEmployeeNo() throws Exception {
+        Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
+
+                mockMvc.perform(get("/api/employees")
+                        .cookie(tokenCookie)
+                        .param("query", "李建"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("李建國"))
+                .andExpect(jsonPath("$[0].employeeNo").value("EMP006"));
+
+        mockMvc.perform(get("/api/employees")
+                        .cookie(tokenCookie)
+                        .param("query", "EMP008"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("吳俊賢"))
+                .andExpect(jsonPath("$[0].employeeNo").value("EMP008"));
+    }
+
+    @Test
     void availableDeputiesExcludesEmployeesWithOverlappingLeave() throws Exception {
         Cookie applicantCookie = loginAndGetCookie("huang.yating@example.com", "password123");
         Cookie deputyCookie = loginAndGetCookie("li.jianguo@example.com", "FrontendDev123!");
@@ -50,8 +71,8 @@ class EmployeeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody(
                                 "ANNUAL",
-                                "2026-08-03T09:00:00",
-                                "2026-08-05T18:00:00",
+                                "2026-10-13T09:00:00",
+                                "2026-10-15T18:00:00",
                                 "Deputy is away",
                                 7
                         )))
@@ -59,11 +80,36 @@ class EmployeeIntegrationTest {
 
         mockMvc.perform(get("/api/employees/available-deputies")
                         .cookie(applicantCookie)
-                        .param("startTime", "2026-08-04T09:00:00")
-                        .param("endTime", "2026-08-05T18:00:00"))
+                        .param("startTime", "2026-10-14T09:00:00")
+                        .param("endTime", "2026-10-15T18:00:00"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].id", not(hasItem(6))))
                 .andExpect(jsonPath("$[*].name", hasItem("張美玲")));
+    }
+
+    @Test
+    void availableDeputiesSupportsQueryByNameAndEmployeeNo() throws Exception {
+        Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
+
+        mockMvc.perform(get("/api/employees/available-deputies")
+                        .cookie(tokenCookie)
+                        .param("startTime", "2026-10-14T09:00:00")
+                        .param("endTime", "2026-10-15T18:00:00")
+                        .param("query", "李建"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("李建國"))
+                .andExpect(jsonPath("$[0].employeeNo").value("EMP006"));
+
+        mockMvc.perform(get("/api/employees/available-deputies")
+                        .cookie(tokenCookie)
+                        .param("startTime", "2026-10-14T09:00:00")
+                        .param("endTime", "2026-10-15T18:00:00")
+                        .param("query", "EMP008"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("吳俊賢"))
+                .andExpect(jsonPath("$[0].employeeNo").value("EMP008"));
     }
 
     @Test
@@ -72,8 +118,8 @@ class EmployeeIntegrationTest {
 
         mockMvc.perform(get("/api/employees/available-deputies")
                         .cookie(tokenCookie)
-                        .param("startTime", "2026-08-05T18:00:00")
-                        .param("endTime", "2026-08-05T09:00:00"))
+                        .param("startTime", "2026-10-15T18:00:00")
+                        .param("endTime", "2026-10-15T09:00:00"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value("endTime must be after startTime"));

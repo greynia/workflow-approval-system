@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useDebounce } from "@/lib/use-debounce";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -138,6 +138,8 @@ export default function RequestsNewPage() {
   const selectedType = useWatch({ control, name: "type" });
   const selectedDeputyId = useWatch({ control, name: "deputyId" });
   const durationMinutes = useWatch({ control, name: "durationMinutes" });
+  const [deputyQuery, setDeputyQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
   const startParts = splitDateTimeLocal(startTime);
   const endParts = splitDateTimeLocal(endTime);
   const maximumStartTime = getMaximumStartTime(endTime);
@@ -155,6 +157,7 @@ export default function RequestsNewPage() {
 
   const debouncedStartTime = useDebounce(startTime, 500);
   const debouncedEndTime = useDebounce(endTime, 500);
+  const debouncedDeputyQuery = useDebounce(deputyQuery, 250);
   const hasAlignedTimes = isHalfHourAligned(debouncedStartTime) && isHalfHourAligned(debouncedEndTime);
   const hasCompleteWindow = Boolean(
     debouncedStartTime && debouncedEndTime && debouncedEndTime > debouncedStartTime
@@ -177,18 +180,18 @@ export default function RequestsNewPage() {
   }, [calculation, canCalculate, setValue]);
 
   const { data: employees = [], isLoading: isDeputiesLoading } = useQuery({
-    queryKey: ["employees", "available-deputies", debouncedStartTime, debouncedEndTime],
-    queryFn: () => EmployeeService.getAvailableDeputies(debouncedStartTime, debouncedEndTime),
+    queryKey: ["employees", "available-deputies", debouncedStartTime, debouncedEndTime, debouncedDeputyQuery],
+    queryFn: () => EmployeeService.getAvailableDeputies(debouncedStartTime, debouncedEndTime, debouncedDeputyQuery),
     enabled: canCalculate,
   });
 
   const { data: balances } = useQuery({
     queryKey: ["requests", "balance"],
     queryFn: () => LeaveService.getBalances(),
-    enabled: selectedType === "ANNUAL",
+    enabled: !!selectedType && selectedType !== "OTHER",
   });
 
-  const annualBalance = balances?.find((item) => item.leaveType === "ANNUAL");
+  const currentBalance = balances?.find((item) => item.leaveType === selectedType);
 
   useEffect(() => {
     if (!startTime || !endTime) {
@@ -206,12 +209,10 @@ export default function RequestsNewPage() {
 
   useEffect(() => {
     if (!canCalculate) {
+      setValue("deputyId", undefined, { shouldDirty: true });
       return;
     }
-    if (selectedDeputyId == null) {
-      return;
-    }
-    if (!employees.some((employee) => employee.id === selectedDeputyId)) {
+    if (selectedDeputyId != null && !employees.some((employee) => employee.id === selectedDeputyId)) {
       setValue("deputyId", undefined, { shouldDirty: true });
     }
   }, [employees, canCalculate, selectedDeputyId, setValue]);
@@ -415,12 +416,13 @@ export default function RequestsNewPage() {
                 : "-"}
             </div>
             <FieldError message={errors.durationMinutes?.message} t={t} />
-            {selectedType === "ANNUAL" && annualBalance ? (
+            {currentBalance ? (
               <p className="mt-2 text-xs text-zinc-500">
-                {t("AnnualBalanceHint", {
-                  remaining: formatDurationAsHours(annualBalance.remainingMinutes),
-                  used: formatDurationAsHours(annualBalance.usedMinutes),
-                  quota: formatDurationAsHours(annualBalance.quotaMinutes),
+                {t("BalanceHint", {
+                  leaveType: t(`TypeOptions.${selectedType as "ANNUAL" | "SICK" | "PERSONAL" | "OTHER"}`),
+                  remaining: formatDurationAsHours(currentBalance.remainingMinutes),
+                  used: formatDurationAsHours(currentBalance.usedMinutes),
+                  quota: formatDurationAsHours(currentBalance.quotaMinutes),
                 })}
               </p>
             ) : null}
@@ -442,26 +444,74 @@ export default function RequestsNewPage() {
             <label className="mb-1.5 block text-sm font-medium text-zinc-700">
               {t("Fields.DeputyId")}
             </label>
-            <select
-              {...register("deputyId", {
-                setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
-              })}
-              disabled={!canCalculate || isDeputiesLoading}
-              className={fieldClassName}
-            >
-              <option value="">
-                {!canCalculate
-                  ? t("Placeholders.DeputyDateRequired")
-                  : isDeputiesLoading
-                    ? t("Placeholders.DeputyLoading")
-                    : t("Placeholders.DeputyId")}
-              </option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name}
-                </option>
-              ))}
-            </select>
+            <input type="hidden" {...register("deputyId")} />
+            {(() => {
+              const selectedEmployee = selectedDeputyId != null
+                ? employees.find((e) => e.id === selectedDeputyId)
+                : undefined;
+              return (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={selectedEmployee ? selectedEmployee.name : deputyQuery}
+                    disabled={!canCalculate}
+                    placeholder={
+                      !canCalculate
+                        ? t("Placeholders.DeputyDateRequired")
+                        : t("Placeholders.DeputySearch")
+                    }
+                    onChange={(event) => {
+                      setDeputyQuery(event.target.value);
+                      setValue("deputyId", undefined, { shouldDirty: true, shouldValidate: true });
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => {
+                      if (!selectedEmployee) {
+                        setShowDropdown(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowDropdown(false), 150);
+                    }}
+                    className={fieldClassName}
+                  />
+                  {showDropdown && !selectedEmployee && canCalculate && (
+                    <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-zinc-200 bg-white shadow-md">
+                      {isDeputiesLoading ? (
+                        <p className="px-3 py-2 text-sm text-zinc-400">
+                          {t("Placeholders.DeputyLoading")}
+                        </p>
+                      ) : employees.length === 0 ? (
+                        <p className="px-3 py-2 text-sm text-zinc-400">
+                          {t("Placeholders.DeputyNoResults")}
+                        </p>
+                      ) : (
+                        <ul>
+                          {employees.map((employee) => (
+                            <li
+                              key={employee.id}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setValue("deputyId", employee.id, {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                });
+                                setDeputyQuery("");
+                                setShowDropdown(false);
+                              }}
+                              className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                            >
+                              <span>{employee.name}</span>
+                              <span className="text-xs text-zinc-400">{employee.employeeNo}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <FieldError message={errors.deputyId?.message} t={t} />
           </div>
 

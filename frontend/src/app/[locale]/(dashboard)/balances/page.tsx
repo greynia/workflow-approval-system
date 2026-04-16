@@ -25,7 +25,7 @@ export default function LeaveBalancesPage() {
       </div>
 
       {isLoading ? (
-        <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
           <table className="w-full text-sm">
             <tbody>
               {Array.from({ length: 4 }).map((_, index) => (
@@ -47,7 +47,7 @@ export default function LeaveBalancesPage() {
       ) : null}
 
       {!isLoading && !isError && data ? (
-        <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50">
               <tr>

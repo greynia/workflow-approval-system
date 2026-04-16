@@ -5,6 +5,7 @@ import type {
   LeaveCalculationResponse,
   LeaveRequestDetail,
   LeaveRequestSummary,
+  PendingRequestCountResponse,
 } from "@/types/leave";
 import type { PageResponse } from "@/types/common";
 
@@ -47,6 +48,13 @@ const LeaveService = {
     return ApiService.fetchData({
       url: `/requests/${id}/cancel`,
       method: "PATCH",
+    });
+  },
+
+  getPendingCount(): Promise<PendingRequestCountResponse> {
+    return ApiService.fetchData({
+      url: "/requests/pending/count",
+      method: "GET",
     });
   },
 

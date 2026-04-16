@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.eva.workflow.approval.api.dto.leave.ApprovalStepResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
+import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.application.approval.ManagerChainResolver;
 import com.eva.workflow.approval.application.approval.WorkflowRuleAssembler;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
@@ -216,6 +218,42 @@ class LeaveRequestApplicationServiceTest {
         assertThatThrownBy(() -> leaveRequestApplicationService.createRequest(authenticatedEmployee, request))
                 .isInstanceOf(BadRequestApplicationException.class)
                 .hasMessageContaining("deputyId cannot be the same as applicant");
+    }
+
+    @Test
+    void getRequestDetailAllowsAdminToViewAnyRequest() {
+        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN);
+        EmployeeEntity applicant = employee(7L, true);
+        EmployeeEntity deputy = employee(6L, true);
+        LocalDateTime startTime = LocalDateTime.of(2026, 5, 1, 9, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 5, 1, 18, 0);
+        LeaveRequestEntity leaveRequest = leaveRequest(10L, applicant, deputy, 480, startTime, endTime);
+        LeaveRequestDetailResponse mockResponse = mock(LeaveRequestDetailResponse.class);
+
+        when(leaveRequestRepository.findById(10L)).thenReturn(Optional.of(leaveRequest));
+        when(approvalStepRepository.findByLeaveRequestIdOrderByStepOrderAsc(10L)).thenReturn(List.of());
+        when(approvalActionRepository.findByApprovalStepLeaveRequestIdOrderByCreatedAtAsc(10L)).thenReturn(List.of());
+        when(leaveRequestMapper.toDetailResponse(eq(leaveRequest), any(), any())).thenReturn(mockResponse);
+
+        LeaveRequestDetailResponse result = leaveRequestApplicationService.getRequestDetail(admin, 10L);
+
+        assertThat(result).isEqualTo(mockResponse);
+    }
+
+    @Test
+    void getRequestDetailRejectsUnrelatedEmployee() {
+        AuthenticatedEmployee unrelated = new AuthenticatedEmployee(99L, "other@example.com", "Other", UserRole.EMPLOYEE);
+        EmployeeEntity applicant = employee(7L, true);
+        EmployeeEntity deputy = employee(6L, true);
+        LocalDateTime startTime = LocalDateTime.of(2026, 5, 1, 9, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 5, 1, 18, 0);
+        LeaveRequestEntity leaveRequest = leaveRequest(10L, applicant, deputy, 480, startTime, endTime);
+
+        when(leaveRequestRepository.findById(10L)).thenReturn(Optional.of(leaveRequest));
+        when(approvalStepRepository.existsByLeaveRequestIdAndApproverId(10L, 99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> leaveRequestApplicationService.getRequestDetail(unrelated, 10L))
+                .isInstanceOf(ResourceNotFoundApplicationException.class);
     }
 
     private EmployeeEntity employee(Long id, boolean active) {

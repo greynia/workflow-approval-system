@@ -76,6 +76,9 @@ BaseService.interceptors.response.use(
       clearMockSession();
       useAuthStore.getState().clearUser();
       window.location.assign(appConfig.routes.login);
+    } else if (status === HTTP_STATUS.FORBIDDEN) {
+      const t = getVanillaTranslator("Common.Notification");
+      useToastStore.getState().error(t("Forbidden"));
     } else if (isNetworkError) {
       const t = getVanillaTranslator("Common.Notification");
       useToastStore.getState().error(t("NetworkError"));

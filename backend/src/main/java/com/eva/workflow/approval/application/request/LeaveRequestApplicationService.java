@@ -15,6 +15,7 @@ import com.eva.workflow.approval.api.dto.leave.ApprovalActionResponse;
 import com.eva.workflow.approval.api.dto.leave.ApprovalStepResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveBalanceResponse;
+import com.eva.workflow.approval.api.dto.leave.PendingRequestCountResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
@@ -27,6 +28,7 @@ import com.eva.workflow.approval.application.exception.ForbiddenApplicationExcep
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.common.enums.StepStatus;
 import com.eva.workflow.approval.common.enums.RequestStatus;
+import com.eva.workflow.approval.common.enums.UserRole;
 import com.eva.workflow.approval.domain.approval.model.ApprovalFlowContext;
 import com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep;
 import com.eva.workflow.approval.domain.approval.model.ApprovalRule;
@@ -162,7 +164,8 @@ public class LeaveRequestApplicationService {
     public LeaveRequestDetailResponse getRequestDetail(AuthenticatedEmployee authenticatedEmployee, Long requestId) {
         LeaveRequestEntity leaveRequest = leaveRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundApplicationException("Leave request not found"));
-        boolean canAccess = leaveRequest.getApplicant().getId().equals(authenticatedEmployee.employeeId())
+        boolean canAccess = authenticatedEmployee.role() == UserRole.ADMIN
+                || leaveRequest.getApplicant().getId().equals(authenticatedEmployee.employeeId())
                 || approvalStepRepository.existsByLeaveRequestIdAndApproverId(requestId, authenticatedEmployee.employeeId());
         if (!canAccess) {
             throw new ResourceNotFoundApplicationException("Leave request not found");
@@ -215,6 +218,15 @@ public class LeaveRequestApplicationService {
         int targetYear = (year == 0) ? java.time.Year.now().getValue() : year;
         EmployeeEntity employee = findActiveEmployee(authenticatedEmployee.employeeId(), "Employee not found");
         return leaveBalanceService.getBalances(employee.getId(), employee.getHireDate(), targetYear);
+    }
+
+    @Transactional(readOnly = true)
+    public PendingRequestCountResponse getPendingRequestCount(AuthenticatedEmployee authenticatedEmployee) {
+        long count = leaveRequestRepository.countByApplicantIdAndStatus(
+                authenticatedEmployee.employeeId(),
+                RequestStatus.PENDING
+        );
+        return new PendingRequestCountResponse(count);
     }
 
     private void validateCreateRequest(CreateLeaveRequest request) {

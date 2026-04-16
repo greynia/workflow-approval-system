@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import ApprovalService from "@/services/approval.service";
+import LeaveService from "@/services/leave.service";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore } from "@/stores/ui-store";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,9 +17,14 @@ export function Sidebar() {
   const closeSidebar = useUIStore((s) => s.closeSidebar);
   const pathname = usePathname();
   const shouldLoadPendingCount = user?.role != null;
-  const { data: pendingCount } = useQuery({
+  const { data: pendingApprovalCount } = useQuery({
     queryKey: ["approvals", "pending", "count"],
     queryFn: ApprovalService.getPendingCount,
+    enabled: shouldLoadPendingCount,
+  });
+  const { data: pendingRequestCount } = useQuery({
+    queryKey: ["requests", "pending", "count"],
+    queryFn: LeaveService.getPendingCount,
     enabled: shouldLoadPendingCount,
   });
 
@@ -62,16 +68,21 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={closeSidebar}
-                  className={`block rounded px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-between rounded px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-zinc-900 text-white"
                       : "text-zinc-700 hover:bg-zinc-100"
                   }`}
                 >
                   <span>{t(item.labelKey as Parameters<typeof t>[0])}</span>
-                  {item.href === "/approvals" && pendingCount?.count ? (
+                  {item.href === "/requests" && pendingRequestCount?.count ? (
                     <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs text-current">
-                      {pendingCount.count}
+                      {pendingRequestCount.count}
+                    </span>
+                  ) : null}
+                  {item.href === "/approvals" && pendingApprovalCount?.count ? (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs text-current">
+                      {pendingApprovalCount.count}
                     </span>
                   ) : null}
                 </Link>

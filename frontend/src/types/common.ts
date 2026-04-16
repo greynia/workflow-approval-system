@@ -14,5 +14,6 @@ export interface PageResponse<T> {
 
 export interface EmployeeSummary {
   id: number;
+  employeeNo: string;
   name: string;
 }

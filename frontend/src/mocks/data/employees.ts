@@ -86,6 +86,7 @@ export function toLoginResponse(employee: MockEmployeeAccount): LoginResponse {
 export function toEmployeeSummary(employee: MockEmployeeAccount): EmployeeSummary {
   return {
     id: employee.id,
+    employeeNo: employee.employeeNo,
     name: employee.name,
   };
 }

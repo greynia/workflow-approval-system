@@ -24,7 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     labelKey: "Sidebar.AuditLog",
-    href: "/audit",
+    href: "/admin/audit-logs",
     roles: ["ADMIN"],
   },
 ];
