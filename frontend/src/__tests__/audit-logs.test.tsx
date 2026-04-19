@@ -36,10 +36,10 @@ describe("AuditLogsPage", () => {
     await waitFor(() => expect(capturedUrl).not.toBeNull());
     capturedUrl = null;
 
-    await user.type(screen.getByPlaceholderText("e.g. 3"), "6");
+    await user.type(screen.getByPlaceholderText("Search by name..."), "Alice");
 
     await waitFor(() =>
-      expect(capturedUrl?.searchParams.get("actorId")).toBe("6")
+      expect(capturedUrl?.searchParams.get("actorName")).toBe("Alice")
     );
   });
 });
