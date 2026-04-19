@@ -1,7 +1,7 @@
 export interface ApiErrorResponse {
   code: string;
   message: string;
-  traceId: string;
+  requestId: string;
 }
 
 export interface PageResponse<T> {

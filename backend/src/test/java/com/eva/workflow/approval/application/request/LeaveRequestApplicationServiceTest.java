@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -228,16 +227,19 @@ class LeaveRequestApplicationServiceTest {
         LocalDateTime startTime = LocalDateTime.of(2026, 5, 1, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 5, 1, 18, 0);
         LeaveRequestEntity leaveRequest = leaveRequest(10L, applicant, deputy, 480, startTime, endTime);
-        LeaveRequestDetailResponse mockResponse = mock(LeaveRequestDetailResponse.class);
+        LeaveRequestDetailResponse stubResponse = new LeaveRequestDetailResponse(
+                10L, 7L, "applicant", 6L, "deputy", LeaveType.ANNUAL,
+                startTime, endTime, 480, "reason", RequestStatus.PENDING,
+                LeaveRequestStage.WAITING_DEPUTY, startTime, startTime, List.of(), List.of());
 
         when(leaveRequestRepository.findById(10L)).thenReturn(Optional.of(leaveRequest));
         when(approvalStepRepository.findByLeaveRequestIdOrderByStepOrderAsc(10L)).thenReturn(List.of());
         when(approvalActionRepository.findByApprovalStepLeaveRequestIdOrderByCreatedAtAsc(10L)).thenReturn(List.of());
-        when(leaveRequestMapper.toDetailResponse(eq(leaveRequest), any(), any())).thenReturn(mockResponse);
+        when(leaveRequestMapper.toDetailResponse(eq(leaveRequest), any(), any())).thenReturn(stubResponse);
 
         LeaveRequestDetailResponse result = leaveRequestApplicationService.getRequestDetail(admin, 10L);
 
-        assertThat(result).isEqualTo(mockResponse);
+        assertThat(result).isEqualTo(stubResponse);
     }
 
     @Test

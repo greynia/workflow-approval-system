@@ -444,7 +444,17 @@ export default function RequestsNewPage() {
             <label className="mb-1.5 block text-sm font-medium text-zinc-700">
               {t("Fields.DeputyId")}
             </label>
-            <input type="hidden" {...register("deputyId")} />
+            <input
+              type="hidden"
+              {...register("deputyId", {
+                setValueAs: (value) => {
+                  if (value === "" || value == null) {
+                    return undefined;
+                  }
+                  return Number(value);
+                },
+              })}
+            />
             {(() => {
               const selectedEmployee = selectedDeputyId != null
                 ? employees.find((e) => e.id === selectedDeputyId)
@@ -488,21 +498,23 @@ export default function RequestsNewPage() {
                       ) : (
                         <ul>
                           {employees.map((employee) => (
-                            <li
-                              key={employee.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                setValue("deputyId", employee.id, {
-                                  shouldDirty: true,
-                                  shouldValidate: true,
-                                });
-                                setDeputyQuery("");
-                                setShowDropdown(false);
-                              }}
-                              className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
-                            >
-                              <span>{employee.name}</span>
-                              <span className="text-xs text-zinc-400">{employee.employeeNo}</span>
+                            <li key={employee.id}>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  setValue("deputyId", employee.id, {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  });
+                                  setDeputyQuery("");
+                                  setShowDropdown(false);
+                                }}
+                                className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50"
+                              >
+                                <span>{employee.name}</span>
+                                <span className="text-xs text-zinc-400">{employee.employeeNo}</span>
+                              </button>
                             </li>
                           ))}
                         </ul>

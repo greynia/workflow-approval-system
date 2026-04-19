@@ -1,7 +1,6 @@
 package com.eva.workflow.approval.infrastructure.security;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -10,6 +9,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import com.eva.workflow.approval.api.dto.common.ErrorResponse;
+import com.eva.workflow.approval.infrastructure.observability.RequestCorrelationConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletException;
@@ -29,11 +29,14 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException, ServletException {
+        Object requestId = request.getAttribute(RequestCorrelationConstants.REQUEST_ID_ATTRIBUTE);
+        String correlationId = requestId != null ? requestId.toString() : null;
+
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(
                 response.getWriter(),
-                new ErrorResponse("UNAUTHORIZED", "Authentication is required", UUID.randomUUID().toString())
+                new ErrorResponse("UNAUTHORIZED", "Authentication is required", correlationId)
         );
     }
 }

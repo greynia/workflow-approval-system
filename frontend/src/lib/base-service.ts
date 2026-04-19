@@ -7,9 +7,6 @@ import {
   HTTP_STATUS,
   LOCALE_COOKIE,
 } from "@/constants/app.constant";
-// MEMO: X-Request-ID header 前端已送出,但後端尚未接(ApiExceptionHandler 目前自產 traceId,
-// 沒從 request header 讀)。等後端加上 @RequestHeader("X-Request-ID") 並寫進 MDC /
-// 回傳的 ErrorResponse.traceId 後,前後端 request tracing 才串得起來。不刪,等後端對接。
 import { routing } from "@/i18n/routing";
 import { useAuthStore } from "@/stores/auth-store";
 import { useToastStore } from "@/stores/toast-store";

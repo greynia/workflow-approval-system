@@ -4,6 +4,6 @@ export function mockErrorBody(code: string, message: string): ApiErrorResponse {
   return {
     code,
     message,
-    traceId: `mock-${code.toLowerCase()}`,
+    requestId: `mock-${code.toLowerCase()}`,
   };
 }

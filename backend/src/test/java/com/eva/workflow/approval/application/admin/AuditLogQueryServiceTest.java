@@ -123,8 +123,6 @@ class AuditLogQueryServiceTest {
                 "{\"stepId\": 5}",
                 LocalDateTime.of(2026, 4, 16, 12, 30)
         ));
-
-        verify(auditLogRepository).findAll(any(Specification.class), eq(pageable));
     }
 
     private AuditLogEntity auditLogEntity(

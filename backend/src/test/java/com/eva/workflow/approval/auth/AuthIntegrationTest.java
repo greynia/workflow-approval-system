@@ -87,7 +87,7 @@ class AuthIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
                 .andExpect(jsonPath("$.message").value("Invalid email or password"))
-                .andExpect(jsonPath("$.traceId").isString());
+                .andExpect(jsonPath("$.requestId").isString());
     }
 
     @Test
@@ -96,7 +96,33 @@ class AuthIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
                 .andExpect(jsonPath("$.message").value("Authentication is required"))
-                .andExpect(jsonPath("$.traceId").isString());
+                .andExpect(jsonPath("$.requestId").isString());
+    }
+
+    @Test
+    void returns400WhenRequestBodyIsMalformed() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ invalid json }"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+    }
+
+    @Test
+    void returns405WhenMethodNotSupported() throws Exception {
+        mockMvc.perform(get("/api/auth/login"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
+    }
+
+    @Test
+    void returns400WhenRequiredParameterIsMissing() throws Exception {
+        Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
+
+        mockMvc.perform(get("/api/employees/available-deputies")
+                        .cookie(tokenCookie))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("MISSING_PARAMETER"));
     }
 
     @Test
