@@ -43,7 +43,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new LoginResponse(result.employeeId(), result.name(), result.role()));
+                .body(new LoginResponse(result.employeeId(), result.name(), result.role(), result.permissions()));
     }
 
     @PostMapping("/logout")

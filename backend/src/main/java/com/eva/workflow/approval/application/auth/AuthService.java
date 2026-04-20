@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eva.workflow.approval.api.dto.auth.EmployeeResponse;
 import com.eva.workflow.approval.api.dto.auth.LoginRequest;
+import com.eva.workflow.approval.common.RolePermissions;
 import com.eva.workflow.approval.application.exception.InvalidCredentialsApplicationException;
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.infrastructure.cache.CacheNames;
@@ -35,7 +36,7 @@ public class AuthService {
         }
 
         String token = jwtProvider.generateToken(employee);
-        return new AuthResult(token, employee.getId(), employee.getName(), employee.getRole());
+        return new AuthResult(token, employee.getId(), employee.getName(), employee.getRole(), RolePermissions.of(employee.getRole()));
     }
 
     @Cacheable(value = CacheNames.CURRENT_EMPLOYEE, key = "#authenticatedEmployee.employeeId()")
@@ -52,7 +53,8 @@ public class AuthService {
                 employee.getEmail(),
                 employee.getRole(),
                 employee.getDepartment().getId(),
-                employee.getManager() != null ? employee.getManager().getId() : null
+                employee.getManager() != null ? employee.getManager().getId() : null,
+                RolePermissions.of(employee.getRole())
         );
     }
 }

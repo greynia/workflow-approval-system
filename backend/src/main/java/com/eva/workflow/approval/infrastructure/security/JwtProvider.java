@@ -9,7 +9,9 @@ import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;
 
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
+import com.eva.workflow.approval.common.RolePermissions;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeEntity;
+import java.util.List;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -37,6 +39,7 @@ public class JwtProvider {
                 .claim("email", employee.getEmail())
                 .claim("name", employee.getName())
                 .claim("role", employee.getRole().name())
+                .claim("permissions", RolePermissions.of(employee.getRole()))
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(secretKey)
@@ -50,11 +53,13 @@ public class JwtProvider {
                 .parseSignedClaims(token)
                 .getPayload();
 
+        List<String> permissions = claims.get("permissions", List.class);
         return new AuthenticatedEmployee(
                 Long.valueOf(claims.getSubject()),
                 claims.get("email", String.class),
                 claims.get("name", String.class),
-                com.eva.workflow.approval.common.enums.UserRole.valueOf(claims.get("role", String.class))
+                com.eva.workflow.approval.common.enums.UserRole.valueOf(claims.get("role", String.class)),
+                permissions != null ? permissions : List.of()
         );
     }
 

@@ -1,6 +1,7 @@
 package com.eva.workflow.approval.application.auth;
 
 import com.eva.workflow.approval.common.enums.UserRole;
+import java.util.List;
 
 /**
  * Internal result from AuthService.login().
@@ -10,6 +11,7 @@ public record AuthResult(
         String token,
         Long employeeId,
         String name,
-        UserRole role
+        UserRole role,
+        List<String> permissions
 ) {
 }
