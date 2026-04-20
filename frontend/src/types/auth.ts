@@ -9,6 +9,7 @@ export interface LoginResponse {
   employeeId: number;
   name: string;
   role: UserRole;
+  permissions: string[];
 }
 
 export interface EmployeeResponse {
@@ -19,6 +20,7 @@ export interface EmployeeResponse {
   role: UserRole;
   departmentId: number;
   managerId: number | null;
+  permissions: string[];
 }
 
 // AuthUser 目前就是 LoginResponse 本身。

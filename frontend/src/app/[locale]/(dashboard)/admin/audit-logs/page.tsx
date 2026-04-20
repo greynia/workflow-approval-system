@@ -252,7 +252,27 @@ export default function AuditLogsPage() {
               {t("Empty")}
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+            <>
+            {/* Mobile card list */}
+            <div className="space-y-3 md:hidden">
+              {data.items.map((log) => (
+                <button
+                  key={log.id}
+                  onClick={() => setSelectedLog(log)}
+                  className="w-full rounded-lg border border-zinc-200 bg-white p-4 text-left transition-colors hover:bg-zinc-50"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-zinc-900">{log.actorName}</span>
+                    <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">{log.action}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-500">{log.entityType} #{log.entityId}</p>
+                  <p className="mt-1 text-xs text-zinc-400">{new Date(log.createdAt).toLocaleString()}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
               <table className="w-full text-sm">
                 <thead className="border-b border-zinc-200 bg-zinc-50">
                   <tr>
@@ -305,6 +325,7 @@ export default function AuditLogsPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
 
           {/* Pagination */}

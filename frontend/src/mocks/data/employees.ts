@@ -2,11 +2,18 @@ import type {
   EmployeeResponse,
   LoginRequest,
   LoginResponse,
+  UserRole,
 } from "@/types/auth";
 import type { EmployeeSummary } from "@/types/common";
 
-type MockEmployeeAccount = EmployeeResponse & {
+type MockEmployeeAccount = Omit<EmployeeResponse, "permissions"> & {
   password: string;
+};
+
+const MOCK_PERMISSIONS: Record<UserRole, string[]> = {
+  ADMIN:    ["request.view", "request.create", "request.edit", "request.delete", "approval.view", "approval.approve", "employee.view", "balance.view", "audit.view"],
+  MANAGER:  ["request.view", "request.create", "request.edit", "approval.view", "approval.approve", "employee.view", "balance.view"],
+  EMPLOYEE: ["request.view", "request.create", "request.edit", "employee.view", "balance.view"],
 };
 
 export const mockEmployeeAccounts: MockEmployeeAccount[] = [
@@ -80,6 +87,7 @@ export function toLoginResponse(employee: MockEmployeeAccount): LoginResponse {
     employeeId: employee.id,
     name: employee.name,
     role: employee.role,
+    permissions: MOCK_PERMISSIONS[employee.role] ?? [],
   };
 }
 
@@ -102,5 +110,6 @@ export function toEmployeeResponse(
     role: employee.role,
     departmentId: employee.departmentId,
     managerId: employee.managerId,
+    permissions: MOCK_PERMISSIONS[employee.role] ?? [],
   };
 }

@@ -223,7 +223,7 @@ class ApprovalApplicationServiceTest {
     }
 
     private AuthenticatedEmployee authenticatedEmployee(Long employeeId) {
-        return new AuthenticatedEmployee(employeeId, "user@example.com", "User", UserRole.MANAGER);
+        return new AuthenticatedEmployee(employeeId, "user@example.com", "User", UserRole.MANAGER, java.util.List.of());
     }
 
     private EmployeeEntity employee(Long id) {

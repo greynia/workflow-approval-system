@@ -97,7 +97,7 @@ class LeaveRequestApplicationServiceTest {
 
     @Test
     void createRequestPersistsDeputyAndManagerStepsFromDomainOutput() throws JsonProcessingException {
-        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE);
+        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE, java.util.List.of());
         LocalDateTime startTime = LocalDateTime.of(2026, 4, 20, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 4, 22, 18, 0);
         CreateLeaveRequest request = new CreateLeaveRequest(LeaveType.ANNUAL, startTime, endTime, "Family trip", 6L);
@@ -160,7 +160,7 @@ class LeaveRequestApplicationServiceTest {
 
     @Test
     void createRequestRejectsDeputyWhenDeputyHasOverlappingLeave() {
-        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE);
+        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE, java.util.List.of());
         LocalDateTime startTime = LocalDateTime.of(2026, 4, 20, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 4, 22, 18, 0);
         CreateLeaveRequest request = new CreateLeaveRequest(LeaveType.ANNUAL, startTime, endTime, "Family trip", 6L);
@@ -183,7 +183,7 @@ class LeaveRequestApplicationServiceTest {
 
     @Test
     void createRequestRejectsApplicantWhenApplicantHasOverlappingLeave() {
-        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE);
+        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE, java.util.List.of());
         LocalDateTime startTime = LocalDateTime.of(2026, 4, 21, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 4, 21, 18, 0);
         CreateLeaveRequest request = new CreateLeaveRequest(LeaveType.ANNUAL, startTime, endTime, "Overlap", 6L);
@@ -202,7 +202,7 @@ class LeaveRequestApplicationServiceTest {
 
     @Test
     void createRequestRejectsDeputySameAsApplicant() {
-        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE);
+        AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE, java.util.List.of());
         LocalDateTime startTime = LocalDateTime.of(2026, 4, 21, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 4, 21, 18, 0);
         CreateLeaveRequest request = new CreateLeaveRequest(LeaveType.ANNUAL, startTime, endTime, "Same deputy", 7L);
@@ -221,7 +221,7 @@ class LeaveRequestApplicationServiceTest {
 
     @Test
     void getRequestDetailAllowsAdminToViewAnyRequest() {
-        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN);
+        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN, java.util.List.of());
         EmployeeEntity applicant = employee(7L, true);
         EmployeeEntity deputy = employee(6L, true);
         LocalDateTime startTime = LocalDateTime.of(2026, 5, 1, 9, 0);
@@ -244,7 +244,7 @@ class LeaveRequestApplicationServiceTest {
 
     @Test
     void getRequestDetailRejectsUnrelatedEmployee() {
-        AuthenticatedEmployee unrelated = new AuthenticatedEmployee(99L, "other@example.com", "Other", UserRole.EMPLOYEE);
+        AuthenticatedEmployee unrelated = new AuthenticatedEmployee(99L, "other@example.com", "Other", UserRole.EMPLOYEE, java.util.List.of());
         EmployeeEntity applicant = employee(7L, true);
         EmployeeEntity deputy = employee(6L, true);
         LocalDateTime startTime = LocalDateTime.of(2026, 5, 1, 9, 0);

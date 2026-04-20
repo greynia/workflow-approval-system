@@ -209,11 +209,11 @@ export default function RequestsNewPage() {
 
   useEffect(() => {
     if (!canCalculate) {
-      setValue("deputyId", undefined, { shouldDirty: true });
+      setValue("deputyId", undefined as unknown as number, { shouldDirty: true });
       return;
     }
     if (selectedDeputyId != null && !employees.some((employee) => employee.id === selectedDeputyId)) {
-      setValue("deputyId", undefined, { shouldDirty: true });
+      setValue("deputyId", undefined as unknown as number, { shouldDirty: true });
     }
   }, [employees, canCalculate, selectedDeputyId, setValue]);
 
@@ -282,7 +282,7 @@ export default function RequestsNewPage() {
             <FieldError message={errors.type?.message} t={t} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-zinc-700">
                 {t("Fields.StartDate")}
@@ -472,7 +472,7 @@ export default function RequestsNewPage() {
                     }
                     onChange={(event) => {
                       setDeputyQuery(event.target.value);
-                      setValue("deputyId", undefined, { shouldDirty: true, shouldValidate: true });
+                      setValue("deputyId", undefined as unknown as number, { shouldDirty: true, shouldValidate: true });
                       setShowDropdown(true);
                     }}
                     onFocus={() => {
