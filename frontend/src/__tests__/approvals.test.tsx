@@ -37,7 +37,7 @@ const mockApprovals: PendingApproval[] = [
 
 beforeEach(() => {
   useAuthStore.setState({
-    user: { employeeId: 2, name: "Mina Manager", role: "MANAGER" },
+    user: { employeeId: 2, name: "Mina Manager", role: "MANAGER", permissions: ["request.view", "request.create", "request.edit", "approval.view", "approval.approve", "employee.view", "balance.view"] },
   });
   // Override handler — no employee-ID check needed in unit tests
   server.use(

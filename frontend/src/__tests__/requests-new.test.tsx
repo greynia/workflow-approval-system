@@ -38,7 +38,7 @@ const mockBalances: LeaveBalanceResponse[] = [
 ];
 beforeEach(() => {
   useAuthStore.setState({
-    user: { employeeId: CURRENT_EMPLOYEE_ID, name: "Alice Chen", role: "EMPLOYEE" },
+    user: { employeeId: CURRENT_EMPLOYEE_ID, name: "Alice Chen", role: "EMPLOYEE", permissions: ["request.view", "request.create", "request.edit", "employee.view", "balance.view"] },
   });
   useToastStore.setState({ toasts: [] });
   // Override only the auth-gated endpoint: default handler requires HEADER_MOCK_EMPLOYEE_ID

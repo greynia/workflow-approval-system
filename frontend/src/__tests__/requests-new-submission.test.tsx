@@ -63,7 +63,7 @@ const mockBalances: LeaveBalanceResponse[] = [
 
 beforeEach(() => {
   useAuthStore.setState({
-    user: { employeeId: CURRENT_EMPLOYEE_ID, name: "Alice Chen", role: "EMPLOYEE" },
+    user: { employeeId: CURRENT_EMPLOYEE_ID, name: "Alice Chen", role: "EMPLOYEE", permissions: ["request.view", "request.create", "request.edit", "employee.view", "balance.view"] },
   });
   useToastStore.setState({ toasts: [] });
   server.use(

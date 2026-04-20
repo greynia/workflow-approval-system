@@ -46,7 +46,7 @@ class AuditLogQueryServiceTest {
 
     @Test
     void getAuditLogsRejectsNonAdminUsers() {
-        AuthenticatedEmployee employee = new AuthenticatedEmployee(7L, "user@example.com", "User", UserRole.EMPLOYEE);
+        AuthenticatedEmployee employee = new AuthenticatedEmployee(7L, "user@example.com", "User", UserRole.EMPLOYEE, java.util.List.of());
 
         assertThatThrownBy(() -> auditLogQueryService.getAuditLogs(
                 employee,
@@ -63,7 +63,7 @@ class AuditLogQueryServiceTest {
 
     @Test
     void getAuditLogsRejectsInvalidDateRange() {
-        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN);
+        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN, java.util.List.of());
         LocalDateTime createdFrom = LocalDateTime.of(2026, 4, 17, 0, 0);
         LocalDateTime createdTo = LocalDateTime.of(2026, 4, 16, 0, 0);
 
@@ -82,7 +82,7 @@ class AuditLogQueryServiceTest {
 
     @Test
     void getAuditLogsMapsPageResult() {
-        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN);
+        AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN, java.util.List.of());
         EmployeeEntity actor = employeeEntity(6L, "李建國");
         AuditLogEntity auditLog = auditLogEntity(
                 101L,
