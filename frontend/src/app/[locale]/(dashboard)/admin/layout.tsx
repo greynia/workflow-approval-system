@@ -3,22 +3,24 @@
 import { useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
+import { useAuthority } from "@/hooks/useAuthority";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const role = useAuthStore((s) => s.user?.role);
+  const user = useAuthStore((s) => s.user);
+  const canAccess = useAuthority(user?.permissions ?? [], ["audit.view"]);
   const router = useRouter();
 
   useEffect(() => {
-    if (role && role !== "ADMIN") {
+    if (user && !canAccess) {
       router.replace("/");
     }
-  }, [role, router]);
+  }, [user, canAccess, router]);
 
-  if (role === undefined || role === null) {
+  if (user === null) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
@@ -26,7 +28,7 @@ export default function AdminLayout({
     );
   }
 
-  if (role !== "ADMIN") {
+  if (!canAccess) {
     return null;
   }
 

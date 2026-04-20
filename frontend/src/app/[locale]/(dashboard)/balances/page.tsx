@@ -47,45 +47,71 @@ export default function LeaveBalancesPage() {
       ) : null}
 
       {!isLoading && !isError && data ? (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50">
-              <tr>
-                {(["LeaveType", "Quota", "Used", "Remaining"] as const).map((col) => (
-                  <th
-                    key={col}
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500"
-                  >
-                    {t(`Table.${col}`)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item) => (
-                <tr
-                  key={item.leaveType}
-                  className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
-                >
-                  <td className="px-4 py-4 font-medium text-zinc-900">
-                    {tLeaveType(item.leaveType)}
-                  </td>
-                  <td className="px-4 py-4 text-zinc-600">
-                    {formatDuration(item.quotaMinutes)}
-                  </td>
-                  <td className="px-4 py-4 text-zinc-600">
-                    {formatDuration(item.usedMinutes)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-800">
-                      {formatDuration(item.remainingMinutes)}
-                    </span>
-                  </td>
+        <>
+          {/* Mobile card list */}
+          <div className="space-y-3 md:hidden">
+            {data.map((item) => (
+              <div key={item.leaveType} className="rounded-lg border border-zinc-200 bg-white p-4">
+                <p className="font-medium text-zinc-900">{tLeaveType(item.leaveType)}</p>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xs text-zinc-400">{t("Table.Quota")}</p>
+                    <p className="mt-0.5 text-sm font-medium text-zinc-900">{formatDuration(item.quotaMinutes)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-400">{t("Table.Used")}</p>
+                    <p className="mt-0.5 text-sm font-medium text-zinc-900">{formatDuration(item.usedMinutes)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-400">{t("Table.Remaining")}</p>
+                    <p className="mt-0.5 text-sm font-medium text-zinc-800">{formatDuration(item.remainingMinutes)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
+            <table className="w-full text-sm">
+              <thead className="border-b border-zinc-200 bg-zinc-50">
+                <tr>
+                  {(["LeaveType", "Quota", "Used", "Remaining"] as const).map((col) => (
+                    <th
+                      key={col}
+                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500"
+                    >
+                      {t(`Table.${col}`)}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data.map((item) => (
+                  <tr
+                    key={item.leaveType}
+                    className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
+                  >
+                    <td className="px-4 py-4 font-medium text-zinc-900">
+                      {tLeaveType(item.leaveType)}
+                    </td>
+                    <td className="px-4 py-4 text-zinc-600">
+                      {formatDuration(item.quotaMinutes)}
+                    </td>
+                    <td className="px-4 py-4 text-zinc-600">
+                      {formatDuration(item.usedMinutes)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-800">
+                        {formatDuration(item.remainingMinutes)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
     </div>
   );
