@@ -28,6 +28,7 @@ import com.eva.workflow.approval.application.request.LeaveRequestApplicationServ
 import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 @RestController
@@ -52,7 +53,7 @@ public class LeaveRequestController {
     public ResponseEntity<PageResponse<LeaveRequestSummaryResponse>> list(
             Authentication authentication,
             @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "10") @Min(1) int size
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
         return ResponseEntity.ok(leaveRequestApplicationService.getRequests(authenticatedEmployee, page, size));

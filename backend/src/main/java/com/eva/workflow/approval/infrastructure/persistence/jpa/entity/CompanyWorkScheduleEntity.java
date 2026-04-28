@@ -9,14 +9,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "company_work_schedules")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CompanyWorkScheduleEntity {
 
@@ -42,6 +46,7 @@ public class CompanyWorkScheduleEntity {
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

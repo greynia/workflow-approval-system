@@ -40,7 +40,9 @@ class AuthIntegrationTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists("workflow-token"))
+                .andExpect(cookie().exists("workflow-refresh-token"))
                 .andExpect(cookie().httpOnly("workflow-token", true))
+                .andExpect(cookie().httpOnly("workflow-refresh-token", true))
                 .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("SameSite=Lax")))
                 .andExpect(jsonPath("$.token").doesNotExist())
                 .andExpect(jsonPath("$.employeeId").value(7))
@@ -91,6 +93,22 @@ class AuthIntegrationTest {
     }
 
     @Test
+    void loginRejectsInvalidPasswordInTraditionalChineseWhenAcceptLanguageIsZhTw() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .header("Accept-Language", "zh-TW")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "huang.yating@example.com",
+                                  "password": "wrong-password"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.message").value("帳號或密碼錯誤"));
+    }
+
+    @Test
     void meRejectsRequestWithoutJwt() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized())
@@ -130,12 +148,34 @@ class AuthIntegrationTest {
         mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists("workflow-token"))
+                .andExpect(cookie().exists("workflow-refresh-token"))
                 .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("SameSite=Lax")))
-                .andExpect(cookie().maxAge("workflow-token", 0));
+                .andExpect(cookie().maxAge("workflow-token", 0))
+                .andExpect(cookie().maxAge("workflow-refresh-token", 0));
+    }
+
+    @Test
+    void refreshRotatesRefreshCookieAndReturnsNewAccessCookie() throws Exception {
+        MvcResult loginResult = login("huang.yating@example.com", "password123");
+        Cookie refreshCookie = loginResult.getResponse().getCookie("workflow-refresh-token");
+        Cookie accessCookie = loginResult.getResponse().getCookie("workflow-token");
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(refreshCookie))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("workflow-token"))
+                .andExpect(cookie().exists("workflow-refresh-token"))
+                .andExpect(cookie().value("workflow-token", org.hamcrest.Matchers.not(accessCookie.getValue())))
+                .andExpect(cookie().value("workflow-refresh-token", org.hamcrest.Matchers.not(refreshCookie.getValue())));
     }
 
     private Cookie loginAndGetCookie(String email, String password) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
+        MvcResult result = login(email, password);
+        return result.getResponse().getCookie("workflow-token");
+    }
+
+    private MvcResult login(String email, String password) throws Exception {
+        return mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -145,7 +185,5 @@ class AuthIntegrationTest {
                                 """.formatted(email, password)))
                 .andExpect(status().isOk())
                 .andReturn();
-
-        return result.getResponse().getCookie("workflow-token");
     }
 }

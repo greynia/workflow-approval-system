@@ -8,6 +8,7 @@ public final class SecurityConstants {
      * are deployed on the same domain (e.g. an admin panel alongside this app).
      */
     public static final String TOKEN_COOKIE_NAME = "workflow-token";
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "workflow-refresh-token";
 
     private SecurityConstants() {}
 }

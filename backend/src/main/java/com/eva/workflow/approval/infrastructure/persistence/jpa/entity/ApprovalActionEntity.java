@@ -6,6 +6,7 @@ import com.eva.workflow.approval.common.enums.ActionType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -15,6 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "approval_actions")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ApprovalActionEntity {
 
@@ -44,7 +48,8 @@ public class ApprovalActionEntity {
     @Column
     private String comment;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public static ApprovalActionEntity create(
@@ -58,7 +63,6 @@ public class ApprovalActionEntity {
         entity.actor = actor;
         entity.actionType = actionType;
         entity.comment = comment;
-        entity.createdAt = LocalDateTime.now();
         return entity;
     }
 }

@@ -6,18 +6,13 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eva.workflow.approval.application.exception.BadRequestApplicationException;
-import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.CompanyWorkScheduleEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeScheduleEntity;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.CompanyWorkScheduleRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.EmployeeScheduleRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.HolidayRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,30 +22,22 @@ public class LeaveQuotaEngine {
 
     private static final int MINIMUM_UNIT_MINUTES = 30;
 
-    private final CompanyWorkScheduleRepository companyWorkScheduleRepository;
-    private final HolidayRepository holidayRepository;
-    private final EmployeeScheduleRepository employeeScheduleRepository;
+    private final CompanyWorkScheduleService companyWorkScheduleService;
+    private final HolidayCalendarService holidayCalendarService;
+    private final EmployeeScheduleService employeeScheduleService;
 
     @Transactional(readOnly = true)
     public int calculateDurationMinutes(Long employeeId, LocalDateTime startTime, LocalDateTime endTime) {
         validateRequestWindow(startTime, endTime);
 
-        CompanyWorkScheduleEntity companySchedule = companyWorkScheduleRepository
-                .findFirstByEffectiveFromLessThanEqualOrderByEffectiveFromDesc(startTime.toLocalDate())
-                .orElseThrow(() -> new ResourceNotFoundApplicationException("Company work schedule not found"));
+        CompanyWorkScheduleEntity companySchedule = companyWorkScheduleService.getEffectiveSchedule(startTime.toLocalDate());
 
-        EmployeeScheduleEntity employeeSchedule = employeeScheduleRepository
-                .findActiveSchedules(employeeId, startTime.toLocalDate())
-                .stream()
-                .findFirst()
-                .orElse(null);
+        EmployeeScheduleEntity employeeSchedule = employeeScheduleService.getActiveSchedule(employeeId, startTime.toLocalDate());
         if (employeeSchedule != null && !"STANDARD".equals(employeeSchedule.getScheduleType())) {
             throw new BadRequestApplicationException("UNSUPPORTED_EMPLOYEE_SCHEDULE");
         }
 
-        Set<LocalDate> holidays = holidayRepository.findByDateBetween(startTime.toLocalDate(), endTime.toLocalDate()).stream()
-                .map(holiday -> holiday.getDate())
-                .collect(Collectors.toSet());
+        Set<LocalDate> holidays = holidayCalendarService.getHolidayDatesBetween(startTime.toLocalDate(), endTime.toLocalDate());
 
         int totalMinutes = 0;
         for (LocalDate currentDate = startTime.toLocalDate();

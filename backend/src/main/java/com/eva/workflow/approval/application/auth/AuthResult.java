@@ -8,7 +8,8 @@ import java.util.List;
  * Contains both the JWT token (for cookie) and user info (for response body).
  */
 public record AuthResult(
-        String token,
+        String accessToken,
+        String refreshToken,
         Long employeeId,
         String name,
         UserRole role,

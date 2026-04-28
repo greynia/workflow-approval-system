@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +21,15 @@ import com.eva.workflow.approval.api.dto.leave.LeaveCalculationRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestSummaryResponse;
+import com.eva.workflow.approval.application.audit.AuditLogService;
 import com.eva.workflow.approval.application.approval.ManagerChainResolver;
 import com.eva.workflow.approval.application.approval.WorkflowRuleAssembler;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.application.exception.BadRequestApplicationException;
 import com.eva.workflow.approval.application.exception.ForbiddenApplicationException;
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
+import com.eva.workflow.approval.application.request.event.LeaveRequestCreatedEvent;
+import com.eva.workflow.approval.common.AuditEntityTypes;
 import com.eva.workflow.approval.common.enums.StepStatus;
 import com.eva.workflow.approval.common.enums.RequestStatus;
 import com.eva.workflow.approval.common.enums.UserRole;
@@ -34,16 +38,12 @@ import com.eva.workflow.approval.domain.approval.model.ApprovalFlowStep;
 import com.eva.workflow.approval.domain.approval.model.ApprovalRule;
 import com.eva.workflow.approval.domain.approval.service.ApprovalFlowEngine;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.ApprovalStepEntity;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.AuditLogEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.LeaveRequestEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalActionRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalStepRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.AuditLogRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.EmployeeRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.LeaveRequestRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -51,21 +51,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LeaveRequestApplicationService {
 
-    private static final String LEAVE_REQUEST_ENTITY_TYPE = "LEAVE_REQUEST";
     private static final String CREATE_LEAVE_REQUEST_ACTION = "CREATE";
 
     private final LeaveRequestRepository leaveRequestRepository;
     private final EmployeeRepository employeeRepository;
     private final ApprovalStepRepository approvalStepRepository;
     private final ApprovalActionRepository approvalActionRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogService auditLogService;
     private final LeaveRequestMapper leaveRequestMapper;
-    private final ObjectMapper objectMapper;
     private final WorkflowRuleAssembler workflowRuleAssembler;
     private final ManagerChainResolver managerChainResolver;
     private final ApprovalFlowEngine approvalFlowEngine;
     private final LeaveQuotaEngine leaveQuotaEngine;
     private final LeaveBalanceService leaveBalanceService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public LeaveRequestDetailResponse createRequest(AuthenticatedEmployee authenticatedEmployee, CreateLeaveRequest request) {
@@ -100,13 +99,14 @@ public class LeaveRequestApplicationService {
                 .map(leaveRequestMapper::toStepResponse)
                 .toList();
 
-        auditLogRepository.save(AuditLogEntity.create(
-                LEAVE_REQUEST_ENTITY_TYPE,
+        auditLogService.log(
+                AuditEntityTypes.LEAVE_REQUEST,
                 saved.getId(),
                 CREATE_LEAVE_REQUEST_ACTION,
                 applicant,
                 buildCreateAuditDetail(saved)
-        ));
+        );
+        applicationEventPublisher.publishEvent(new LeaveRequestCreatedEvent(saved.getId(), applicant.getId()));
 
         return leaveRequestMapper.toDetailResponse(saved, stepResponses, List.of());
     }
@@ -202,13 +202,13 @@ public class LeaveRequestApplicationService {
         approvalStepRepository.findByLeaveRequestIdOrderByStepOrderAsc(requestId).stream()
                 .filter(step -> StepStatus.PENDING.equals(step.getStatus()))
                 .forEach(step -> step.updateStatus(StepStatus.SKIPPED));
-        auditLogRepository.save(AuditLogEntity.create(
-                LEAVE_REQUEST_ENTITY_TYPE,
+        auditLogService.log(
+                AuditEntityTypes.LEAVE_REQUEST,
                 leaveRequest.getId(),
                 "CANCEL",
                 leaveRequest.getApplicant(),
                 buildCancelAuditDetail(leaveRequest)
-        ));
+        );
     }
 
     // @Transactional (not readOnly) — getOrInitBalance() inside leaveBalanceService.getBalances()
@@ -267,27 +267,19 @@ public class LeaveRequestApplicationService {
         return deputy;
     }
 
-    private String buildCreateAuditDetail(LeaveRequestEntity entity) {
-        try {
-            return objectMapper.writeValueAsString(Map.of(
-                    "status", entity.getStatus(),
-                    "type", entity.getType(),
-                    "durationMinutes", entity.getDurationMinutes()
-            ));
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Failed to serialize audit detail", exception);
-        }
+    private Map<String, Object> buildCreateAuditDetail(LeaveRequestEntity entity) {
+        return Map.of(
+                "status", entity.getStatus(),
+                "type", entity.getType(),
+                "durationMinutes", entity.getDurationMinutes()
+        );
     }
 
-    private String buildCancelAuditDetail(LeaveRequestEntity entity) {
-        try {
-            return objectMapper.writeValueAsString(Map.of(
-                    "status", entity.getStatus(),
-                    "durationMinutes", entity.getDurationMinutes()
-            ));
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Failed to serialize audit detail", exception);
-        }
+    private Map<String, Object> buildCancelAuditDetail(LeaveRequestEntity entity) {
+        return Map.of(
+                "status", entity.getStatus(),
+                "durationMinutes", entity.getDurationMinutes()
+        );
     }
 
     private List<ApprovalStepEntity> createApprovalSteps(LeaveRequestEntity leaveRequest, EmployeeEntity applicant) {

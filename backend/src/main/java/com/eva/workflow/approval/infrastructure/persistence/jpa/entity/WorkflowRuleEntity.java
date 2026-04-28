@@ -14,14 +14,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "workflow_rules")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WorkflowRuleEntity {
 
@@ -43,6 +47,7 @@ public class WorkflowRuleEntity {
     @Column(name = "approver_type", nullable = false, length = 30)
     private ApproverType approverType;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

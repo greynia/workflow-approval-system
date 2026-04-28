@@ -24,8 +24,9 @@ public class AuthService {
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResult login(LoginRequest request) {
         EmployeeEntity employee = employeeRepository.findByEmail(request.email())
                 .filter(EmployeeEntity::getActive)
@@ -35,8 +36,36 @@ public class AuthService {
             throw new InvalidCredentialsApplicationException("Invalid email or password");
         }
 
-        String token = jwtProvider.generateToken(employee);
-        return new AuthResult(token, employee.getId(), employee.getName(), employee.getRole(), RolePermissions.of(employee.getRole()));
+        String accessToken = jwtProvider.generateToken(employee);
+        IssuedRefreshToken refreshToken = refreshTokenService.issue(employee);
+        return new AuthResult(
+                accessToken,
+                refreshToken.token(),
+                employee.getId(),
+                employee.getName(),
+                employee.getRole(),
+                RolePermissions.of(employee.getRole())
+        );
+    }
+
+    @Transactional
+    public AuthResult refresh(String rawRefreshToken) {
+        IssuedRefreshToken refreshToken = refreshTokenService.rotate(rawRefreshToken);
+        EmployeeEntity employee = refreshToken.employee();
+        String accessToken = jwtProvider.generateToken(employee);
+        return new AuthResult(
+                accessToken,
+                refreshToken.token(),
+                employee.getId(),
+                employee.getName(),
+                employee.getRole(),
+                RolePermissions.of(employee.getRole())
+        );
+    }
+
+    @Transactional
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
     }
 
     @Cacheable(value = CacheNames.CURRENT_EMPLOYEE, key = "#authenticatedEmployee.employeeId()")

@@ -18,10 +18,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.eva.workflow.approval.api.dto.leave.ApprovalStepResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
+import com.eva.workflow.approval.application.audit.AuditLogService;
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.application.approval.ManagerChainResolver;
 import com.eva.workflow.approval.application.approval.WorkflowRuleAssembler;
@@ -41,11 +43,8 @@ import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeE
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.LeaveRequestEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalActionRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalStepRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.AuditLogRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.EmployeeRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.LeaveRequestRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class LeaveRequestApplicationServiceTest {
@@ -59,11 +58,9 @@ class LeaveRequestApplicationServiceTest {
     @Mock
     private ApprovalActionRepository approvalActionRepository;
     @Mock
-    private AuditLogRepository auditLogRepository;
+    private AuditLogService auditLogService;
     @Mock
     private LeaveRequestMapper leaveRequestMapper;
-    @Mock
-    private ObjectMapper objectMapper;
     @Mock
     private WorkflowRuleAssembler workflowRuleAssembler;
     @Mock
@@ -74,6 +71,8 @@ class LeaveRequestApplicationServiceTest {
     private LeaveQuotaEngine leaveQuotaEngine;
     @Mock
     private LeaveBalanceService leaveBalanceService;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private LeaveRequestApplicationService leaveRequestApplicationService;
 
@@ -84,19 +83,19 @@ class LeaveRequestApplicationServiceTest {
                 employeeRepository,
                 approvalStepRepository,
                 approvalActionRepository,
-                auditLogRepository,
+                auditLogService,
                 leaveRequestMapper,
-                objectMapper,
                 workflowRuleAssembler,
                 managerChainResolver,
                 approvalFlowEngine,
                 leaveQuotaEngine,
-                leaveBalanceService
+                leaveBalanceService,
+                applicationEventPublisher
         );
     }
 
     @Test
-    void createRequestPersistsDeputyAndManagerStepsFromDomainOutput() throws JsonProcessingException {
+    void createRequestPersistsDeputyAndManagerStepsFromDomainOutput() {
         AuthenticatedEmployee authenticatedEmployee = new AuthenticatedEmployee(7L, "huang.yating@example.com", "黃雅婷", UserRole.EMPLOYEE, java.util.List.of());
         LocalDateTime startTime = LocalDateTime.of(2026, 4, 20, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 4, 22, 18, 0);
@@ -141,8 +140,6 @@ class LeaveRequestApplicationServiceTest {
             );
         });
         when(leaveRequestMapper.toDetailResponse(eq(savedLeaveRequest), any(), eq(List.of()))).thenReturn(expectedResponse);
-        when(objectMapper.writeValueAsString(any(Map.class))).thenReturn("{}");
-
         LeaveRequestDetailResponse response = leaveRequestApplicationService.createRequest(authenticatedEmployee, request);
 
         ArgumentCaptor<List> approvalStepsCaptor = ArgumentCaptor.forClass(List.class);

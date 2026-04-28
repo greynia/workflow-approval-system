@@ -3,6 +3,7 @@ package com.eva.workflow.approval.infrastructure.security;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -35,6 +36,7 @@ public class JwtProvider {
         Instant expiry = now.plusSeconds(jwtProperties.expirationSeconds());
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(employee.getId()))
                 .claim("email", employee.getEmail())
                 .claim("name", employee.getName())
