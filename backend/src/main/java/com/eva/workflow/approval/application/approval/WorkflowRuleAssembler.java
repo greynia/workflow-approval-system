@@ -3,11 +3,13 @@ package com.eva.workflow.approval.application.approval;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eva.workflow.approval.application.exception.ApplicationConfigurationException;
 import com.eva.workflow.approval.domain.approval.model.ApprovalRule;
+import com.eva.workflow.approval.infrastructure.cache.CacheNames;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.WorkflowRuleEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.WorkflowDefinitionRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.WorkflowRuleRepository;
@@ -24,6 +26,7 @@ public class WorkflowRuleAssembler {
     private final WorkflowRuleRepository workflowRuleRepository;
     private final ObjectMapper objectMapper;
 
+    @Cacheable(CacheNames.WORKFLOW_RULES)
     @Transactional(readOnly = true)
     public List<ApprovalRule> loadActiveWorkflowRules() {
         Long workflowDefinitionId = workflowDefinitionRepository.findFirstByActiveTrueOrderByIdAsc()

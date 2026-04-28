@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.eva.workflow.approval.api.dto.approval.ApprovalDecisionRequest;
+import com.eva.workflow.approval.application.audit.AuditLogService;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.application.exception.BadRequestApplicationException;
 import com.eva.workflow.approval.application.exception.ForbiddenApplicationException;
@@ -36,8 +37,6 @@ import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeE
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.LeaveRequestEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalActionRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalStepRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.AuditLogRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +49,7 @@ class ApprovalApplicationServiceTest {
     private ApprovalActionRepository approvalActionRepository;
 
     @Mock
-    private AuditLogRepository auditLogRepository;
+    private AuditLogService auditLogService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -64,14 +63,14 @@ class ApprovalApplicationServiceTest {
         approvalApplicationService = new ApprovalApplicationService(
                 approvalStepRepository,
                 approvalActionRepository,
-                auditLogRepository,
+                auditLogService,
                 objectMapper,
                 leaveBalanceService
         );
     }
 
     @Test
-    void approveStepMarksStepApprovedAndRequestApprovedWhenItIsLastPendingStep() throws JsonProcessingException {
+    void approveStepMarksStepApprovedAndRequestApprovedWhenItIsLastPendingStep() throws Exception {
         EmployeeEntity manager = employee(5L);
         LeaveRequestEntity leaveRequest = leaveRequest(100L, RequestStatus.PENDING);
         ApprovalStepEntity step = approvalStep(200L, 1, manager, leaveRequest, StepStatus.PENDING);
@@ -96,7 +95,7 @@ class ApprovalApplicationServiceTest {
     }
 
     @Test
-    void approveStepKeepsRequestPendingWhenOtherStepsRemain() throws JsonProcessingException {
+    void approveStepKeepsRequestPendingWhenOtherStepsRemain() throws Exception {
         EmployeeEntity manager = employee(5L);
         EmployeeEntity director = employee(2L);
         LeaveRequestEntity leaveRequest = leaveRequest(100L, RequestStatus.PENDING);
@@ -119,7 +118,7 @@ class ApprovalApplicationServiceTest {
     }
 
     @Test
-    void rejectStepMarksRequestRejectedAndSkipsRemainingPendingSteps() throws JsonProcessingException {
+    void rejectStepMarksRequestRejectedAndSkipsRemainingPendingSteps() throws Exception {
         EmployeeEntity manager = employee(5L);
         EmployeeEntity director = employee(2L);
         LeaveRequestEntity leaveRequest = leaveRequest(100L, RequestStatus.PENDING);
@@ -159,7 +158,7 @@ class ApprovalApplicationServiceTest {
                 .hasMessageContaining("not allowed");
 
         verify(approvalActionRepository, never()).save(any());
-        verify(auditLogRepository, never()).save(any());
+        verify(auditLogService, never()).log(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -175,7 +174,7 @@ class ApprovalApplicationServiceTest {
                 .hasMessageContaining("Approval step not found");
 
         verify(approvalActionRepository, never()).save(any());
-        verify(auditLogRepository, never()).save(any());
+        verify(auditLogService, never()).log(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -196,7 +195,7 @@ class ApprovalApplicationServiceTest {
                 .hasMessageContaining("already been processed");
 
         verify(approvalActionRepository, never()).save(any());
-        verify(auditLogRepository, never()).save(any());
+        verify(auditLogService, never()).log(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -219,7 +218,7 @@ class ApprovalApplicationServiceTest {
                 .hasMessageContaining("Previous approval step has not been completed");
 
         verify(approvalActionRepository, never()).save(any());
-        verify(auditLogRepository, never()).save(any());
+        verify(auditLogService, never()).log(any(), any(), any(), any(), any());
     }
 
     private AuthenticatedEmployee authenticatedEmployee(Long employeeId) {

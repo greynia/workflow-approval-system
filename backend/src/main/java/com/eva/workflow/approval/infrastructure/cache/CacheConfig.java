@@ -23,9 +23,26 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager manager = new CaffeineCacheManager();
-        manager.setCaffeine(Caffeine.newBuilder()
+        manager.registerCustomCache(CacheNames.CURRENT_EMPLOYEE, Caffeine.newBuilder()
                 .expireAfterWrite(30, TimeUnit.SECONDS)
-                .maximumSize(500));
+                .maximumSize(500)
+                .build());
+        manager.registerCustomCache(CacheNames.WORKFLOW_RULES, Caffeine.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .maximumSize(100)
+                .build());
+        manager.registerCustomCache(CacheNames.HOLIDAY_CALENDAR, Caffeine.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .maximumSize(200)
+                .build());
+        manager.registerCustomCache(CacheNames.EMPLOYEE_SCHEDULE, Caffeine.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .maximumSize(500)
+                .build());
+        manager.registerCustomCache(CacheNames.COMPANY_WORK_SCHEDULE, Caffeine.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .maximumSize(100)
+                .build());
         return manager;
     }
 }

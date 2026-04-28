@@ -8,22 +8,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eva.workflow.approval.api.dto.approval.ApprovalDecisionRequest;
+import com.eva.workflow.approval.application.audit.AuditLogService;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.application.exception.BadRequestApplicationException;
 import com.eva.workflow.approval.application.exception.ForbiddenApplicationException;
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.application.request.LeaveBalanceService;
+import com.eva.workflow.approval.common.AuditEntityTypes;
 import com.eva.workflow.approval.common.enums.ActionType;
-import com.eva.workflow.approval.common.enums.ApprovalStepType;
 import com.eva.workflow.approval.common.enums.RequestStatus;
 import com.eva.workflow.approval.common.enums.StepStatus;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.ApprovalActionEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.ApprovalStepEntity;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.AuditLogEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.LeaveRequestEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalActionRepository;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.ApprovalStepRepository;
-import com.eva.workflow.approval.infrastructure.persistence.jpa.repository.AuditLogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,11 +32,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ApprovalApplicationService {
 
-    private static final String LEAVE_REQUEST_ENTITY_TYPE = "LEAVE_REQUEST";
-
     private final ApprovalStepRepository approvalStepRepository;
     private final ApprovalActionRepository approvalActionRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
     private final LeaveBalanceService leaveBalanceService;
 
@@ -96,13 +93,13 @@ public class ApprovalApplicationService {
                 request.comment()
         ));
 
-        auditLogRepository.save(AuditLogEntity.create(
-                LEAVE_REQUEST_ENTITY_TYPE,
+        auditLogService.log(
+                AuditEntityTypes.LEAVE_REQUEST,
                 leaveRequest.getId(),
                 actionType.name(),
                 step.getApprover(),
                 buildAuditDetail(step, leaveRequest, request, actionType)
-        ));
+        );
     }
 
     private void validateDecision(

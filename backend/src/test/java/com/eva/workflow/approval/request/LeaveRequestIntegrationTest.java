@@ -137,7 +137,8 @@ class LeaveRequestIntegrationTest {
                                 6
                         )))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("DEPUTY_ON_LEAVE"));
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Deputy is already on leave for the selected period"));
     }
 
     @Test
@@ -163,7 +164,8 @@ class LeaveRequestIntegrationTest {
                                 6
                         )))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("APPLICANT_ON_LEAVE"));
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Applicant is already on leave for the selected period"));
     }
 
     @Test

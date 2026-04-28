@@ -19,6 +19,8 @@ import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.infrastructure.security.JwtProperties;
 import com.eva.workflow.approval.infrastructure.security.SecurityConstants;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -34,21 +36,59 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResult result = authService.login(request);
 
-        ResponseCookie cookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, result.token())
+        ResponseCookie accessCookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, result.accessToken())
                 .httpOnly(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(jwtProperties.expirationSeconds())
                 .build();
+        ResponseCookie refreshCookie = ResponseCookie.from(SecurityConstants.REFRESH_TOKEN_COOKIE_NAME, result.refreshToken())
+                .httpOnly(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(jwtProperties.refreshExpirationSeconds())
+                .build();
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new LoginResponse(result.employeeId(), result.name(), result.role(), result.permissions()));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<Void> refresh(HttpServletRequest request) {
+        AuthResult result = authService.refresh(resolveCookie(request, SecurityConstants.REFRESH_TOKEN_COOKIE_NAME));
+
+        ResponseCookie accessCookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, result.accessToken())
+                .httpOnly(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(jwtProperties.expirationSeconds())
+                .build();
+        ResponseCookie refreshCookie = ResponseCookie.from(SecurityConstants.REFRESH_TOKEN_COOKIE_NAME, result.refreshToken())
+                .httpOnly(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(jwtProperties.refreshExpirationSeconds())
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
+    }
+
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        ResponseCookie cookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, "")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        authService.logout(resolveCookie(request, SecurityConstants.REFRESH_TOKEN_COOKIE_NAME));
+
+        ResponseCookie accessCookie = ResponseCookie.from(SecurityConstants.TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+        ResponseCookie refreshCookie = ResponseCookie.from(SecurityConstants.REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
                 .sameSite("Lax")
                 .path("/")
@@ -56,7 +96,8 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .build();
     }
 
@@ -64,5 +105,18 @@ public class AuthController {
     public ResponseEntity<EmployeeResponse> me(Authentication authentication) {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
         return ResponseEntity.ok(authService.getCurrentEmployee(authenticatedEmployee));
+    }
+
+    private String resolveCookie(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
+            if (cookieName.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

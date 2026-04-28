@@ -6,13 +6,16 @@ import com.eva.workflow.approval.common.enums.LeaveType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "employee_leave_balances")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LeaveBalanceEntity {
 
@@ -43,22 +47,21 @@ public class LeaveBalanceEntity {
     @Column(name = "used_minutes", nullable = false)
     private Integer usedMinutes;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public static LeaveBalanceEntity create(Long employeeId, int year, LeaveType leaveType, int quotaMinutes) {
         LeaveBalanceEntity entity = new LeaveBalanceEntity();
-        LocalDateTime now = LocalDateTime.now();
         entity.employeeId = employeeId;
         entity.year = year;
         entity.leaveType = leaveType;
         entity.quotaMinutes = quotaMinutes;
         entity.usedMinutes = 0;
-        entity.createdAt = now;
-        entity.updatedAt = now;
         return entity;
     }
 
@@ -74,8 +77,4 @@ public class LeaveBalanceEntity {
         this.usedMinutes = Math.max(0, this.usedMinutes - minutes);
     }
 
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
