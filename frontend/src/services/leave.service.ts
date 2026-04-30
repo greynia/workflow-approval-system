@@ -1,5 +1,6 @@
 import ApiService from "@/lib/api-service";
 import type {
+  AiReviewResponse,
   CreateLeaveRequest,
   LeaveBalanceResponse,
   LeaveCalculationResponse,
@@ -40,6 +41,13 @@ const LeaveService = {
   getDetail(id: number): Promise<LeaveRequestDetail> {
     return ApiService.fetchData({
       url: `/requests/${id}`,
+      method: "GET",
+    });
+  },
+
+  getAiReview(id: number): Promise<AiReviewResponse> {
+    return ApiService.fetchData({
+      url: `/requests/${id}/ai-review`,
       method: "GET",
     });
   },

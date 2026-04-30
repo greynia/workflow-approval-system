@@ -41,6 +41,10 @@ public class RefreshTokenService {
 
     @Transactional
     public IssuedRefreshToken rotate(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new InvalidCredentialsApplicationException("Invalid refresh token");
+        }
+
         RefreshTokenEntity current = refreshTokenRepository.findByTokenHash(hash(rawToken))
                 .orElseThrow(() -> new InvalidCredentialsApplicationException("Invalid refresh token"));
 

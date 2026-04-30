@@ -1,5 +1,6 @@
 package com.eva.workflow.approval.request;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -197,6 +198,29 @@ class LeaveRequestIntegrationTest {
     }
 
     @Test
+    void aiReviewCompletesAndReturnsHardRuleFlagsForCreatedRequest() throws Exception {
+        Cookie applicantCookie = loginAndGetCookie("zhou.yijun@example.com", "password123");
+        Cookie managerCookie = loginAndGetCookie("zhang.meiling@example.com", "BackendLead123!");
+
+        Long requestId = createRequest(applicantCookie, requestBody(
+                "PERSONAL",
+                "2026-09-01T09:00:00",
+                "2026-09-01T18:00:00",
+                "New hire short leave integration test",
+                7
+        ), "zh-TW");
+
+        String response = awaitCompletedAiReview(managerCookie, requestId);
+
+        assertThat(JsonPath.<String>read(response, "$.status")).isEqualTo("COMPLETED");
+        assertThat(JsonPath.<String>read(response, "$.riskLevel")).isEqualTo("MEDIUM");
+        assertThat(JsonPath.<String>read(response, "$.provider")).isEqualTo("LOCAL");
+        assertThat(JsonPath.<String>read(response, "$.hardRuleFlags[0].code")).isEqualTo("NEW_HIRE_SHORT_LEAVE");
+        assertThat(JsonPath.<String>read(response, "$.hardRuleFlags[0].level")).isEqualTo("MEDIUM");
+        assertThat(JsonPath.<String>read(response, "$.riskReasons[0]")).isEqualTo("新進員工在到職 90 天內申請請假");
+    }
+
+    @Test
     void listRejectsInvalidPaginationArguments() throws Exception {
         Cookie tokenCookie = loginAndGetCookie("huang.yating@example.com", "password123");
 
@@ -221,10 +245,19 @@ class LeaveRequestIntegrationTest {
     }
 
     private Long createRequest(Cookie tokenCookie, String body) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/requests")
-                        .cookie(tokenCookie)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+        return createRequest(tokenCookie, body, null);
+    }
+
+    private Long createRequest(Cookie tokenCookie, String body, String acceptLanguage) throws Exception {
+        var requestBuilder = post("/api/requests")
+                .cookie(tokenCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body);
+        if (acceptLanguage != null) {
+            requestBuilder.header("Accept-Language", acceptLanguage);
+        }
+
+        MvcResult result = mockMvc.perform(requestBuilder)
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -256,5 +289,28 @@ class LeaveRequestIntegrationTest {
                 .andReturn();
 
         return result.getResponse().getCookie("workflow-token");
+    }
+
+    private String awaitCompletedAiReview(Cookie tokenCookie, Long requestId) throws Exception {
+        String lastResponse = "";
+        int lastStatus = 0;
+
+        for (int i = 0; i < 20; i++) {
+            MvcResult result = mockMvc.perform(get("/api/requests/{id}/ai-review", requestId)
+                            .cookie(tokenCookie))
+                    .andReturn();
+            lastStatus = result.getResponse().getStatus();
+            lastResponse = result.getResponse().getContentAsString();
+
+            if (lastStatus == 200 && "COMPLETED".equals(JsonPath.read(lastResponse, "$.status"))) {
+                return lastResponse;
+            }
+
+            Thread.sleep(250);
+        }
+
+        assertThat(lastStatus).isEqualTo(200);
+        assertThat(lastResponse).contains("\"COMPLETED\"");
+        return lastResponse;
     }
 }

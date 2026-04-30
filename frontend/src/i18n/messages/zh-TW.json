@@ -188,6 +188,8 @@
       }
     },
     "Detail": {
+      "BackToRequests": "我的申請",
+      "BackToApprovals": "待簽核",
       "Title": "申請詳情",
       "Error": "載入申請詳情失敗",
       "TimelineTitle": "簽核歷程",
@@ -220,7 +222,33 @@
         "SKIPPED": "已略過"
       },
       "DeputyLabel": "代理人",
-      "ManagerLabel": "主管"
+      "ManagerLabel": "主管",
+      "AiReview": {
+        "Title": "AI 審核摘要",
+        "Disclaimer": "（僅供參考）",
+        "Unavailable": "無資料",
+        "Pending": "AI 分析中，請稍候...",
+        "Failed": "AI 分析暫時不可用",
+        "Summary": "摘要",
+        "RiskLevel": {
+          "Label": "風險等級",
+          "LOW": "低風險",
+          "MEDIUM": "中風險",
+          "HIGH": "高風險"
+        },
+        "HardRuleFlags": "規則命中",
+        "RiskReasons": "其他注意事項",
+        "Recommendation": {
+          "Label": "建議",
+          "APPROVE": "建議核准",
+          "REVIEW_CAREFULLY": "建議審慎評估",
+          "ESCALATE": "建議呈報上級",
+          "INSUFFICIENT_INFORMATION": "資訊不足，無法給出建議"
+        },
+        "RecommendationReason": "建議理由",
+        "GeneratedAt": "分析時間",
+        "Model": "模型"
+      }
     }
   },
   "AuditLog": {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -106,7 +107,11 @@ public class LeaveRequestApplicationService {
                 applicant,
                 buildCreateAuditDetail(saved)
         );
-        applicationEventPublisher.publishEvent(new LeaveRequestCreatedEvent(saved.getId(), applicant.getId()));
+        applicationEventPublisher.publishEvent(new LeaveRequestCreatedEvent(
+                saved.getId(),
+                applicant.getId(),
+                LocaleContextHolder.getLocale().toLanguageTag()
+        ));
 
         return leaveRequestMapper.toDetailResponse(saved, stepResponses, List.of());
     }
@@ -162,14 +167,7 @@ public class LeaveRequestApplicationService {
 
     @Transactional(readOnly = true)
     public LeaveRequestDetailResponse getRequestDetail(AuthenticatedEmployee authenticatedEmployee, Long requestId) {
-        LeaveRequestEntity leaveRequest = leaveRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResourceNotFoundApplicationException("Leave request not found"));
-        boolean canAccess = authenticatedEmployee.role() == UserRole.ADMIN
-                || leaveRequest.getApplicant().getId().equals(authenticatedEmployee.employeeId())
-                || approvalStepRepository.existsByLeaveRequestIdAndApproverId(requestId, authenticatedEmployee.employeeId());
-        if (!canAccess) {
-            throw new ResourceNotFoundApplicationException("Leave request not found");
-        }
+        LeaveRequestEntity leaveRequest = findAccessibleRequest(authenticatedEmployee, requestId);
 
         List<ApprovalStepResponse> steps = approvalStepRepository.findByLeaveRequestIdOrderByStepOrderAsc(requestId).stream()
                 .map(leaveRequestMapper::toStepResponse)
@@ -180,6 +178,23 @@ public class LeaveRequestApplicationService {
                 .toList();
 
         return leaveRequestMapper.toDetailResponse(leaveRequest, steps, actions);
+    }
+
+    @Transactional(readOnly = true)
+    public void assertCanAccessRequest(AuthenticatedEmployee authenticatedEmployee, Long requestId) {
+        findAccessibleRequest(authenticatedEmployee, requestId);
+    }
+
+    private LeaveRequestEntity findAccessibleRequest(AuthenticatedEmployee authenticatedEmployee, Long requestId) {
+        LeaveRequestEntity leaveRequest = leaveRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundApplicationException("Leave request not found"));
+        boolean canAccess = authenticatedEmployee.role() == UserRole.ADMIN
+                || leaveRequest.getApplicant().getId().equals(authenticatedEmployee.employeeId())
+                || approvalStepRepository.existsByLeaveRequestIdAndApproverId(requestId, authenticatedEmployee.employeeId());
+        if (!canAccess) {
+            throw new ResourceNotFoundApplicationException("Leave request not found");
+        }
+        return leaveRequest;
     }
 
     @Transactional

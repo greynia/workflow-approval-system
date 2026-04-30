@@ -57,6 +57,8 @@ public class ApiMessageResolver {
             case "DEPUTY_ON_LEAVE" -> "error.leaveRequest.deputyOnLeave";
             case "INVALID_DURATION_UNIT" -> "error.leaveRequest.invalidDurationUnit";
             case "UNSUPPORTED_EMPLOYEE_SCHEDULE" -> "error.leaveRequest.unsupportedEmployeeSchedule";
+            case "AI review access forbidden" -> "error.aiReview.forbidden";
+            case "AI review not found" -> "error.aiReview.notFound";
             default -> null;
         };
     }

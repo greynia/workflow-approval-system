@@ -49,6 +49,7 @@ class LeaveRequestEventIntegrationTest {
 
         MvcResult result = mockMvc.perform(post("/api/requests")
                         .cookie(tokenCookie)
+                        .header("Accept-Language", "zh-TW")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -68,6 +69,7 @@ class LeaveRequestEventIntegrationTest {
         assertThat(event).isNotNull();
         assertThat(event.leaveRequestId()).isEqualTo(requestId.longValue());
         assertThat(event.applicantId()).isEqualTo(7L);
+        assertThat(event.locale()).isEqualTo("zh-TW");
     }
 
     private Cookie loginAndGetCookie(String email, String password) throws Exception {

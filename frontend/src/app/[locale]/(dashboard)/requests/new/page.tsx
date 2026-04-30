@@ -127,7 +127,7 @@ export default function RequestsNewPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateLeaveFormValues>({
     resolver: zodResolver(createLeaveSchema),
-    defaultValues: { durationMinutes: 0 } as Partial<CreateLeaveFormValues>,
+    defaultValues: { durationMinutes: 0, deputyId: undefined } as Partial<CreateLeaveFormValues>,
   });
 
   const startTimeField = register("startTime");
@@ -209,11 +209,11 @@ export default function RequestsNewPage() {
 
   useEffect(() => {
     if (!canCalculate) {
-      setValue("deputyId", undefined as unknown as number, { shouldDirty: true });
+      setValue("deputyId", undefined, { shouldDirty: true });
       return;
     }
     if (selectedDeputyId != null && !employees.some((employee) => employee.id === selectedDeputyId)) {
-      setValue("deputyId", undefined as unknown as number, { shouldDirty: true });
+      setValue("deputyId", undefined, { shouldDirty: true });
     }
   }, [employees, canCalculate, selectedDeputyId, setValue]);
 
@@ -247,6 +247,10 @@ export default function RequestsNewPage() {
   });
 
   function onSubmit(values: CreateLeaveFormValues) {
+    if (values.deputyId == null) {
+      return;
+    }
+
     mutate({
       type: values.type,
       startTime: values.startTime,
@@ -472,7 +476,7 @@ export default function RequestsNewPage() {
                     }
                     onChange={(event) => {
                       setDeputyQuery(event.target.value);
-                      setValue("deputyId", undefined as unknown as number, { shouldDirty: true, shouldValidate: true });
+                      setValue("deputyId", undefined, { shouldDirty: true, shouldValidate: true });
                       setShowDropdown(true);
                     }}
                     onFocus={() => {

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import com.eva.workflow.approval.api.dto.aireview.AiReviewResponse;
 import com.eva.workflow.approval.api.dto.common.PageResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveBalanceResponse;
@@ -22,6 +23,7 @@ import com.eva.workflow.approval.api.dto.leave.LeaveCalculationRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestSummaryResponse;
+import com.eva.workflow.approval.application.aireview.AiReviewQueryService;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.application.request.LeaveRequestApplicationService;
 
@@ -38,6 +40,7 @@ import jakarta.validation.constraints.Min;
 public class LeaveRequestController {
 
     private final LeaveRequestApplicationService leaveRequestApplicationService;
+    private final AiReviewQueryService aiReviewQueryService;
 
     @PostMapping
     public ResponseEntity<LeaveRequestDetailResponse> create(
@@ -82,6 +85,15 @@ public class LeaveRequestController {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
         leaveRequestApplicationService.cancelRequest(authenticatedEmployee, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/ai-review")
+    public ResponseEntity<AiReviewResponse> getAiReview(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
+        return ResponseEntity.ok(aiReviewQueryService.getAiReview(authenticatedEmployee, id));
     }
 
     @GetMapping("/pending/count")
