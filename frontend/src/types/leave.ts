@@ -1,4 +1,29 @@
 export type LeaveType = "ANNUAL" | "SICK" | "PERSONAL" | "OTHER";
+export type AiReviewStatus = "PENDING" | "COMPLETED" | "FAILED" | "SKIPPED";
+export type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
+export type AiRecommendation = "APPROVE" | "REVIEW_CAREFULLY" | "ESCALATE" | "INSUFFICIENT_INFORMATION";
+export type AiProvider = "RULE_ENGINE" | "LOCAL" | "GEMINI";
+
+export interface HardRuleFlag {
+  code: string;
+  level: RiskLevel;
+  humanReadable: string;
+}
+
+export interface AiReviewResponse {
+  status: AiReviewStatus;
+  summary: string | null;
+  riskLevel: RiskLevel | null;
+  riskReasons: string[];
+  hardRuleFlags: HardRuleFlag[];
+  recommendation: AiRecommendation | null;
+  recommendationReason: string | null;
+  modelName: string | null;
+  promptVersion: string | null;
+  provider: AiProvider | null;
+  errorCode: string | null;
+  createdAt: string;
+}
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type StepStatus = "PENDING" | "APPROVED" | "REJECTED" | "SKIPPED";
 export type ActionType = "APPROVE" | "REJECT";

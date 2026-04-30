@@ -21,7 +21,12 @@ const baseSchema = z.object({
     .refine(isHalfHourAligned, { message: "InvalidTimeUnit" }),
   durationMinutes: z.number().int().min(30, { message: "DaysMin" }),
   reason: z.string().max(1000).optional(),
-  deputyId: z.number({ error: "DeputyRequired" }).int().positive(),
+  deputyId: z
+    .number({ error: "DeputyRequired" })
+    .int()
+    .positive()
+    .optional()
+    .refine((value) => value != null, { message: "DeputyRequired" }),
 });
 
 export const createLeaveSchema = baseSchema.refine(

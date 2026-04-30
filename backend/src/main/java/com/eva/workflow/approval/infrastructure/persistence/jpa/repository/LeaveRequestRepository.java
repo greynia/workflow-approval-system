@@ -32,4 +32,18 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestEntity
             @Param("endTime") LocalDateTime endTime,
             @Param("statuses") List<RequestStatus> statuses
     );
+
+    @Query("""
+            select count(r) from LeaveRequestEntity r
+            where r.applicant.id = :applicantId
+            and r.id <> :excludedRequestId
+            and r.status in :statuses
+            and r.createdAt >= :since
+            """)
+    long countRecentByApplicantIdExcludingRequest(
+            @Param("applicantId") Long applicantId,
+            @Param("excludedRequestId") Long excludedRequestId,
+            @Param("statuses") List<RequestStatus> statuses,
+            @Param("since") LocalDateTime since
+    );
 }

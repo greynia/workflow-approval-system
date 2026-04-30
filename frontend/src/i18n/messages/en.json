@@ -188,6 +188,8 @@
       }
     },
     "Detail": {
+      "BackToRequests": "My Requests",
+      "BackToApprovals": "Pending Approvals",
       "Title": "Request Detail",
       "Error": "Failed to load request detail",
       "TimelineTitle": "Approval Timeline",
@@ -220,7 +222,33 @@
         "SKIPPED": "Skipped"
       },
       "DeputyLabel": "Deputy",
-      "ManagerLabel": "Manager"
+      "ManagerLabel": "Manager",
+      "AiReview": {
+        "Title": "AI Review Summary",
+        "Disclaimer": "(For reference only)",
+        "Unavailable": "Unavailable",
+        "Pending": "AI analysis in progress, please wait...",
+        "Failed": "AI analysis temporarily unavailable",
+        "Summary": "Summary",
+        "RiskLevel": {
+          "Label": "Risk Level",
+          "LOW": "Low Risk",
+          "MEDIUM": "Medium Risk",
+          "HIGH": "High Risk"
+        },
+        "HardRuleFlags": "Rules Triggered",
+        "RiskReasons": "Additional Notes",
+        "Recommendation": {
+          "Label": "Recommendation",
+          "APPROVE": "Recommended: Approve",
+          "REVIEW_CAREFULLY": "Recommended: Review Carefully",
+          "ESCALATE": "Recommended: Escalate",
+          "INSUFFICIENT_INFORMATION": "Insufficient information"
+        },
+        "RecommendationReason": "Recommendation Reason",
+        "GeneratedAt": "Generated At",
+        "Model": "Model"
+      }
     }
   },
   "AuditLog": {

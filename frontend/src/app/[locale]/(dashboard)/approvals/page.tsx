@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import ApprovalService from "@/services/approval.service";
 import { useToastStore } from "@/stores/toast-store";
 import type { PendingApproval } from "@/types/approval";
@@ -167,6 +167,7 @@ function ApprovalsTable({
 }) {
   const t = useTranslations("Approvals.List");
   const formatDuration = useFormatDurationAsHours();
+  const router = useRouter();
 
   if (items.length === 0) {
     return <p className="py-16 text-center text-sm text-zinc-400">{t("Empty")}</p>;
@@ -188,21 +189,29 @@ function ApprovalsTable({
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.stepId} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
+              <tr
+                key={item.stepId}
+                className="cursor-pointer border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
+                onClick={() => router.push(`/approvals/${item.requestId}`)}
+              >
                 <td className="px-4 py-3 font-medium text-zinc-900">
-                  <Link href={`/requests/${item.requestId}`} className="transition-colors hover:text-zinc-600">
-                    {item.applicantName}
-                  </Link>
+                  {item.applicantName}
                 </td>
                 <td className="px-4 py-3 text-zinc-600">{t(`LeaveType.${item.leaveType}`)}</td>
                 <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
                 <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button onClick={() => onApprove(item)} className="rounded-md bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onApprove(item); }}
+                      className="rounded-md bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+                    >
                       {t("ApproveButton")}
                     </button>
-                    <button onClick={() => onReject(item)} className="rounded-md bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onReject(item); }}
+                      className="rounded-md bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                    >
                       {t("RejectButton")}
                     </button>
                   </div>
@@ -216,11 +225,13 @@ function ApprovalsTable({
       {/* Mobile card list */}
       <div className="space-y-3 md:hidden">
         {items.map((item) => (
-          <div key={item.stepId} className="rounded-lg border border-zinc-200 bg-white p-4">
+          <div
+            key={item.stepId}
+            className="cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:bg-zinc-50"
+            onClick={() => router.push(`/approvals/${item.requestId}`)}
+          >
             <div className="flex items-start justify-between gap-2">
-              <Link href={`/requests/${item.requestId}`} className="font-medium text-zinc-900 hover:text-zinc-600">
-                {item.applicantName}
-              </Link>
+              <span className="font-medium text-zinc-900">{item.applicantName}</span>
               <span className="shrink-0 text-sm text-zinc-500">{t(`LeaveType.${item.leaveType}`)}</span>
             </div>
             <p className="mt-1 text-sm text-zinc-500">
@@ -228,10 +239,16 @@ function ApprovalsTable({
             </p>
             <p className="mt-0.5 text-xs text-zinc-400">{formatDuration(item.durationMinutes)}</p>
             <div className="mt-3 flex gap-2">
-              <button onClick={() => onApprove(item)} className="flex-1 rounded-md bg-emerald-50 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+              <button
+                onClick={(e) => { e.stopPropagation(); onApprove(item); }}
+                className="flex-1 rounded-md bg-emerald-50 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+              >
                 {t("ApproveButton")}
               </button>
-              <button onClick={() => onReject(item)} className="flex-1 rounded-md bg-red-50 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
+              <button
+                onClick={(e) => { e.stopPropagation(); onReject(item); }}
+                className="flex-1 rounded-md bg-red-50 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+              >
                 {t("RejectButton")}
               </button>
             </div>

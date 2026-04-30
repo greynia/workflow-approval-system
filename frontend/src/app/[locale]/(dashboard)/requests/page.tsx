@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import LeaveService from "@/services/leave.service";
 import { appConfig } from "@/configs/app.config";
 import type { LeaveRequestSummary, LeaveType, RequestStatus } from "@/types/leave";
@@ -77,6 +77,8 @@ function RequestsTable({
   t: ListTranslations;
 }) {
   const formatDuration = useFormatDurationAsHours();
+  const router = useRouter();
+
   if (items.length === 0) {
     return <p className="py-16 text-center text-sm text-zinc-400">{t("Empty")}</p>;
   }
@@ -111,11 +113,13 @@ function RequestsTable({
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50">
+              <tr
+                key={item.id}
+                className="cursor-pointer border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
+                onClick={() => router.push(`/requests/${item.id}`)}
+              >
                 <td className="px-4 py-3 font-medium text-zinc-900">
-                  <Link href={`/requests/${item.id}`} className="transition-colors hover:text-zinc-600">
-                    {leaveTypeLabel[item.type]}
-                  </Link>
+                  {leaveTypeLabel[item.type]}
                 </td>
                 <td className="px-4 py-3 text-zinc-600">{formatDate(item.startTime)} – {formatDate(item.endTime)}</td>
                 <td className="px-4 py-3 text-zinc-600">{formatDuration(item.durationMinutes)}</td>
