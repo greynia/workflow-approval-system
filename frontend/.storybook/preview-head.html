@@ -1,0 +1,12 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Storybook cannot load Geist via next/font; Noto Sans TC covers CJK.
+     Latin text will differ slightly from the app — this is a framework constraint. */
+  :root {
+    --font-geist: 'Noto Sans TC', sans-serif;
+    --font-noto: 'Noto Sans TC', sans-serif;
+    --font-sans: var(--font-geist), var(--font-noto), -apple-system, BlinkMacSystemFont, 'PingFang TC', sans-serif;
+  }
+</style>
