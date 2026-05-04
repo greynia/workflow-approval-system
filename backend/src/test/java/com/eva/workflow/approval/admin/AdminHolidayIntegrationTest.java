@@ -8,7 +8,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -16,8 +19,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -28,7 +34,7 @@ import com.jayway.jsonpath.JsonPath;
 
 import jakarta.servlet.http.Cookie;
 
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, AdminHolidayIntegrationTest.FixedClockConfig.class})
 @SpringBootTest
 @AutoConfigureMockMvc
 class AdminHolidayIntegrationTest {
@@ -38,6 +44,15 @@ class AdminHolidayIntegrationTest {
 
     @MockBean
     private TaiwanCalendarApiClient calendarApiClient;
+
+    @TestConfiguration
+    static class FixedClockConfig {
+        @Bean
+        @Primary
+        Clock fixedClock() {
+            return Clock.fixed(Instant.parse("2026-12-31T16:30:00Z"), ZoneId.of("UTC"));
+        }
+    }
 
     // ── GET /api/admin/holidays ───────────────────────────────────────────
 
@@ -59,6 +74,24 @@ class AdminHolidayIntegrationTest {
                         .param("year", "2099"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getHolidays_defaultsToCurrentTaipeiYear() throws Exception {
+        Cookie adminCookie = loginAndGetCookie("admin@example.com", "AdminPass123!");
+
+        mockMvc.perform(post("/api/admin/holidays")
+                        .cookie(adminCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"date": "2027-12-31", "name": "台北預設年份測試假日"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/admin/holidays")
+                        .cookie(adminCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", hasItem("台北預設年份測試假日")));
     }
 
     // ── POST /api/admin/holidays ──────────────────────────────────────────
@@ -206,6 +239,23 @@ class AdminHolidayIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.imported").value(0))
                 .andExpect(jsonPath("$.skipped").value(1));
+    }
+
+    @Test
+    void importHolidays_defaultsToCurrentTaipeiYear() throws Exception {
+        Cookie adminCookie = loginAndGetCookie("admin@example.com", "AdminPass123!");
+
+        Mockito.when(calendarApiClient.fetchHolidaysForYear(2027)).thenReturn(List.of(
+                new TaiwanCalendarApiClient.TaiwanCalendarDay("20270101", "五", true, "元旦")
+        ));
+
+        mockMvc.perform(post("/api/admin/holidays/import")
+                        .cookie(adminCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.imported").value(1))
+                .andExpect(jsonPath("$.skipped").value(0));
+
+        Mockito.verify(calendarApiClient).fetchHolidaysForYear(2027);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────

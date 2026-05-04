@@ -77,4 +77,8 @@ public class LeaveBalanceEntity {
         this.usedMinutes = Math.max(0, this.usedMinutes - minutes);
     }
 
+    public void updateQuotaMinutes(int quotaMinutes) {
+        this.quotaMinutes = quotaMinutes;
+    }
+
 }

@@ -1,5 +1,8 @@
 package com.eva.workflow.approval.api.controller;
 
+import java.time.Clock;
+import java.time.Year;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -32,15 +35,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminHolidayController {
 
+    private static final ZoneId HOLIDAY_YEAR_ZONE = ZoneId.of("Asia/Taipei");
+
     private final AdminHolidayService adminHolidayService;
+    private final Clock clock;
 
     @GetMapping
     public ResponseEntity<List<HolidayResponse>> getHolidays(
-            @RequestParam(defaultValue = "2026") @Min(2020) @Max(2099) int year,
+            @RequestParam(required = false) @Min(2020) @Max(2099) Integer year,
             Authentication authentication
     ) {
         AuthenticatedEmployee actor = (AuthenticatedEmployee) authentication.getPrincipal();
-        return ResponseEntity.ok(adminHolidayService.getHolidaysByYear(actor, year));
+        return ResponseEntity.ok(adminHolidayService.getHolidaysByYear(actor, resolveYear(year)));
     }
 
     @PostMapping
@@ -54,11 +60,11 @@ public class AdminHolidayController {
 
     @PostMapping("/import")
     public ResponseEntity<HolidayImportResultResponse> importHolidays(
-            @RequestParam(defaultValue = "2026") @Min(2020) @Max(2099) int year,
+            @RequestParam(required = false) @Min(2020) @Max(2099) Integer year,
             Authentication authentication
     ) {
         AuthenticatedEmployee actor = (AuthenticatedEmployee) authentication.getPrincipal();
-        return ResponseEntity.ok(adminHolidayService.importFromCalendar(actor, year));
+        return ResponseEntity.ok(adminHolidayService.importFromCalendar(actor, resolveYear(year)));
     }
 
     @DeleteMapping("/{id}")
@@ -69,5 +75,9 @@ public class AdminHolidayController {
         AuthenticatedEmployee actor = (AuthenticatedEmployee) authentication.getPrincipal();
         adminHolidayService.deleteHoliday(actor, id);
         return ResponseEntity.noContent().build();
+    }
+
+    private int resolveYear(Integer requestedYear) {
+        return requestedYear != null ? requestedYear : Year.now(clock.withZone(HOLIDAY_YEAR_ZONE)).getValue();
     }
 }

@@ -25,11 +25,13 @@ import com.eva.workflow.approval.api.dto.leave.ApprovalStepResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveRequestDetailResponse;
 import com.eva.workflow.approval.application.audit.AuditLogService;
+import com.eva.workflow.approval.application.exception.ForbiddenApplicationException;
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.application.approval.ManagerChainResolver;
 import com.eva.workflow.approval.application.approval.WorkflowRuleAssembler;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.application.exception.BadRequestApplicationException;
+import com.eva.workflow.approval.common.AuditEntityTypes;
 import com.eva.workflow.approval.common.enums.ApprovalStepType;
 import com.eva.workflow.approval.common.enums.LeaveRequestStage;
 import com.eva.workflow.approval.common.enums.LeaveType;
@@ -254,6 +256,57 @@ class LeaveRequestApplicationServiceTest {
 
         assertThatThrownBy(() -> leaveRequestApplicationService.getRequestDetail(unrelated, 10L))
                 .isInstanceOf(ResourceNotFoundApplicationException.class);
+    }
+
+    @Test
+    void recallRequest_cancelsApprovedRequest() {
+        AuthenticatedEmployee applicantPrincipal = new AuthenticatedEmployee(7L, "user@example.com", "User", UserRole.EMPLOYEE, java.util.List.of());
+        EmployeeEntity applicant = employee(7L, true);
+        EmployeeEntity deputy = employee(6L, true);
+        LocalDateTime startTime = LocalDateTime.of(2026, 6, 1, 9, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 6, 1, 18, 0);
+        LeaveRequestEntity leaveRequest = leaveRequest(20L, applicant, deputy, 480, startTime, endTime);
+        leaveRequest.updateStatus(RequestStatus.APPROVED);
+
+        when(leaveRequestRepository.findById(20L)).thenReturn(Optional.of(leaveRequest));
+
+        leaveRequestApplicationService.recallRequest(applicantPrincipal, 20L);
+
+        assertThat(leaveRequest.getStatus()).isEqualTo(RequestStatus.CANCELLED);
+        verify(leaveBalanceService).refundBalance(7L, LeaveType.ANNUAL, 2026, 480);
+        verify(auditLogService).log(eq(AuditEntityTypes.LEAVE_REQUEST), eq(20L), eq("RECALL"), eq(applicant), any());
+    }
+
+    @Test
+    void recallRequest_rejectsWhenNotApplicant() {
+        AuthenticatedEmployee other = new AuthenticatedEmployee(99L, "other@example.com", "Other", UserRole.EMPLOYEE, java.util.List.of());
+        EmployeeEntity applicant = employee(7L, true);
+        EmployeeEntity deputy = employee(6L, true);
+        LocalDateTime startTime = LocalDateTime.of(2026, 6, 1, 9, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 6, 1, 18, 0);
+        LeaveRequestEntity leaveRequest = leaveRequest(20L, applicant, deputy, 480, startTime, endTime);
+        leaveRequest.updateStatus(RequestStatus.APPROVED);
+
+        when(leaveRequestRepository.findById(20L)).thenReturn(Optional.of(leaveRequest));
+
+        assertThatThrownBy(() -> leaveRequestApplicationService.recallRequest(other, 20L))
+                .isInstanceOf(ForbiddenApplicationException.class);
+    }
+
+    @Test
+    void recallRequest_rejectsWhenNotApproved() {
+        AuthenticatedEmployee applicantPrincipal = new AuthenticatedEmployee(7L, "user@example.com", "User", UserRole.EMPLOYEE, java.util.List.of());
+        EmployeeEntity applicant = employee(7L, true);
+        EmployeeEntity deputy = employee(6L, true);
+        LocalDateTime startTime = LocalDateTime.of(2026, 6, 1, 9, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 6, 1, 18, 0);
+        LeaveRequestEntity leaveRequest = leaveRequest(20L, applicant, deputy, 480, startTime, endTime);
+        // status is PENDING (default from factory)
+
+        when(leaveRequestRepository.findById(20L)).thenReturn(Optional.of(leaveRequest));
+
+        assertThatThrownBy(() -> leaveRequestApplicationService.recallRequest(applicantPrincipal, 20L))
+                .isInstanceOf(BadRequestApplicationException.class);
     }
 
     private EmployeeEntity employee(Long id, boolean active) {

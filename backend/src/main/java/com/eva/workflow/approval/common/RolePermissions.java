@@ -11,7 +11,8 @@ public final class RolePermissions {
         UserRole.ADMIN, List.of(
             Permission.REQUEST_VIEW, Permission.REQUEST_CREATE, Permission.REQUEST_EDIT, Permission.REQUEST_DELETE,
             Permission.APPROVAL_VIEW, Permission.APPROVAL_APPROVE,
-            Permission.EMPLOYEE_VIEW, Permission.BALANCE_VIEW, Permission.AUDIT_VIEW
+            Permission.EMPLOYEE_VIEW, Permission.BALANCE_VIEW, Permission.AUDIT_VIEW,
+            Permission.LEAVE_BALANCE_MANAGE
         ),
         UserRole.MANAGER, List.of(
             Permission.REQUEST_VIEW, Permission.REQUEST_CREATE, Permission.REQUEST_EDIT,

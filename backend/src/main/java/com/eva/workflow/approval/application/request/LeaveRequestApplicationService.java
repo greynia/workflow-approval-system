@@ -226,6 +226,32 @@ public class LeaveRequestApplicationService {
         );
     }
 
+    @Transactional
+    public void recallRequest(AuthenticatedEmployee authenticatedEmployee, Long requestId) {
+        LeaveRequestEntity leaveRequest = leaveRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundApplicationException("Leave request not found"));
+        if (!leaveRequest.getApplicant().getId().equals(authenticatedEmployee.employeeId())) {
+            throw new ForbiddenApplicationException("You are not allowed to recall this leave request");
+        }
+        if (!RequestStatus.APPROVED.equals(leaveRequest.getStatus())) {
+            throw new BadRequestApplicationException("Only approved leave requests can be recalled");
+        }
+        leaveRequest.updateStatus(RequestStatus.CANCELLED);
+        leaveBalanceService.refundBalance(
+                leaveRequest.getApplicant().getId(),
+                leaveRequest.getType(),
+                leaveRequest.getStartTime().getYear(),
+                leaveRequest.getDurationMinutes()
+        );
+        auditLogService.log(
+                AuditEntityTypes.LEAVE_REQUEST,
+                leaveRequest.getId(),
+                "RECALL",
+                leaveRequest.getApplicant(),
+                buildCancelAuditDetail(leaveRequest)
+        );
+    }
+
     // @Transactional (not readOnly) — getOrInitBalance() inside leaveBalanceService.getBalances()
     // may INSERT a new LeaveBalanceEntity on first access for a given year/type, requiring a write tx.
     @Transactional

@@ -87,6 +87,13 @@ public class LeaveRequestController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/recall")
+    public ResponseEntity<Void> recall(Authentication authentication, @PathVariable Long id) {
+        AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
+        leaveRequestApplicationService.recallRequest(authenticatedEmployee, id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/ai-review")
     public ResponseEntity<AiReviewResponse> getAiReview(
             Authentication authentication,

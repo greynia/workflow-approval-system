@@ -14,4 +14,6 @@ public final class Permission {
     public static final String EMPLOYEE_VIEW = "employee.view";
     public static final String BALANCE_VIEW  = "balance.view";
     public static final String AUDIT_VIEW    = "audit.view";
+
+    public static final String LEAVE_BALANCE_MANAGE = "leave.balance.manage";
 }
