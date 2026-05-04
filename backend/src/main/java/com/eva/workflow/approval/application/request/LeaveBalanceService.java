@@ -134,7 +134,7 @@ public class LeaveBalanceService {
                 });
     }
 
-    private int calculateQuotaMinutes(LeaveType leaveType, LocalDate hireDate, int year) {
+    public int calculateQuotaMinutes(LeaveType leaveType, LocalDate hireDate, int year) {
         return switch (leaveType) {
             case ANNUAL   -> calculateAnnualLeaveQuotaDays(hireDate, year) * WORK_MINUTES_PER_DAY;
             case SICK     -> SICK_LEAVE_DAYS * WORK_MINUTES_PER_DAY;
