@@ -1,5 +1,6 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.repository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,6 +45,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequestEntity
             @Param("applicantId") Long applicantId,
             @Param("excludedRequestId") Long excludedRequestId,
             @Param("statuses") List<RequestStatus> statuses,
-            @Param("since") LocalDateTime since
+            @Param("since") Instant since
     );
 }

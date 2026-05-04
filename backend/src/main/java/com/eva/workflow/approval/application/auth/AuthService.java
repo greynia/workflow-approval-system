@@ -36,6 +36,10 @@ public class AuthService {
             throw new InvalidCredentialsApplicationException("Invalid email or password");
         }
 
+        if (request.preferredLocale() != null) {
+            employee.setPreferredLocale(request.preferredLocale());
+        }
+
         String accessToken = jwtProvider.generateToken(employee);
         IssuedRefreshToken refreshToken = refreshTokenService.issue(employee);
         return new AuthResult(
@@ -44,7 +48,8 @@ public class AuthService {
                 employee.getId(),
                 employee.getName(),
                 employee.getRole(),
-                RolePermissions.of(employee.getRole())
+                RolePermissions.of(employee.getRole()),
+                employee.getPreferredLocale()
         );
     }
 
@@ -59,7 +64,8 @@ public class AuthService {
                 employee.getId(),
                 employee.getName(),
                 employee.getRole(),
-                RolePermissions.of(employee.getRole())
+                RolePermissions.of(employee.getRole()),
+                employee.getPreferredLocale()
         );
     }
 

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -235,7 +236,7 @@ class AiReviewOrchestratorTest {
                 LocalDateTime.of(2026, 5, 8, 18, 0),
                 960,
                 "New hire long leave request",
-                LocalDateTime.of(2026, 4, 29, 10, 0),
+                Instant.parse("2026-04-29T10:00:00Z"),
                 7L,
                 30,
                 UserRole.EMPLOYEE,
@@ -253,7 +254,7 @@ class AiReviewOrchestratorTest {
                 LocalDateTime.of(2026, 5, 7, 18, 0),
                 480,
                 "Annual leave request",
-                LocalDateTime.of(2026, 4, 29, 10, 0),
+                Instant.parse("2026-04-29T10:00:00Z"),
                 6L,
                 1034,
                 UserRole.EMPLOYEE,
@@ -271,7 +272,7 @@ class AiReviewOrchestratorTest {
                 LocalDateTime.of(2026, 5, 6, 18, 0),
                 480,
                 "Personal leave request",
-                LocalDateTime.of(2026, 4, 1, 9, 0),
+                Instant.parse("2026-04-01T09:00:00Z"),
                 9L,
                 35,
                 UserRole.EMPLOYEE,

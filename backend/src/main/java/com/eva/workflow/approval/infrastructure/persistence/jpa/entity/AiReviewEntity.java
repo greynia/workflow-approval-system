@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
@@ -91,14 +91,14 @@ public class AiReviewEntity {
     private String errorCode;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     public static AiReviewEntity createPending(Long requestId) {
         AiReviewEntity entity = new AiReviewEntity();
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         entity.requestId = requestId;
         entity.status = AiReviewStatus.PENDING;
         entity.createdAt = now;
@@ -145,6 +145,6 @@ public class AiReviewEntity {
 
     @PreUpdate
     void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
 }

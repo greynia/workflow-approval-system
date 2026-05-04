@@ -2,6 +2,7 @@ package com.eva.workflow.approval.domain.aireview.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -111,7 +112,7 @@ class AiHardRuleEngineTest {
                 LocalDateTime.of(2026, 5, 7, 18, 0),
                 durationMinutes,
                 "Hard rule test",
-                LocalDateTime.of(2026, 4, 29, 10, 0),
+                Instant.parse("2026-04-29T10:00:00Z"),
                 7L,
                 applicantTenureDays,
                 UserRole.EMPLOYEE,

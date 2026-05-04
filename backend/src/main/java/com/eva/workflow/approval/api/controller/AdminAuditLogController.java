@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.api.controller;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -34,8 +34,8 @@ public class AdminAuditLogController {
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) String action,
             @RequestParam(required = false) String actorName,
-            @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) LocalDateTime createdFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) LocalDateTime createdTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime createdFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime createdTo,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             Authentication authentication
@@ -46,8 +46,8 @@ public class AdminAuditLogController {
                 entityType,
                 action,
                 actorName,
-                createdFrom,
-                createdTo,
+                createdFrom != null ? createdFrom.toInstant() : null,
+                createdTo != null ? createdTo.toInstant() : null,
                 page,
                 size
         ));

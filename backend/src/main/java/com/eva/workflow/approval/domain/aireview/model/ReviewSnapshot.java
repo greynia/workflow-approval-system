@@ -1,5 +1,6 @@
 package com.eva.workflow.approval.domain.aireview.model;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import com.eva.workflow.approval.common.enums.LeaveType;
@@ -12,7 +13,7 @@ public record ReviewSnapshot(
         LocalDateTime endTime,
         int durationMinutes,
         String reason,
-        LocalDateTime requestCreatedAt,
+        Instant requestCreatedAt,
 
         Long applicantId,
         long applicantTenureDays,

@@ -7,6 +7,7 @@ public record LoginResponse(
         Long employeeId,
         String name,
         UserRole role,
-        List<String> permissions
+        List<String> permissions,
+        String preferredLocale
 ) {
 }

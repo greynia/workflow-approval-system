@@ -1,5 +1,6 @@
 package com.eva.workflow.approval.api.dto.leave;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,8 +21,8 @@ public record LeaveRequestDetailResponse(
         String reason,
         RequestStatus status,
         LeaveRequestStage currentStage,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt,
+        Instant createdAt,
+        Instant updatedAt,
         List<ApprovalStepResponse> approvalSteps,
         List<ApprovalActionResponse> approvalActions
 ) {

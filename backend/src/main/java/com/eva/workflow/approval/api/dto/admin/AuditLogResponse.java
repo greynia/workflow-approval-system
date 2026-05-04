@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.api.dto.admin;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record AuditLogResponse(
         Long id,
@@ -10,6 +10,6 @@ public record AuditLogResponse(
         Long actorId,
         String actorName,
         String detailJson,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
 }

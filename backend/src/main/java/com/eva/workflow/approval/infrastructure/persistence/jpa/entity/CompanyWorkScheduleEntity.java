@@ -1,7 +1,7 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import jakarta.persistence.Column;
@@ -48,5 +48,5 @@ public class CompanyWorkScheduleEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 }
