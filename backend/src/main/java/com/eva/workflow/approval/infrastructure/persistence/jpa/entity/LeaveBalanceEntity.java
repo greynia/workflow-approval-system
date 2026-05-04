@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.eva.workflow.approval.common.enums.LeaveType;
 
@@ -49,11 +49,11 @@ public class LeaveBalanceEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     public static LeaveBalanceEntity create(Long employeeId, int year, LeaveType leaveType, int quotaMinutes) {
         LeaveBalanceEntity entity = new LeaveBalanceEntity();

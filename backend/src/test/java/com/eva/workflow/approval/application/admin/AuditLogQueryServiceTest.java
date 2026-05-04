@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -64,8 +64,8 @@ class AuditLogQueryServiceTest {
     @Test
     void getAuditLogsRejectsInvalidDateRange() {
         AuthenticatedEmployee admin = new AuthenticatedEmployee(1L, "admin@example.com", "Admin", UserRole.ADMIN, java.util.List.of());
-        LocalDateTime createdFrom = LocalDateTime.of(2026, 4, 17, 0, 0);
-        LocalDateTime createdTo = LocalDateTime.of(2026, 4, 16, 0, 0);
+        Instant createdFrom = Instant.parse("2026-04-17T00:00:00Z");
+        Instant createdTo = Instant.parse("2026-04-16T00:00:00Z");
 
         assertThatThrownBy(() -> auditLogQueryService.getAuditLogs(
                 admin,
@@ -91,7 +91,7 @@ class AuditLogQueryServiceTest {
                 "APPROVE",
                 actor,
                 "{\"stepId\": 5}",
-                LocalDateTime.of(2026, 4, 16, 12, 30)
+                Instant.parse("2026-04-16T12:30:00Z")
         );
         Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
 
@@ -103,8 +103,8 @@ class AuditLogQueryServiceTest {
                 " LEAVE_REQUEST ",
                 " APPROVE ",
                 "李建國",
-                LocalDateTime.of(2026, 4, 1, 0, 0),
-                LocalDateTime.of(2026, 4, 30, 23, 59),
+                Instant.parse("2026-04-01T00:00:00Z"),
+                Instant.parse("2026-04-30T23:59:00Z"),
                 0,
                 20
         );
@@ -121,7 +121,7 @@ class AuditLogQueryServiceTest {
                 6L,
                 "李建國",
                 "{\"stepId\": 5}",
-                LocalDateTime.of(2026, 4, 16, 12, 30)
+                Instant.parse("2026-04-16T12:30:00Z")
         ));
     }
 
@@ -132,7 +132,7 @@ class AuditLogQueryServiceTest {
             String action,
             EmployeeEntity actor,
             String detailJson,
-            LocalDateTime createdAt
+            Instant createdAt
     ) {
         AuditLogEntity entity = newInstance(AuditLogEntity.class);
         setField(entity, "id", id);

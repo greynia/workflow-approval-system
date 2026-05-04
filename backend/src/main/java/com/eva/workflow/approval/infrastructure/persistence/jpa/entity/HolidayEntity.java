@@ -30,4 +30,12 @@ public class HolidayEntity {
 
     @Column(nullable = false)
     private Integer year;
+
+    public static HolidayEntity create(LocalDate date, String name, int year) {
+        HolidayEntity entity = new HolidayEntity();
+        entity.date = date;
+        entity.name = name;
+        entity.year = year;
+        return entity;
+    }
 }

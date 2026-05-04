@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.eva.workflow.approval.common.enums.ActionType;
 
@@ -50,7 +50,7 @@ public class ApprovalActionEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     public static ApprovalActionEntity create(
             ApprovalStepEntity approvalStep,

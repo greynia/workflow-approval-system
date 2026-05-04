@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.api.dto.aireview;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import com.eva.workflow.approval.common.enums.AiProvider;
@@ -20,6 +20,6 @@ public record AiReviewResponse(
         String promptVersion,
         AiProvider provider,
         String errorCode,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
 }

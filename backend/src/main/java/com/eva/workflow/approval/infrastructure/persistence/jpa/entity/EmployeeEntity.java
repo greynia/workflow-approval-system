@@ -1,7 +1,7 @@
 package com.eva.workflow.approval.infrastructure.persistence.jpa.entity;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import com.eva.workflow.approval.common.enums.UserRole;
 
@@ -64,7 +64,14 @@ public class EmployeeEntity {
     @Column(name = "hire_date", nullable = false)
     private LocalDate hireDate;
 
+    @Column(name = "preferred_locale", nullable = false, length = 10)
+    private String preferredLocale = "zh-TW";
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+
+    public void setPreferredLocale(String preferredLocale) {
+        this.preferredLocale = preferredLocale;
+    }
 }

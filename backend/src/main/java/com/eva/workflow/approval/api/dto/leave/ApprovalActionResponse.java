@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.api.dto.leave;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.eva.workflow.approval.common.enums.ActionType;
 
@@ -10,6 +10,6 @@ public record ApprovalActionResponse(
         String actorName,
         ActionType actionType,
         String comment,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
 }

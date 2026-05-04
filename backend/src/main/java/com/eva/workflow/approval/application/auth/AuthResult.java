@@ -13,6 +13,7 @@ public record AuthResult(
         Long employeeId,
         String name,
         UserRole role,
-        List<String> permissions
+        List<String> permissions,
+        String preferredLocale
 ) {
 }

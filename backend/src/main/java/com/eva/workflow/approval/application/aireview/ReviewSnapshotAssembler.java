@@ -1,7 +1,7 @@
 package com.eva.workflow.approval.application.aireview;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class ReviewSnapshotAssembler {
 
         long tenureDays = ChronoUnit.DAYS.between(applicant.getHireDate(), LocalDate.now());
 
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
         int recentCount = (int) leaveRequestRepository.countRecentByApplicantIdExcludingRequest(
                 applicant.getId(), request.getId(), ACTIVE_STATUSES, thirtyDaysAgo);
 

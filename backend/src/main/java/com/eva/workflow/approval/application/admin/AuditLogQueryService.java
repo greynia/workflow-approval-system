@@ -1,6 +1,6 @@
 package com.eva.workflow.approval.application.admin;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,8 +33,8 @@ public class AuditLogQueryService {
             String entityType,
             String action,
             String actorName,
-            LocalDateTime createdFrom,
-            LocalDateTime createdTo,
+            Instant createdFrom,
+            Instant createdTo,
             int page,
             int size
     ) {
@@ -110,7 +110,7 @@ public class AuditLogQueryService {
                 );
     }
 
-    private Specification<AuditLogEntity> createdAtGte(LocalDateTime createdFrom) {
+    private Specification<AuditLogEntity> createdAtGte(Instant createdFrom) {
         if (createdFrom == null) {
             return null;
         }
@@ -118,7 +118,7 @@ public class AuditLogQueryService {
                 criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), createdFrom);
     }
 
-    private Specification<AuditLogEntity> createdAtLte(LocalDateTime createdTo) {
+    private Specification<AuditLogEntity> createdAtLte(Instant createdTo) {
         if (createdTo == null) {
             return null;
         }

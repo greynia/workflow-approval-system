@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +109,7 @@ class LeaveRequestApplicationServiceTest {
         LeaveRequestDetailResponse expectedResponse = new LeaveRequestDetailResponse(
                 100L, 7L, "黃雅婷", 6L, "李建國", LeaveType.ANNUAL, startTime, endTime, 1440,
                 "Family trip", RequestStatus.PENDING, LeaveRequestStage.WAITING_DEPUTY,
-                LocalDateTime.of(2026, 4, 14, 10, 0), LocalDateTime.of(2026, 4, 14, 10, 0), List.of(), List.of()
+                Instant.parse("2026-04-14T10:00:00Z"), Instant.parse("2026-04-14T10:00:00Z"), List.of(), List.of()
         );
 
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(applicant));
@@ -227,7 +228,7 @@ class LeaveRequestApplicationServiceTest {
         LeaveRequestDetailResponse stubResponse = new LeaveRequestDetailResponse(
                 10L, 7L, "applicant", 6L, "deputy", LeaveType.ANNUAL,
                 startTime, endTime, 480, "reason", RequestStatus.PENDING,
-                LeaveRequestStage.WAITING_DEPUTY, startTime, startTime, List.of(), List.of());
+                LeaveRequestStage.WAITING_DEPUTY, Instant.parse("2026-05-01T01:00:00Z"), Instant.parse("2026-05-01T01:00:00Z"), List.of(), List.of());
 
         when(leaveRequestRepository.findById(10L)).thenReturn(Optional.of(leaveRequest));
         when(approvalStepRepository.findByLeaveRequestIdOrderByStepOrderAsc(10L)).thenReturn(List.of());

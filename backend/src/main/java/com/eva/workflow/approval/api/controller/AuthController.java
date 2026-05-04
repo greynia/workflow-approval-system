@@ -52,7 +52,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(new LoginResponse(result.employeeId(), result.name(), result.role(), result.permissions()));
+                .body(new LoginResponse(result.employeeId(), result.name(), result.role(), result.permissions(), result.preferredLocale()));
     }
 
     @PostMapping("/refresh")
