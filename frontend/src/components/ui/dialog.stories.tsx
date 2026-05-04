@@ -15,6 +15,7 @@ import {
 
 const meta: Meta = {
   title: "UI/Dialog",
+  tags: ["autodocs"],
   parameters: { layout: "centered" },
 }
 export default meta
@@ -44,10 +45,21 @@ export const Default: Story = {
 export const ApprovalDialog: Story = {
   name: "Approval Action",
   render: () => {
+    const [open, setOpen] = useState(false)
     const [result, setResult] = useState<string | null>(null)
+
+    const handleOpenChange = (next: boolean) => {
+      setOpen(next)
+      if (next) setResult(null)
+    }
+    const handleApprove = () => {
+      setResult("Approved")
+      setOpen(false)
+    }
+
     return (
       <div className="flex flex-col items-center gap-4">
-        <Dialog onOpenChange={() => setResult(null)}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button variant="success">Approve Request</Button>
           </DialogTrigger>
@@ -63,7 +75,7 @@ export const ApprovalDialog: Story = {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="success" onClick={() => setResult("Approved")}>
+              <Button variant="success" onClick={handleApprove}>
                 Approve
               </Button>
             </DialogFooter>
@@ -80,10 +92,21 @@ export const ApprovalDialog: Story = {
 export const DestructiveDialog: Story = {
   name: "Destructive Action",
   render: () => {
+    const [open, setOpen] = useState(false)
     const [result, setResult] = useState<string | null>(null)
+
+    const handleOpenChange = (next: boolean) => {
+      setOpen(next)
+      if (next) setResult(null)
+    }
+    const handleReject = () => {
+      setResult("Rejected")
+      setOpen(false)
+    }
+
     return (
       <div className="flex flex-col items-center gap-4">
-        <Dialog onOpenChange={() => setResult(null)}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button variant="destructive">Reject Request</Button>
           </DialogTrigger>
@@ -99,7 +122,7 @@ export const DestructiveDialog: Story = {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="destructive" onClick={() => setResult("Rejected")}>
+              <Button variant="destructive" onClick={handleReject}>
                 Reject
               </Button>
             </DialogFooter>
@@ -114,20 +137,25 @@ export const DestructiveDialog: Story = {
 }
 
 export const ControlledOpen: Story = {
-  name: "Controlled (always open)",
-  render: () => (
-    <Dialog open>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Always Visible</DialogTitle>
-          <DialogDescription>
-            This dialog is controlled — useful for displaying loading states or forced confirmations.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter showCloseButton>
-          <Button>OK</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  ),
+  name: "Controlled (initially open)",
+  parameters: { docs: { story: { inline: false } } },
+  render: () => {
+    const [open, setOpen] = useState(true)
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Controlled Dialog</DialogTitle>
+            <DialogDescription>
+              Parent owns the <code>open</code> state. Useful for loading overlays
+              or forced confirmations triggered programmatically.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter showCloseButton>
+            <Button>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  },
 }

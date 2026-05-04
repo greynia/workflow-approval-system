@@ -25,9 +25,10 @@ export const useToastStore = create<ToastState>((set, get) => ({
       toasts: [...state.toasts, { ...toast, id: crypto.randomUUID() }],
     })),
   removeToast: (id) =>
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    })),
+    set((state) => {
+      const next = state.toasts.filter((t) => t.id !== id);
+      return next.length === state.toasts.length ? state : { toasts: next };
+    }),
   error: (title, description) =>
     get().addToast({ variant: "error", title, description }),
   success: (title, description) =>

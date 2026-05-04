@@ -16,7 +16,8 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
     "@storybook/addon-onboarding",
     "@storybook/addon-themes",
-    "storybook-addon-pseudo-states"
+    "storybook-addon-pseudo-states",
+    "storybook/viewport"
   ],
   "framework": "@storybook/nextjs-vite",
   "staticDirs": [

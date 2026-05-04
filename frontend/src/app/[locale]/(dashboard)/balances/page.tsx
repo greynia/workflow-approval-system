@@ -5,6 +5,36 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import LeaveService from "@/services/leave.service";
 import { useFormatDurationAsHours } from "@/lib/use-format-duration";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import {
+  DescriptionList,
+  DescriptionItem,
+} from "@/components/ui/description-list";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { LeaveBalanceResponse } from "@/types/leave";
+
+const WARNING_THRESHOLD = 50;
+const DANGER_THRESHOLD = 80;
+
+function getUsagePercent(used: number, quota: number): number {
+  if (quota <= 0) return 0;
+  return Math.min(100, Math.round((used / quota) * 100));
+}
+
+function getIndicatorClass(percent: number): string {
+  if (percent >= DANGER_THRESHOLD) return "bg-destructive";
+  if (percent >= WARNING_THRESHOLD) return "bg-warning";
+  return "bg-primary";
+}
 
 export default function LeaveBalancesPage() {
   const t = useTranslations("Balances");
@@ -18,101 +48,123 @@ export default function LeaveBalancesPage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-zinc-900">{t("Title")}</h1>
-        <p className="mt-1 text-sm text-zinc-500">{t("Description", { year })}</p>
-      </div>
-
-      {isLoading ? (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-          <table className="w-full text-sm">
-            <tbody>
-              {Array.from({ length: 4 }).map((_, index) => (
-                <tr key={index} className="border-b border-zinc-100 last:border-0">
-                  {Array.from({ length: 4 }).map((__, col) => (
-                    <td key={col} className="px-4 py-4">
-                      <div className="h-4 animate-pulse rounded bg-zinc-100" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <PageHeader title={t("Title")} description={t("Description", { year })} />
 
       {isError ? (
-        <p className="py-10 text-center text-sm text-zinc-500">{t("Error")}</p>
-      ) : null}
-
-      {!isLoading && !isError && data ? (
-        <>
-          {/* Mobile card list */}
-          <div className="space-y-3 md:hidden">
-            {data.map((item) => (
-              <div key={item.leaveType} className="rounded-lg border border-zinc-200 bg-white p-4">
-                <p className="font-medium text-zinc-900">{tLeaveType(item.leaveType)}</p>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <p className="text-xs text-zinc-400">{t("Table.Quota")}</p>
-                    <p className="mt-0.5 text-sm font-medium text-zinc-900">{formatDuration(item.quotaMinutes)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-zinc-400">{t("Table.Used")}</p>
-                    <p className="mt-0.5 text-sm font-medium text-zinc-900">{formatDuration(item.usedMinutes)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-zinc-400">{t("Table.Remaining")}</p>
-                    <p className="mt-0.5 text-sm font-medium text-zinc-800">{formatDuration(item.remainingMinutes)}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table */}
-          <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
-            <table className="w-full text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50">
-                <tr>
-                  {(["LeaveType", "Quota", "Used", "Remaining"] as const).map((col) => (
-                    <th
-                      key={col}
-                      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500"
-                    >
-                      {t(`Table.${col}`)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((item) => (
-                  <tr
-                    key={item.leaveType}
-                    className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
-                  >
-                    <td className="px-4 py-4 font-medium text-zinc-900">
-                      {tLeaveType(item.leaveType)}
-                    </td>
-                    <td className="px-4 py-4 text-zinc-600">
-                      {formatDuration(item.quotaMinutes)}
-                    </td>
-                    <td className="px-4 py-4 text-zinc-600">
-                      {formatDuration(item.usedMinutes)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-800">
-                        {formatDuration(item.remainingMinutes)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      ) : null}
+        <EmptyState title={t("Error")} />
+      ) : isLoading ? (
+        <BalanceCardGrid>
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <BalanceCardSkeleton key={idx} />
+          ))}
+        </BalanceCardGrid>
+      ) : !data || data.length === 0 ? (
+        <EmptyState title={t("Empty")} />
+      ) : (
+        <BalanceCardGrid>
+          {data.map((row) => (
+            <BalanceCard
+              key={row.leaveType}
+              row={row}
+              leaveTypeLabel={tLeaveType(row.leaveType)}
+              labels={{
+                quota: t("Table.Quota"),
+                used: t("Table.Used"),
+                remaining: t("Table.Remaining"),
+                usageRate: t("UsageRate"),
+              }}
+              formatDuration={formatDuration}
+            />
+          ))}
+        </BalanceCardGrid>
+      )}
     </div>
+  );
+}
+
+function BalanceCardGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {children}
+    </div>
+  );
+}
+
+interface BalanceCardLabels {
+  quota: string;
+  used: string;
+  remaining: string;
+  usageRate: string;
+}
+
+function BalanceCard({
+  row,
+  leaveTypeLabel,
+  labels,
+  formatDuration,
+}: {
+  row: LeaveBalanceResponse;
+  leaveTypeLabel: string;
+  labels: BalanceCardLabels;
+  formatDuration: (minutes: number) => string;
+}) {
+  const usagePercent = getUsagePercent(row.usedMinutes, row.quotaMinutes);
+  const indicatorClass = getIndicatorClass(usagePercent);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{leaveTypeLabel}</CardTitle>
+        <CardDescription>
+          <span className="text-2xl font-semibold text-foreground">
+            {formatDuration(row.remainingMinutes)}
+          </span>
+          <span className="text-muted-foreground">
+            {" / "}
+            {formatDuration(row.quotaMinutes)}
+          </span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{labels.usageRate}</span>
+            <span className="font-medium text-foreground">{usagePercent}%</span>
+          </div>
+          <Progress value={usagePercent} indicatorClassName={indicatorClass} />
+        </div>
+        <DescriptionList columns={3} className="gap-x-3 gap-y-0">
+          <DescriptionItem term={labels.quota}>
+            {formatDuration(row.quotaMinutes)}
+          </DescriptionItem>
+          <DescriptionItem term={labels.used}>
+            {formatDuration(row.usedMinutes)}
+          </DescriptionItem>
+          <DescriptionItem term={labels.remaining}>
+            {formatDuration(row.remainingMinutes)}
+          </DescriptionItem>
+        </DescriptionList>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BalanceCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="mt-2 h-7 w-32" />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <Skeleton className="h-1 w-full" />
+        <div className="grid grid-cols-3 gap-3">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -19,12 +19,21 @@
       "day": "d",
       "hour": "h",
       "min": "m"
+    },
+    "UnsavedChanges": {
+      "Title": "Unsaved changes",
+      "Description": "You have unsaved changes on this page. If you leave now, the changes will be lost.",
+      "Stay": "Stay on page",
+      "Leave": "Leave anyway"
     }
   },
   "Auth": {
     "Login": {
       "Title": "Workflow Approval System",
       "Subtitle": "Sign in to continue",
+      "BrandTitle": "Workflow Approval System",
+      "BrandTagline": "Streamline leave requests and accelerate approval decisions.",
+      "Heading": "Sign in",
       "Email": "Email",
       "Password": "Password",
       "EmailPlaceholder": "name@company.com",
@@ -59,12 +68,21 @@
         "LeaveType": "Leave Type",
         "DateRange": "Date Range",
         "Days": "Duration",
+        "Step": "Step",
         "Actions": "Actions"
+      },
+      "StepLabel": {
+        "DEPUTY": "Deputy Confirmation",
+        "MANAGER": "Manager Review"
       },
       "ApproveButton": "Approve",
       "RejectButton": "Reject",
+      "DeputyApproveButton": "Accept",
+      "DeputyRejectButton": "Decline",
       "ApproveSuccess": "Approved",
       "RejectSuccess": "Rejected",
+      "DeputyApproveSuccess": "Deputy role accepted",
+      "DeputyRejectSuccess": "Deputy role declined",
       "ActionError": "Action failed. Please try again.",
       "ApproveDialog": {
         "Title": "Confirm Approval",
@@ -81,14 +99,27 @@
         "Confirm": "Reject",
         "Cancel": "Cancel"
       },
+      "DeputyApproveDialog": {
+        "Title": "Accept Deputy Role",
+        "Description": "You will cover this colleague's work during their leave. The request then moves to manager review.",
+        "Confirm": "Accept",
+        "Cancel": "Cancel"
+      },
+      "DeputyRejectDialog": {
+        "Title": "Decline Deputy Role",
+        "Description": "The applicant will be asked to choose another deputy.",
+        "CommentLabel": "Reason",
+        "CommentPlaceholder": "Explain why you cannot cover (required)",
+        "CommentRequired": "Please enter a reason",
+        "Confirm": "Decline",
+        "Cancel": "Cancel"
+      },
       "LeaveType": {
         "ANNUAL": "Annual Leave",
         "SICK": "Sick Leave",
         "PERSONAL": "Personal Leave",
         "OTHER": "Other"
-      },
-      "DeputyStep": "Deputy Confirmation",
-      "ManagerStep": "Manager Review"
+      }
     }
   },
   "Header": {
@@ -171,6 +202,7 @@
         "DeputyNoResults": "No matching deputies found"
       },
       "SelectedDeputy": "Selected deputy: {deputy}",
+      "DeputyAutoCleared": "The previously selected deputy is no longer available for this time range. Please select another.",
       "Submit": "Submit",
       "Submitting": "Submitting...",
       "AllDay": "Apply full day 09:00-18:00",
@@ -266,6 +298,15 @@
         "EntityType": "All types",
         "Action": "All actions",
         "ActorName": "Search by name..."
+      },
+      "EntityTypeOption": {
+        "LEAVE_REQUEST": "Leave Request"
+      },
+      "ActionOption": {
+        "CREATE": "Create",
+        "APPROVE": "Approve",
+        "REJECT": "Reject",
+        "CANCEL": "Cancel"
       }
     },
     "Table": {
@@ -299,6 +340,8 @@
     "Title": "Leave Balances",
     "Description": "View quota, used time, and remaining balance for {year}",
     "Error": "Failed to load leave balances",
+    "Empty": "No leave balance records for this year",
+    "UsageRate": "Usage",
     "Table": {
       "LeaveType": "Leave Type",
       "Quota": "Quota",

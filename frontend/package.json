@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch",
+    "check:i18n": "node scripts/check-i18n-keys.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

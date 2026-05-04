@@ -19,12 +19,21 @@
       "day": " 天",
       "hour": " 小時",
       "min": " 分"
+    },
+    "UnsavedChanges": {
+      "Title": "尚未儲存的變更",
+      "Description": "本頁有尚未儲存的變更，若現在離開將會遺失，是否確定要離開？",
+      "Stay": "留在此頁",
+      "Leave": "確定離開"
     }
   },
   "Auth": {
     "Login": {
       "Title": "Workflow Approval System",
       "Subtitle": "登入以繼續",
+      "BrandTitle": "Workflow Approval System",
+      "BrandTagline": "簡化請假流程，加速簽核決策。",
+      "Heading": "登入",
       "Email": "電子郵件",
       "Password": "密碼",
       "EmailPlaceholder": "name@company.com",
@@ -59,12 +68,21 @@
         "LeaveType": "假別",
         "DateRange": "日期",
         "Days": "時數",
+        "Step": "階段",
         "Actions": "操作"
+      },
+      "StepLabel": {
+        "DEPUTY": "代理人確認",
+        "MANAGER": "主管審核"
       },
       "ApproveButton": "核准",
       "RejectButton": "退回",
+      "DeputyApproveButton": "同意代理",
+      "DeputyRejectButton": "拒絕代理",
       "ApproveSuccess": "已核准",
       "RejectSuccess": "已退回",
+      "DeputyApproveSuccess": "已同意代理",
+      "DeputyRejectSuccess": "已拒絕代理",
       "ActionError": "操作失敗，請稍後再試",
       "ApproveDialog": {
         "Title": "確認核准",
@@ -81,14 +99,27 @@
         "Confirm": "確認退回",
         "Cancel": "取消"
       },
+      "DeputyApproveDialog": {
+        "Title": "同意擔任代理人",
+        "Description": "你將在此同事請假期間代理其工作；同意後流程會繼續送往主管審核。",
+        "Confirm": "同意代理",
+        "Cancel": "取消"
+      },
+      "DeputyRejectDialog": {
+        "Title": "拒絕擔任代理人",
+        "Description": "申請人會被要求重新指定其他代理人。",
+        "CommentLabel": "原因",
+        "CommentPlaceholder": "請說明無法代理的原因（必填）",
+        "CommentRequired": "請填寫原因",
+        "Confirm": "拒絕代理",
+        "Cancel": "取消"
+      },
       "LeaveType": {
         "ANNUAL": "特休",
         "SICK": "病假",
         "PERSONAL": "事假",
         "OTHER": "其他"
-      },
-      "DeputyStep": "代理人確認",
-      "ManagerStep": "主管審核"
+      }
     }
   },
   "Header": {
@@ -171,6 +202,7 @@
         "DeputyNoResults": "找不到符合條件的代理人"
       },
       "SelectedDeputy": "已選代理人：{deputy}",
+      "DeputyAutoCleared": "原先選擇的代理人在此時段已不可用，請重新選擇。",
       "Submit": "送出",
       "Submitting": "送出中...",
       "AllDay": "套用全天 09:00-18:00",
@@ -266,6 +298,15 @@
         "EntityType": "全部類型",
         "Action": "全部行為",
         "ActorName": "輸入姓名關鍵字..."
+      },
+      "EntityTypeOption": {
+        "LEAVE_REQUEST": "請假申請"
+      },
+      "ActionOption": {
+        "CREATE": "建立",
+        "APPROVE": "核准",
+        "REJECT": "退回",
+        "CANCEL": "取消"
       }
     },
     "Table": {
@@ -299,6 +340,8 @@
     "Title": "我的假別餘額",
     "Description": "查看 {year} 年各假別的總額度、已使用與剩餘時數",
     "Error": "載入假別餘額失敗",
+    "Empty": "本年度尚無假別餘額紀錄",
+    "UsageRate": "使用率",
     "Table": {
       "LeaveType": "假別",
       "Quota": "年度額度",
