@@ -18,97 +18,47 @@ import { useToastStore } from "@/stores/toast-store";
 import { appConfig } from "@/configs/app.config";
 import type { ApiErrorResponse } from "@/types/common";
 import { useFormatDurationAsHours } from "@/lib/use-format-duration";
+import { useUnsavedChangesGuard } from "@/lib/use-unsaved-changes-guard";
+import { useGuardedNavigation } from "@/lib/use-guarded-navigation";
+import { PageHeader } from "@/components/ui/page-header";
+import { Section } from "@/components/ui/section";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { DateTimeRangeSection } from "./_components/date-time-range-section";
+import { DeputySearch } from "./_components/deputy-search";
+import {
+  TIME_OPTIONS,
+  getMaximumStartTime,
+  getMinimumEndTime,
+  isHalfHourAligned,
+  normalizeEndTime,
+  normalizeStartTime,
+  splitDateTimeLocal,
+  toAllDay,
+} from "./_utils/date-time";
 
 const LEAVE_TYPES = ["ANNUAL", "SICK", "PERSONAL", "OTHER"] as const;
-const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
-  const hours = String(Math.floor(index / 2)).padStart(2, "0");
-  const minutes = index % 2 === 0 ? "00" : "30";
-  return `${hours}:${minutes}`;
-});
 
-const fieldClassName =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900";
+// Native <select> styled to match Input primitive — keeps RHF integration simple
+// while sharing visual tokens with the rest of the form.
+const selectClassName = cn(
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none",
+  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50",
+  "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
+);
 
 type NewTranslations = ReturnType<typeof useTranslations<"Requests.New">>;
 
 function FieldError({ message, t }: { message?: string; t: NewTranslations }) {
   if (!message) return null;
   return (
-    <p className="mt-1 text-xs text-red-600">
+    <p className="mt-1 text-xs text-destructive" role="alert">
       {t(`Errors.${message}` as Parameters<NewTranslations>[0])}
     </p>
   );
-}
-
-function toAllDay(value: string, endOfDay: boolean): string {
-  if (!value) return value;
-  const datePart = value.slice(0, 10);
-  return `${datePart}T${endOfDay ? "18:00" : "09:00"}`;
-}
-
-function splitDateTimeLocal(value?: string): { date: string; time: string } {
-  if (!value || !value.includes("T")) {
-    return { date: "", time: "09:00" };
-  }
-
-  const [date, rawTime] = value.split("T");
-  return { date, time: rawTime.slice(0, 5) || "09:00" };
-}
-
-function buildDateTimeLocal(date: string, time: string): string {
-  if (!date || !time) return "";
-  return `${date}T${time}`;
-}
-
-function formatDatePart(date: Date): string {
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function formatTimePart(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
-
-function addMinutes(value: string, minutes: number): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  date.setMinutes(date.getMinutes() + minutes);
-  return buildDateTimeLocal(formatDatePart(date), formatTimePart(date));
-}
-
-function getMinimumEndTime(startTime?: string): string {
-  if (!startTime) return "";
-  return addMinutes(startTime, 30);
-}
-
-function getMaximumStartTime(endTime?: string): string {
-  if (!endTime) return "";
-  return addMinutes(endTime, -30);
-}
-
-function normalizeStartTime(nextStartDate: string, nextStartTime: string, endTime?: string): string {
-  const candidate = buildDateTimeLocal(nextStartDate, nextStartTime);
-  if (!candidate) return "";
-  if (!endTime || candidate < endTime) return candidate;
-  return getMaximumStartTime(endTime);
-}
-
-function normalizeEndTime(nextEndDate: string, nextEndTime: string, startTime?: string): string {
-  const candidate = buildDateTimeLocal(nextEndDate, nextEndTime);
-  if (!candidate) return "";
-  if (!startTime || candidate > startTime) return candidate;
-  return getMinimumEndTime(startTime);
-}
-
-function isHalfHourAligned(value?: string): boolean {
-  if (!value) return false;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
-  return date.getMinutes() === 0 || date.getMinutes() === 30;
 }
 
 export default function RequestsNewPage() {
@@ -116,19 +66,22 @@ export default function RequestsNewPage() {
   const tError = useTranslations("Error");
   const formatDurationAsHours = useFormatDurationAsHours();
   const router = useRouter();
+  const guardedNav = useGuardedNavigation();
   const queryClient = useQueryClient();
-  const toast = useToastStore();
+  const toast = useToastStore.getState();
 
   const {
     register,
     handleSubmit,
     setValue,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty, isSubmitSuccessful },
   } = useForm<CreateLeaveFormValues>({
     resolver: zodResolver(createLeaveSchema),
-    defaultValues: { durationMinutes: 0, deputyId: undefined } as Partial<CreateLeaveFormValues>,
+    defaultValues: { deputyId: undefined } as Partial<CreateLeaveFormValues>,
   });
+
+  useUnsavedChangesGuard({ when: isDirty && !isSubmitSuccessful });
 
   const startTimeField = register("startTime");
   const endTimeField = register("endTime");
@@ -137,9 +90,7 @@ export default function RequestsNewPage() {
   const endTime = useWatch({ control, name: "endTime" });
   const selectedType = useWatch({ control, name: "type" });
   const selectedDeputyId = useWatch({ control, name: "deputyId" });
-  const durationMinutes = useWatch({ control, name: "durationMinutes" });
   const [deputyQuery, setDeputyQuery] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const startParts = splitDateTimeLocal(startTime);
   const endParts = splitDateTimeLocal(endTime);
   const maximumStartTime = getMaximumStartTime(endTime);
@@ -170,15 +121,6 @@ export default function RequestsNewPage() {
     enabled: canCalculate,
   });
 
-  useEffect(() => {
-    if (calculation && canCalculate) {
-      setValue("durationMinutes", calculation.durationMinutes, { shouldValidate: true });
-      return;
-    }
-
-    setValue("durationMinutes", 0, { shouldValidate: false });
-  }, [calculation, canCalculate, setValue]);
-
   const { data: employees = [], isLoading: isDeputiesLoading } = useQuery({
     queryKey: ["employees", "available-deputies", debouncedStartTime, debouncedEndTime, debouncedDeputyQuery],
     queryFn: () => EmployeeService.getAvailableDeputies(debouncedStartTime, debouncedEndTime, debouncedDeputyQuery),
@@ -194,28 +136,12 @@ export default function RequestsNewPage() {
   const currentBalance = balances?.find((item) => item.leaveType === selectedType);
 
   useEffect(() => {
-    if (!startTime || !endTime) {
-      return;
-    }
-    if (endTime > startTime) {
-      return;
-    }
+    if (!canCalculate || selectedDeputyId == null) return;
+    if (employees.some((employee) => employee.id === selectedDeputyId)) return;
 
-    setValue("endTime", getMinimumEndTime(startTime), {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-  }, [endTime, setValue, startTime]);
-
-  useEffect(() => {
-    if (!canCalculate) {
-      setValue("deputyId", undefined, { shouldDirty: true });
-      return;
-    }
-    if (selectedDeputyId != null && !employees.some((employee) => employee.id === selectedDeputyId)) {
-      setValue("deputyId", undefined, { shouldDirty: true });
-    }
-  }, [employees, canCalculate, selectedDeputyId, setValue]);
+    setValue("deputyId", undefined, { shouldDirty: true });
+    toast.info(t("DeputyAutoCleared"));
+  }, [employees, canCalculate, selectedDeputyId, setValue, toast, t]);
 
   const KNOWN_ERROR_CODES = new Set([
     "DEPUTY_ON_LEAVE",
@@ -261,21 +187,28 @@ export default function RequestsNewPage() {
   }
 
   const busy = isSubmitting || isPending;
-  const canSubmit = canCalculate && (calculation?.durationMinutes ?? durationMinutes ?? 0) >= 30;
+  const canSubmit = canCalculate && (calculation?.durationMinutes ?? 0) >= 30;
   const allDayEndTime = toAllDay(endTime ?? startTime ?? "", true);
   const allDayEndParts = splitDateTimeLocal(allDayEndTime);
 
-  return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900">{t("Title")}</h1>
+  const deputyIdRegister = register("deputyId", {
+    setValueAs: (value) => {
+      if (value === "" || value == null) {
+        return undefined;
+      }
+      return Number(value);
+    },
+  });
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-              {t("Fields.Type")}
-            </label>
-            <select {...register("type")} className={fieldClassName}>
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <PageHeader title={t("Title")} />
+
+      <Section>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="leave-type">{t("Fields.Type")}</Label>
+            <select id="leave-type" {...register("type")} className={selectClassName}>
               <option value="">{t("TypeOptions.Placeholder")}</option>
               {LEAVE_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -286,142 +219,58 @@ export default function RequestsNewPage() {
             <FieldError message={errors.type?.message} t={t} />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-                {t("Fields.StartDate")}
-              </label>
-              <input type="hidden" {...startTimeField} />
-              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
-                <input
-                  type="date"
-                  value={startParts.date}
-                  max={maximumStartParts.date || undefined}
-                  onChange={(event) =>
-                    setValue(
-                      "startTime",
-                      normalizeStartTime(event.target.value, startParts.time, endTime),
-                      {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      }
-                    )
-                  }
-                  className={fieldClassName}
-                />
-                <select
-                  value={startParts.time}
-                  onChange={(event) =>
-                    setValue(
-                      "startTime",
-                      normalizeStartTime(startParts.date, event.target.value, endTime),
-                      {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      }
-                    )
-                  }
-                  className={fieldClassName}
-                >
-                  {availableStartTimes.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setValue(
-                    "startTime",
-                    normalizeStartTime(
-                      splitDateTimeLocal(toAllDay(startTime ?? "", false)).date,
-                      splitDateTimeLocal(toAllDay(startTime ?? "", false)).time,
-                      endTime
-                    ),
-                    { shouldDirty: true, shouldValidate: true }
-                  )
-                }
-                className="mt-2 text-xs text-zinc-500 hover:text-zinc-700"
-              >
-                {t("AllDay")}
-              </button>
-              <FieldError message={errors.startTime?.message} t={t} />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-                {t("Fields.EndDate")}
-              </label>
-              <input type="hidden" {...endTimeField} />
-              <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
-                <input
-                  type="date"
-                  value={endParts.date}
-                  min={minimumEndParts.date || startParts.date || undefined}
-                  onChange={(event) =>
-                    setValue(
-                      "endTime",
-                      normalizeEndTime(event.target.value, endParts.time, startTime),
-                      {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      }
-                    )
-                  }
-                  className={fieldClassName}
-                />
-                <select
-                  value={endParts.time}
-                  onChange={(event) =>
-                    setValue(
-                      "endTime",
-                      normalizeEndTime(endParts.date, event.target.value, startTime),
-                      {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      }
-                    )
-                  }
-                  className={fieldClassName}
-                >
-                  {availableEndTimes.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setValue(
-                    "endTime",
-                    normalizeEndTime(allDayEndParts.date, allDayEndParts.time, startTime),
-                    { shouldDirty: true, shouldValidate: true }
-                  )
-                }
-                className="mt-2 text-xs text-zinc-500 hover:text-zinc-700"
-              >
-                {t("AllDay")}
-              </button>
-              <FieldError message={errors.endTime?.message} t={t} />
-            </div>
-          </div>
+          <DateTimeRangeSection
+            startTime={startTime}
+            endTime={endTime}
+            startMaxDate={maximumStartParts.date}
+            endMinDate={minimumEndParts.date || startParts.date}
+            availableStartTimes={availableStartTimes}
+            availableEndTimes={availableEndTimes}
+            startRegister={startTimeField}
+            endRegister={endTimeField}
+            startLabel={t("Fields.StartDate")}
+            endLabel={t("Fields.EndDate")}
+            allDayLabel={t("AllDay")}
+            onStartChange={(nextDate, nextTime) =>
+              setValue("startTime", normalizeStartTime(nextDate, nextTime, endTime), {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            onEndChange={(nextDate, nextTime) =>
+              setValue("endTime", normalizeEndTime(nextDate, nextTime, startTime), {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            onStartAllDay={() => {
+              const allDayStart = splitDateTimeLocal(toAllDay(startTime ?? "", false));
+              setValue(
+                "startTime",
+                normalizeStartTime(allDayStart.date, allDayStart.time, endTime),
+                { shouldDirty: true, shouldValidate: true },
+              );
+            }}
+            onEndAllDay={() =>
+              setValue(
+                "endTime",
+                normalizeEndTime(allDayEndParts.date, allDayEndParts.time, startTime),
+                { shouldDirty: true, shouldValidate: true },
+              )
+            }
+            startError={<FieldError message={errors.startTime?.message} t={t} />}
+            endError={<FieldError message={errors.endTime?.message} t={t} />}
+          />
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-              {t("Fields.Days")}
-            </label>
-            <input type="hidden" {...register("durationMinutes", { valueAsNumber: true })} />
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-              {canCalculate && (calculation?.durationMinutes ?? durationMinutes ?? 0) > 0
-                ? formatDurationAsHours(calculation?.durationMinutes ?? durationMinutes ?? 0)
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("Fields.Days")}</Label>
+            <div className="rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-foreground">
+              {canCalculate && (calculation?.durationMinutes ?? 0) > 0
+                ? formatDurationAsHours(calculation?.durationMinutes ?? 0)
                 : "-"}
             </div>
-            <FieldError message={errors.durationMinutes?.message} t={t} />
             {currentBalance ? (
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 {t("BalanceHint", {
                   leaveType: t(`TypeOptions.${selectedType as "ANNUAL" | "SICK" | "PERSONAL" | "OTHER"}`),
                   remaining: formatDurationAsHours(currentBalance.remainingMinutes),
@@ -432,123 +281,53 @@ export default function RequestsNewPage() {
             ) : null}
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-              {t("Fields.Reason")}
-            </label>
-            <textarea
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="leave-reason">{t("Fields.Reason")}</Label>
+            <Textarea
+              id="leave-reason"
               {...register("reason")}
               rows={3}
               placeholder={t("Placeholders.Reason")}
-              className={`${fieldClassName} resize-none`}
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-              {t("Fields.DeputyId")}
-            </label>
-            <input
-              type="hidden"
-              {...register("deputyId", {
-                setValueAs: (value) => {
-                  if (value === "" || value == null) {
-                    return undefined;
-                  }
-                  return Number(value);
-                },
-              })}
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("Fields.DeputyId")}</Label>
+            <input type="hidden" {...deputyIdRegister} />
+            <DeputySearch
+              selectedDeputyId={selectedDeputyId}
+              employees={employees}
+              isLoading={isDeputiesLoading}
+              enabled={canCalculate}
+              query={deputyQuery}
+              onQueryChange={setDeputyQuery}
+              onSelect={(id) =>
+                setValue("deputyId", id, { shouldDirty: true, shouldValidate: true })
+              }
+              labels={{
+                placeholderEnabled: t("Placeholders.DeputySearch"),
+                placeholderDisabled: t("Placeholders.DeputyDateRequired"),
+                loading: t("Placeholders.DeputyLoading"),
+                noResults: t("Placeholders.DeputyNoResults"),
+              }}
             />
-            {(() => {
-              const selectedEmployee = selectedDeputyId != null
-                ? employees.find((e) => e.id === selectedDeputyId)
-                : undefined;
-              return (
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={selectedEmployee ? selectedEmployee.name : deputyQuery}
-                    disabled={!canCalculate}
-                    placeholder={
-                      !canCalculate
-                        ? t("Placeholders.DeputyDateRequired")
-                        : t("Placeholders.DeputySearch")
-                    }
-                    onChange={(event) => {
-                      setDeputyQuery(event.target.value);
-                      setValue("deputyId", undefined, { shouldDirty: true, shouldValidate: true });
-                      setShowDropdown(true);
-                    }}
-                    onFocus={() => {
-                      if (!selectedEmployee) {
-                        setShowDropdown(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      setTimeout(() => setShowDropdown(false), 150);
-                    }}
-                    className={fieldClassName}
-                  />
-                  {showDropdown && !selectedEmployee && canCalculate && (
-                    <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-zinc-200 bg-white shadow-md">
-                      {isDeputiesLoading ? (
-                        <p className="px-3 py-2 text-sm text-zinc-400">
-                          {t("Placeholders.DeputyLoading")}
-                        </p>
-                      ) : employees.length === 0 ? (
-                        <p className="px-3 py-2 text-sm text-zinc-400">
-                          {t("Placeholders.DeputyNoResults")}
-                        </p>
-                      ) : (
-                        <ul>
-                          {employees.map((employee) => (
-                            <li key={employee.id}>
-                              <button
-                                type="button"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  setValue("deputyId", employee.id, {
-                                    shouldDirty: true,
-                                    shouldValidate: true,
-                                  });
-                                  setDeputyQuery("");
-                                  setShowDropdown(false);
-                                }}
-                                className="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50"
-                              >
-                                <span>{employee.name}</span>
-                                <span className="text-xs text-zinc-400">{employee.employeeNo}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
             <FieldError message={errors.deputyId?.message} t={t} />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
               type="button"
-              onClick={() => router.push(appConfig.routes.requests)}
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+              variant="outline"
+              onClick={() => guardedNav.push(appConfig.routes.requests)}
             >
               {t("Cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={busy || !canSubmit}
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
-            >
+            </Button>
+            <Button type="submit" disabled={busy || !canSubmit}>
               {busy ? t("Submitting") : t("Submit")}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+      </Section>
     </div>
   );
 }

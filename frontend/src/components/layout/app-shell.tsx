@@ -10,9 +10,13 @@ function AppShell({
   children,
   className,
 }: {
+  /** Left rail content — typically `<AppSidebar>`. Layout assumes the node manages its own desktop/mobile responsive behavior. */
   sidebar: React.ReactNode
+  /** Top bar content — typically `<AppHeader>`. Stays sticky inside the right-side flex column. */
   header: React.ReactNode
+  /** Main page content rendered inside `<main>` with default padding (`p-4 sm:p-6`). */
   children: React.ReactNode
+  /** Additional Tailwind classes merged with the outer flex container. */
   className?: string
 }) {
   return (

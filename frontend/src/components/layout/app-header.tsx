@@ -12,9 +12,13 @@ function AppHeader({
   children,
   className,
 }: {
+  /** Fired when the mobile hamburger is tapped. When omitted, no hamburger button is rendered (header still shows on desktop). */
   onToggleSidebar?: () => void
+  /** aria-label for the hamburger button. */
   toggleLabel?: string
+  /** Right-aligned action slot — typically locale switcher, user menu, notifications. */
   children?: React.ReactNode
+  /** Additional Tailwind classes merged with the sticky-top header bar. */
   className?: string
 }) {
   return (

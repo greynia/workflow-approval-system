@@ -22,13 +22,18 @@ function getSidebarItems(msgs: Messages): SidebarItem[] {
 function SidebarWrapper({
   locale,
   initialOpen = false,
+  initialCollapsed = false,
   pathname,
+  enableCollapse = false,
 }: {
   locale: string
   initialOpen?: boolean
+  initialCollapsed?: boolean
   pathname?: string
+  enableCollapse?: boolean
 }) {
   const [open, setOpen] = useState(initialOpen)
+  const [collapsed, setCollapsed] = useState(initialCollapsed)
   const msgs = msgMap[locale] ?? zhTW
   return (
     <div className="flex h-screen">
@@ -37,7 +42,13 @@ function SidebarWrapper({
         open={open}
         onOpenChange={setOpen}
         pathname={pathname}
-        brand={<span className="text-sm font-semibold">Workflow</span>}
+        collapsed={collapsed}
+        onCollapsedChange={enableCollapse ? setCollapsed : undefined}
+        brand={
+          <span className="truncate text-sm font-semibold">
+            {collapsed ? "W" : "Workflow"}
+          </span>
+        }
       />
       <div className="flex-1 bg-muted/40 p-6">
         <p className="text-sm text-muted-foreground">Main content area</p>
@@ -76,7 +87,28 @@ export const MobileOpen: Story = {
   render: (_, { globals }) => (
     <SidebarWrapper locale={(globals.locale as string) ?? "zh-TW"} initialOpen />
   ),
-  parameters: { viewport: { defaultViewport: "mobile1" } },
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+}
+
+export const Collapsed: Story = {
+  name: "Desktop (collapsed)",
+  render: (_, { globals }) => (
+    <SidebarWrapper
+      locale={(globals.locale as string) ?? "zh-TW"}
+      initialCollapsed
+      enableCollapse
+    />
+  ),
+}
+
+export const Collapsible: Story = {
+  name: "Desktop (toggleable)",
+  render: (_, { globals }) => (
+    <SidebarWrapper
+      locale={(globals.locale as string) ?? "zh-TW"}
+      enableCollapse
+    />
+  ),
 }
 
 export const Loading: Story = {

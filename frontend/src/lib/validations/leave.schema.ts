@@ -19,7 +19,6 @@ const baseSchema = z.object({
     .string()
     .min(1, { message: "EndDateRequired" })
     .refine(isHalfHourAligned, { message: "InvalidTimeUnit" }),
-  durationMinutes: z.number().int().min(30, { message: "DaysMin" }),
   reason: z.string().max(1000).optional(),
   deputyId: z
     .number({ error: "DeputyRequired" })

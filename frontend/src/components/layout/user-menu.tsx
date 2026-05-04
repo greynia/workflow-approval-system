@@ -5,11 +5,21 @@ import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/stores/auth-store";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGuardedNavigation } from "@/lib/use-guarded-navigation";
 
+/**
+ * Header dropdown showing the signed-in user's display name and role,
+ * with a sign-out action.
+ *
+ * Renders a skeleton placeholder while `useAuthStore.user` is `null`.
+ * Reads translations from the `Header` namespace (e.g. `Header.Role.<role>`, `Header.SignOut`).
+ * No props — relies on the auth store and the surrounding `next-intl` provider.
+ */
 export function UserMenu() {
   const t = useTranslations("Header");
   const user = useAuthStore((s) => s.user);
   const { signOut } = useAuth();
+  const guardedNav = useGuardedNavigation();
 
   if (!user) {
     return (
@@ -40,7 +50,7 @@ export function UserMenu() {
           className="z-50 min-w-[160px] rounded-md border border-zinc-200 bg-white p-1 shadow-md"
         >
           <DropdownMenu.Item
-            onSelect={() => void signOut()}
+            onSelect={() => guardedNav.runGuarded(() => void signOut())}
             className="cursor-pointer rounded px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 focus:bg-zinc-100"
           >
             {t("SignOut")}

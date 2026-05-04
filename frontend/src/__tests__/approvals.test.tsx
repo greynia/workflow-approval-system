@@ -1,8 +1,9 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "@/mocks/server";
 import { useAuthStore } from "@/stores/auth-store";
+import { useUnsavedChangesStore } from "@/stores/unsaved-changes-store";
 import ApprovalsPage from "@/app/[locale]/(dashboard)/approvals/page";
 import { renderWithProviders } from "./test-utils";
 import type { PendingApproval } from "@/types/approval";
@@ -22,8 +23,24 @@ jest.mock("@/i18n/navigation", () => ({
 const mockApprovals: PendingApproval[] = [
   {
     stepId: 5001,
-    stepType: "DEPUTY",
+    stepType: "MANAGER",
     requestId: 1001,
+    applicantId: 3,
+    applicantName: "Alice Chen",
+    leaveType: "ANNUAL",
+    durationMinutes: 960,
+    startTime: "2026-04-15T09:00",
+    endTime: "2026-04-16T18:00",
+    status: "PENDING",
+    createdAt: "2026-04-10T09:00:00.000Z",
+  },
+];
+
+const mockDeputyApprovals: PendingApproval[] = [
+  {
+    stepId: 5002,
+    stepType: "DEPUTY",
+    requestId: 1002,
     applicantId: 3,
     applicantName: "Alice Chen",
     leaveType: "ANNUAL",
@@ -39,6 +56,7 @@ beforeEach(() => {
   useAuthStore.setState({
     user: { employeeId: 2, name: "Mina Manager", role: "MANAGER", permissions: ["request.view", "request.create", "request.edit", "approval.view", "approval.approve", "employee.view", "balance.view"] },
   });
+  useUnsavedChangesStore.setState({ dirty: false, pending: null });
   // Override handler — no employee-ID check needed in unit tests
   server.use(
     http.get("/api/approvals/pending", () =>
@@ -218,6 +236,214 @@ describe("ApprovalsPage", () => {
         expect(screen.queryByText("Reject Request")).not.toBeInTheDocument()
       );
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["requests"] });
+    });
+  });
+
+  describe("Deputy step — semantic UI", () => {
+    beforeEach(() => {
+      // Override base handler with deputy-step fixture for this group
+      server.use(
+        http.get("/api/approvals/pending", () =>
+          HttpResponse.json(mockDeputyApprovals, { status: 200 })
+        )
+      );
+    });
+
+    it("renders Accept/Decline buttons and Deputy step badge", async () => {
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Accept").length).toBeGreaterThan(0)
+      );
+      expect(screen.getAllByText("Decline").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Deputy Confirmation").length).toBeGreaterThan(0);
+      // No manager-step labels should leak through for a deputy row
+      expect(screen.queryByText("Approve")).not.toBeInTheDocument();
+      expect(screen.queryByText("Reject")).not.toBeInTheDocument();
+    });
+
+    it("opens deputy-specific approve dialog", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Accept").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByRole("button", { name: "Accept" })[0]);
+
+      expect(screen.getByText("Accept Deputy Role")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "You will cover this colleague's work during their leave. The request then moves to manager review.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("opens deputy-specific reject dialog with deputy-flavored copy", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Decline").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByRole("button", { name: "Decline" })[0]);
+
+      expect(screen.getByText("Decline Deputy Role")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Explain why you cannot cover (required)"),
+      ).toBeInTheDocument();
+    });
+
+    it("shows deputy-specific success toast on approve", async () => {
+      server.use(
+        http.post("/api/approvals/:stepId/approve", () =>
+          new HttpResponse(null, { status: 204 })
+        )
+      );
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Accept").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByRole("button", { name: "Accept" })[0]);
+      const confirmBtn = screen.getAllByRole("button", { name: "Accept" }).at(-1)!;
+      await user.click(confirmBtn);
+
+      await waitFor(() =>
+        expect(screen.getByText("Deputy role accepted")).toBeInTheDocument()
+      );
+    });
+
+    // Guards against the race where approveTarget is cleared (via ESC / backdrop)
+    // before the API resolves. The deputy flag is carried in mutation variables,
+    // so the success toast must still reflect the originating step type.
+    it("preserves deputy-flavored success toast when dialog is dismissed mid-flight", async () => {
+      let resolveApprove: () => void = () => {};
+      server.use(
+        http.post(
+          "/api/approvals/:stepId/approve",
+          async () =>
+            await new Promise<HttpResponse<null>>((resolve) => {
+              resolveApprove = () => resolve(new HttpResponse(null, { status: 204 }));
+            }),
+        ),
+      );
+
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Accept").length).toBeGreaterThan(0)
+      );
+
+      // Open deputy approve dialog and submit
+      await user.click(screen.getAllByRole("button", { name: "Accept" })[0]);
+      const confirmBtn = screen.getAllByRole("button", { name: "Accept" }).at(-1)!;
+      await user.click(confirmBtn);
+
+      // Dismiss the dialog while the mutation is still pending; this clears
+      // approveTarget. A closure-based onSuccess would now read null and
+      // fall back to the manager toast — variables snapshot must prevent that.
+      await user.keyboard("{Escape}");
+
+      act(() => {
+        resolveApprove();
+      });
+
+      await waitFor(() =>
+        expect(screen.getByText("Deputy role accepted")).toBeInTheDocument()
+      );
+    });
+  });
+
+  describe("Reject dialog — unsaved-changes guard", () => {
+    it("closes immediately on Cancel when textarea is empty", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Reject").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByText("Reject")[0]);
+      expect(screen.getByText("Reject Request")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      expect(screen.queryByText("Reject Request")).not.toBeInTheDocument();
+      expect(useUnsavedChangesStore.getState().pending).toBeNull();
+      expect(useUnsavedChangesStore.getState().dirty).toBe(false);
+    });
+
+    it("queues a pending action on Cancel when textarea has content", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Reject").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByText("Reject")[0]);
+      await user.type(
+        screen.getByPlaceholderText("Enter rejection reason (required)"),
+        "Need more information",
+      );
+      expect(useUnsavedChangesStore.getState().dirty).toBe(true);
+
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      // Reject dialog still open; close action queued behind global guard
+      expect(screen.getByText("Reject Request")).toBeInTheDocument();
+      expect(useUnsavedChangesStore.getState().pending).not.toBeNull();
+    });
+
+    it("closes the dialog after the queued action is confirmed", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Reject").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByText("Reject")[0]);
+      await user.type(
+        screen.getByPlaceholderText("Enter rejection reason (required)"),
+        "Need more information",
+      );
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      // Simulate the user clicking "Leave" in the global UnsavedChangesDialog
+      act(() => {
+        useUnsavedChangesStore.getState().confirm();
+      });
+
+      await waitFor(() =>
+        expect(screen.queryByText("Reject Request")).not.toBeInTheDocument()
+      );
+      expect(useUnsavedChangesStore.getState().pending).toBeNull();
+      expect(useUnsavedChangesStore.getState().dirty).toBe(false);
+    });
+
+    it("preserves textarea content when the user chooses Stay", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ApprovalsPage />);
+      await waitFor(() =>
+        expect(screen.getAllByText("Reject").length).toBeGreaterThan(0)
+      );
+
+      await user.click(screen.getAllByText("Reject")[0]);
+      const textarea = screen.getByPlaceholderText(
+        "Enter rejection reason (required)",
+      ) as HTMLTextAreaElement;
+      await user.type(textarea, "Need more information");
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      // Simulate the user clicking "Stay" in the global UnsavedChangesDialog
+      act(() => {
+        useUnsavedChangesStore.getState().cancel();
+      });
+
+      expect(screen.getByText("Reject Request")).toBeInTheDocument();
+      expect(textarea.value).toBe("Need more information");
+      expect(useUnsavedChangesStore.getState().pending).toBeNull();
+      // Still dirty — the user is still typing
+      expect(useUnsavedChangesStore.getState().dirty).toBe(true);
     });
   });
 });

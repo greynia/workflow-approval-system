@@ -3,7 +3,8 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useTransition } from "react";
 import { useLocale } from "next-intl";
-import { useRouter, usePathname } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { useGuardedNavigation } from "@/lib/use-guarded-navigation";
 
 const localeOptions = [
   { value: "zh-TW", shortLabel: "繁中", label: "繁體中文" },
@@ -12,7 +13,7 @@ const localeOptions = [
 
 export function LocaleSwitcher() {
   const currentLocale = useLocale();
-  const router = useRouter();
+  const guardedNav = useGuardedNavigation();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
@@ -24,7 +25,7 @@ export function LocaleSwitcher() {
     if (nextLocale === currentLocale) return;
 
     startTransition(() => {
-      router.replace({ pathname }, { locale: nextLocale });
+      guardedNav.replace({ pathname }, { locale: nextLocale });
     });
   }
 
