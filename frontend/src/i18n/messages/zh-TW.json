@@ -55,6 +55,7 @@
     "MyRequests": "我的申請",
     "PendingApprovals": "待簽核",
     "LeaveBalances": "我的假別餘額",
+    "PendingRecalls": "銷假審核",
     "AuditLog": "審計紀錄"
   },
   "Approvals": {
@@ -73,7 +74,8 @@
       },
       "StepLabel": {
         "DEPUTY": "代理人確認",
-        "MANAGER": "主管審核"
+        "MANAGER": "主管審核",
+        "RECALL": "銷假審核"
       },
       "ApproveButton": "核准",
       "RejectButton": "退回",
@@ -173,7 +175,8 @@
         "PENDING": "審核中",
         "APPROVED": "已核准",
         "REJECTED": "已退回",
-        "CANCELLED": "已取消"
+        "CANCELLED": "已取消",
+        "PENDING_RECALL": "銷假審核中"
       }
     },
     "New": {
@@ -222,6 +225,7 @@
     "Detail": {
       "BackToRequests": "我的申請",
       "BackToApprovals": "待簽核",
+      "BackToRecalls": "銷假審核",
       "Title": "申請詳情",
       "Error": "載入申請詳情失敗",
       "TimelineTitle": "簽核歷程",
@@ -245,7 +249,8 @@
         "PENDING": "審核中",
         "APPROVED": "已核准",
         "REJECTED": "已退回",
-        "CANCELLED": "已取消"
+        "CANCELLED": "已取消",
+        "PENDING_RECALL": "銷假審核中"
       },
       "StepStatus": {
         "PENDING": "待簽核",
@@ -255,6 +260,7 @@
       },
       "DeputyLabel": "代理人",
       "ManagerLabel": "主管",
+      "RecallLabel": "銷假",
       "AiReview": {
         "Title": "AI 審核摘要",
         "Disclaimer": "（僅供參考）",
@@ -280,7 +286,55 @@
         "RecommendationReason": "建議理由",
         "GeneratedAt": "分析時間",
         "Model": "模型"
-      }
+      },
+      "RecallButton": "申請銷假",
+      "RecallConfirmTitle": "申請銷假",
+      "RecallConfirmDesc": "提出銷假申請後，直屬主管將審核此申請。審核通過後假期配額將自動退還。",
+      "RecallReasonLabel": "銷假原因",
+      "RecallReasonPlaceholder": "請說明銷假原因（必填）",
+      "RecallSuccess": "銷假申請已送出，等待主管審核",
+      "RecallError": "申請失敗，請稍後再試",
+      "RecallPending": "銷假審核中",
+      "Cancel": "取消"
+    }
+  },
+  "Recalls": {
+    "Title": "銷假審核",
+    "Description": "審核員工提出的銷假申請",
+    "Empty": "目前沒有待處理的銷假申請",
+    "Error": "載入銷假申請失敗",
+    "ApproveButton": "核准銷假",
+    "RejectButton": "拒絕",
+    "ApproveSuccess": "已核准銷假，假期配額已退還",
+    "RejectSuccess": "已拒絕銷假，申請單維持核准狀態",
+    "ActionError": "操作失敗，請稍後再試",
+    "LeaveType": {
+      "ANNUAL": "年假",
+      "SICK": "病假",
+      "PERSONAL": "事假",
+      "OTHER": "其他"
+    },
+    "Table": {
+      "Applicant": "申請人",
+      "LeaveType": "假別",
+      "DateRange": "請假日期",
+      "Duration": "時數",
+      "RecallReason": "銷假原因"
+    },
+    "ApproveDialog": {
+      "Title": "確認核准銷假",
+      "Description": "核准後假期配額將自動退還，原請假申請將設為已取消。",
+      "Confirm": "確認核准",
+      "Cancel": "取消"
+    },
+    "RejectDialog": {
+      "Title": "拒絕銷假申請",
+      "Description": "拒絕後，原請假申請維持核准狀態。",
+      "CommentLabel": "拒絕原因",
+      "CommentPlaceholder": "請說明拒絕原因（必填）",
+      "CommentRequired": "請填寫拒絕原因",
+      "Confirm": "確認拒絕",
+      "Cancel": "取消"
     }
   },
   "AuditLog": {
@@ -347,6 +401,34 @@
       "Quota": "年度額度",
       "Used": "已使用",
       "Remaining": "剩餘"
+    }
+  },
+  "Admin": {
+    "LeaveBalance": {
+      "Title": "假期配額管理",
+      "InitYear": "初始化年度配額",
+      "InitConfirmTitle": "確認初始化",
+      "InitConfirmDesc": "將為 {year} 年度所有員工建立初始配額（已存在者跳過）",
+      "InitSuccess": "初始化完成：{initialized} 筆新增，{skipped} 筆跳過",
+      "InitError": "初始化失敗，請稍後再試",
+      "AdjustTitle": "調整配額",
+      "AdjustError": "調整失敗，請稍後再試",
+      "Error": "載入配額資料失敗",
+      "Empty": "目前無配額資料",
+      "Fields": {
+        "Employee": "員工",
+        "LeaveType": "假別",
+        "Quota": "配額（天）",
+        "Used": "已用",
+        "Remaining": "餘額",
+        "UpdatedAt": "更新時間",
+        "Reason": "調整原因"
+      },
+      "Actions": {
+        "Adjust": "調整",
+        "Submit": "確認調整",
+        "Cancel": "取消"
+      }
     }
   }
 }

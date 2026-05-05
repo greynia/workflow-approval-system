@@ -13,6 +13,7 @@ const STATUS_VARIANT: Record<StatusKind, BadgeVariant> = {
   REJECTED: "destructive",
   CANCELLED: "secondary",
   SKIPPED: "outline",
+  PENDING_RECALL: "info",
 }
 
 function StatusBadge({

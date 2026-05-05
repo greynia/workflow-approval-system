@@ -55,6 +55,7 @@
     "MyRequests": "My Requests",
     "PendingApprovals": "Pending Approvals",
     "LeaveBalances": "Leave Balances",
+    "PendingRecalls": "Recall Approvals",
     "AuditLog": "Audit Log"
   },
   "Approvals": {
@@ -73,7 +74,8 @@
       },
       "StepLabel": {
         "DEPUTY": "Deputy Confirmation",
-        "MANAGER": "Manager Review"
+        "MANAGER": "Manager Review",
+        "RECALL": "Recall Review"
       },
       "ApproveButton": "Approve",
       "RejectButton": "Reject",
@@ -173,7 +175,8 @@
         "PENDING": "Pending",
         "APPROVED": "Approved",
         "REJECTED": "Rejected",
-        "CANCELLED": "Cancelled"
+        "CANCELLED": "Cancelled",
+        "PENDING_RECALL": "Recall Pending"
       }
     },
     "New": {
@@ -222,6 +225,7 @@
     "Detail": {
       "BackToRequests": "My Requests",
       "BackToApprovals": "Pending Approvals",
+      "BackToRecalls": "Recall Approvals",
       "Title": "Request Detail",
       "Error": "Failed to load request detail",
       "TimelineTitle": "Approval Timeline",
@@ -245,7 +249,8 @@
         "PENDING": "Pending",
         "APPROVED": "Approved",
         "REJECTED": "Rejected",
-        "CANCELLED": "Cancelled"
+        "CANCELLED": "Cancelled",
+        "PENDING_RECALL": "Recall Pending"
       },
       "StepStatus": {
         "PENDING": "Pending",
@@ -255,6 +260,7 @@
       },
       "DeputyLabel": "Deputy",
       "ManagerLabel": "Manager",
+      "RecallLabel": "Recall",
       "AiReview": {
         "Title": "AI Review Summary",
         "Disclaimer": "(For reference only)",
@@ -280,7 +286,55 @@
         "RecommendationReason": "Recommendation Reason",
         "GeneratedAt": "Generated At",
         "Model": "Model"
-      }
+      },
+      "RecallButton": "Apply for Recall",
+      "RecallConfirmTitle": "Apply for Leave Recall",
+      "RecallConfirmDesc": "Your direct manager will review this recall request. Quota will be refunded upon approval.",
+      "RecallReasonLabel": "Recall Reason",
+      "RecallReasonPlaceholder": "Please state the reason for recall (required)",
+      "RecallSuccess": "Recall request submitted, awaiting manager review",
+      "RecallError": "Request failed, please try again",
+      "RecallPending": "Recall pending review",
+      "Cancel": "Cancel"
+    }
+  },
+  "Recalls": {
+    "Title": "Recall Approvals",
+    "Description": "Review leave recall requests submitted by employees",
+    "Empty": "No pending recall requests",
+    "Error": "Failed to load recall requests",
+    "ApproveButton": "Approve Recall",
+    "RejectButton": "Reject",
+    "ApproveSuccess": "Recall approved, leave quota has been refunded",
+    "RejectSuccess": "Recall rejected, original leave remains approved",
+    "ActionError": "Action failed, please try again",
+    "LeaveType": {
+      "ANNUAL": "Annual Leave",
+      "SICK": "Sick Leave",
+      "PERSONAL": "Personal Leave",
+      "OTHER": "Other"
+    },
+    "Table": {
+      "Applicant": "Applicant",
+      "LeaveType": "Leave Type",
+      "DateRange": "Date Range",
+      "Duration": "Duration",
+      "RecallReason": "Recall Reason"
+    },
+    "ApproveDialog": {
+      "Title": "Confirm Recall Approval",
+      "Description": "Upon approval, the leave quota will be refunded and the original request will be cancelled.",
+      "Confirm": "Confirm Approval",
+      "Cancel": "Cancel"
+    },
+    "RejectDialog": {
+      "Title": "Reject Recall Request",
+      "Description": "Upon rejection, the original leave request remains approved.",
+      "CommentLabel": "Rejection Reason",
+      "CommentPlaceholder": "Please state the rejection reason (required)",
+      "CommentRequired": "Rejection reason is required",
+      "Confirm": "Confirm Rejection",
+      "Cancel": "Cancel"
     }
   },
   "AuditLog": {
@@ -347,6 +401,34 @@
       "Quota": "Quota",
       "Used": "Used",
       "Remaining": "Remaining"
+    }
+  },
+  "Admin": {
+    "LeaveBalance": {
+      "Title": "Leave Quota Management",
+      "InitYear": "Initialize Year Balances",
+      "InitConfirmTitle": "Confirm Initialization",
+      "InitConfirmDesc": "This will create initial balances for all employees in {year}. Existing records will be skipped.",
+      "InitSuccess": "Done: {initialized} created, {skipped} skipped",
+      "InitError": "Initialization failed, please try again",
+      "AdjustTitle": "Adjust Quota",
+      "AdjustError": "Adjustment failed, please try again",
+      "Error": "Failed to load quota data",
+      "Empty": "No quota records found",
+      "Fields": {
+        "Employee": "Employee",
+        "LeaveType": "Leave Type",
+        "Quota": "Quota (Days)",
+        "Used": "Used",
+        "Remaining": "Remaining",
+        "UpdatedAt": "Updated At",
+        "Reason": "Adjustment Reason"
+      },
+      "Actions": {
+        "Adjust": "Adjust",
+        "Submit": "Confirm",
+        "Cancel": "Cancel"
+      }
     }
   }
 }
