@@ -165,8 +165,16 @@ export default function RequestsNewPage() {
     },
     onError: (error) => {
       if (isAxiosError<ApiErrorResponse>(error)) {
-        const raw = error.response?.data?.message ?? error.response?.data?.code ?? "";
-        const key = KNOWN_ERROR_CODES.has(raw) ? raw : "Default";
+        const apiError = error.response?.data;
+        const message = apiError?.message?.trim();
+        if (message && message !== apiError?.code && !KNOWN_ERROR_CODES.has(message)) {
+          toast.error(message);
+          return;
+        }
+
+        const key = apiError?.code && KNOWN_ERROR_CODES.has(apiError.code)
+          ? apiError.code
+          : "Default";
         toast.error(tError(key as Parameters<typeof tError>[0]));
       }
     },
