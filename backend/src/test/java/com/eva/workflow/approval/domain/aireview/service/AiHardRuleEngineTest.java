@@ -53,7 +53,7 @@ class AiHardRuleEngineTest {
         assertThat(flags).contains(new HardRuleFlag(
                 "LONG_DURATION",
                 RiskLevel.MEDIUM,
-                "Sick or other leave exceeds 3 days"));
+                "Personal, sick, or other leave exceeds 3 days"));
         assertThat(hardRuleEngine.highestRiskLevel(flags)).isEqualTo(RiskLevel.MEDIUM);
     }
 
@@ -69,14 +69,21 @@ class AiHardRuleEngineTest {
     }
 
     @Test
-    void evaluateDoesNotMarkLongAnnualOrPersonalLeaveAsLongDuration() {
+    void evaluateMarksLongPersonalLeaveAsMediumForNonNewHire() {
+        List<HardRuleFlag> flags = hardRuleEngine.evaluate(snapshot(LeaveType.PERSONAL, 2400, 800, 1, 1));
+
+        assertThat(flags).contains(new HardRuleFlag(
+                "LONG_DURATION",
+                RiskLevel.MEDIUM,
+                "Personal, sick, or other leave exceeds 3 days"));
+        assertThat(hardRuleEngine.highestRiskLevel(flags)).isEqualTo(RiskLevel.MEDIUM);
+    }
+
+    @Test
+    void evaluateDoesNotMarkLongAnnualLeaveAsLongDuration() {
         List<HardRuleFlag> annualFlags = hardRuleEngine.evaluate(snapshot(LeaveType.ANNUAL, 2400, 800, 1, 1));
-        List<HardRuleFlag> personalFlags = hardRuleEngine.evaluate(snapshot(LeaveType.PERSONAL, 2400, 800, 1, 1));
 
         assertThat(annualFlags)
-                .extracting(HardRuleFlag::code)
-                .doesNotContain("LONG_DURATION");
-        assertThat(personalFlags)
                 .extracting(HardRuleFlag::code)
                 .doesNotContain("LONG_DURATION");
     }
@@ -93,7 +100,7 @@ class AiHardRuleEngineTest {
                 new HardRuleFlag(
                         "LONG_DURATION",
                         RiskLevel.MEDIUM,
-                        "Sick or other leave exceeds 3 days")
+                        "Personal, sick, or other leave exceeds 3 days")
         );
         assertThat(hardRuleEngine.highestRiskLevel(flags)).isEqualTo(RiskLevel.HIGH);
     }
