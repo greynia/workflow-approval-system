@@ -20,7 +20,11 @@ public class AiHardRuleEngine {
     private static final int NEW_HIRE_TENURE_DAYS = 90;
     private static final int NEW_HIRE_SHORT_LEAVE_MAX_MINUTES = 480;
     private static final int LONG_DURATION_MINUTES = 1440;
-    private static final Set<LeaveType> LONG_DURATION_LEAVE_TYPES = EnumSet.of(LeaveType.SICK, LeaveType.OTHER);
+    private static final Set<LeaveType> LONG_DURATION_LEAVE_TYPES = EnumSet.of(
+            LeaveType.PERSONAL,
+            LeaveType.SICK,
+            LeaveType.OTHER
+    );
 
     public List<HardRuleFlag> evaluate(ReviewSnapshot snapshot) {
         return evaluate(snapshot, "en");
@@ -75,7 +79,7 @@ public class AiHardRuleEngine {
                 case "FREQUENT_LEAVE_30D" -> "過去 30 天內已申請 5 次以上請假";
                 case "NEW_HIRE_LONG_LEAVE" -> "新進員工申請超過 1 個工作天的請假";
                 case "NEW_HIRE_SHORT_LEAVE" -> "新進員工在到職 90 天內申請請假";
-                case "LONG_DURATION" -> "病假或其他假超過 3 天";
+                case "LONG_DURATION" -> "事假、病假或其他假超過 3 天";
                 default -> code;
             };
         }
@@ -84,7 +88,7 @@ public class AiHardRuleEngine {
             case "FREQUENT_LEAVE_30D" -> "Applied 5+ times in the last 30 days";
             case "NEW_HIRE_LONG_LEAVE" -> "New hire requests more than 1 workday of leave";
             case "NEW_HIRE_SHORT_LEAVE" -> "New hire requests leave within first 90 days";
-            case "LONG_DURATION" -> "Sick or other leave exceeds 3 days";
+            case "LONG_DURATION" -> "Personal, sick, or other leave exceeds 3 days";
             default -> code;
         };
     }

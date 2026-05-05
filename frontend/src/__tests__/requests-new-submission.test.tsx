@@ -126,4 +126,36 @@ describe("RequestsNewPage — submission side effects", () => {
       );
     });
   });
+
+  it("shows backend error message when API returns a readable message", async () => {
+    const createRequestSpy = jest.fn();
+    server.use(
+      http.post("/api/requests", () => {
+        createRequestSpy();
+        return HttpResponse.json(
+          {
+            code: "BAD_REQUEST",
+            message: "申請人在所選時段已有請假紀錄",
+            requestId: "02e2dde3-bec3-41c3-bbb5-0c11d5813189",
+          },
+          { status: 400 }
+        );
+      })
+    );
+
+    const { container } = renderWithProviders(<RequestsNewPage />);
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => {
+      expect(createRequestSpy).toHaveBeenCalled();
+      expect(useToastStore.getState().toasts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            variant: "error",
+            title: "申請人在所選時段已有請假紀錄",
+          }),
+        ])
+      );
+    });
+  });
 });
