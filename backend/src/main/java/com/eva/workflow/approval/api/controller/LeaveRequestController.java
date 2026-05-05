@@ -17,6 +17,7 @@ import java.util.List;
 import com.eva.workflow.approval.api.dto.aireview.AiReviewResponse;
 import com.eva.workflow.approval.api.dto.common.PageResponse;
 import com.eva.workflow.approval.api.dto.leave.CreateLeaveRequest;
+import com.eva.workflow.approval.api.dto.recall.LeaveRecallRequest;
 import com.eva.workflow.approval.api.dto.leave.LeaveBalanceResponse;
 import com.eva.workflow.approval.api.dto.leave.PendingRequestCountResponse;
 import com.eva.workflow.approval.api.dto.leave.LeaveCalculationRequest;
@@ -88,9 +89,13 @@ public class LeaveRequestController {
     }
 
     @PatchMapping("/{id}/recall")
-    public ResponseEntity<Void> recall(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<Void> recall(
+            Authentication authentication,
+            @PathVariable Long id,
+            @Valid @RequestBody LeaveRecallRequest request
+    ) {
         AuthenticatedEmployee authenticatedEmployee = (AuthenticatedEmployee) authentication.getPrincipal();
-        leaveRequestApplicationService.recallRequest(authenticatedEmployee, id);
+        leaveRequestApplicationService.recallRequest(authenticatedEmployee, id, request.reason());
         return ResponseEntity.noContent().build();
     }
 

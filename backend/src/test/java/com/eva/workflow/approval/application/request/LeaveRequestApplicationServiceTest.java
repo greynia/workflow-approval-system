@@ -259,22 +259,28 @@ class LeaveRequestApplicationServiceTest {
     }
 
     @Test
-    void recallRequest_cancelsApprovedRequest() {
+    void recallRequest_setsPendingRecallAndCreatesStep() {
         AuthenticatedEmployee applicantPrincipal = new AuthenticatedEmployee(7L, "user@example.com", "User", UserRole.EMPLOYEE, java.util.List.of());
         EmployeeEntity applicant = employee(7L, true);
         EmployeeEntity deputy = employee(6L, true);
+        EmployeeEntity directManager = employee(5L, true);
         LocalDateTime startTime = LocalDateTime.of(2026, 6, 1, 9, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 6, 1, 18, 0);
         LeaveRequestEntity leaveRequest = leaveRequest(20L, applicant, deputy, 480, startTime, endTime);
         leaveRequest.updateStatus(RequestStatus.APPROVED);
 
         when(leaveRequestRepository.findById(20L)).thenReturn(Optional.of(leaveRequest));
+        when(managerChainResolver.resolveEligibleManagerChainIds(applicant)).thenReturn(List.of(5L));
+        when(employeeRepository.findById(5L)).thenReturn(Optional.of(directManager));
+        when(approvalStepRepository.findByLeaveRequestId(20L)).thenReturn(List.of());
+        when(approvalStepRepository.save(any(ApprovalStepEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        leaveRequestApplicationService.recallRequest(applicantPrincipal, 20L);
+        leaveRequestApplicationService.recallRequest(applicantPrincipal, 20L, "Need to attend office");
 
-        assertThat(leaveRequest.getStatus()).isEqualTo(RequestStatus.CANCELLED);
-        verify(leaveBalanceService).refundBalance(7L, LeaveType.ANNUAL, 2026, 480);
-        verify(auditLogService).log(eq(AuditEntityTypes.LEAVE_REQUEST), eq(20L), eq("RECALL"), eq(applicant), any());
+        assertThat(leaveRequest.getStatus()).isEqualTo(RequestStatus.PENDING_RECALL);
+        assertThat(leaveRequest.getRecallReason()).isEqualTo("Need to attend office");
+        verify(approvalStepRepository).save(any(ApprovalStepEntity.class));
+        verify(auditLogService).log(eq(AuditEntityTypes.LEAVE_REQUEST), eq(20L), eq("RECALL_REQUESTED"), eq(applicant), any());
     }
 
     @Test
@@ -289,7 +295,7 @@ class LeaveRequestApplicationServiceTest {
 
         when(leaveRequestRepository.findById(20L)).thenReturn(Optional.of(leaveRequest));
 
-        assertThatThrownBy(() -> leaveRequestApplicationService.recallRequest(other, 20L))
+        assertThatThrownBy(() -> leaveRequestApplicationService.recallRequest(other, 20L, "reason"))
                 .isInstanceOf(ForbiddenApplicationException.class);
     }
 
@@ -305,7 +311,7 @@ class LeaveRequestApplicationServiceTest {
 
         when(leaveRequestRepository.findById(20L)).thenReturn(Optional.of(leaveRequest));
 
-        assertThatThrownBy(() -> leaveRequestApplicationService.recallRequest(applicantPrincipal, 20L))
+        assertThatThrownBy(() -> leaveRequestApplicationService.recallRequest(applicantPrincipal, 20L, "reason"))
                 .isInstanceOf(BadRequestApplicationException.class);
     }
 

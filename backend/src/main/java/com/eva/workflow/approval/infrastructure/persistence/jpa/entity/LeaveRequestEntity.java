@@ -64,6 +64,9 @@ public class LeaveRequestEntity {
     @Column
     private String reason;
 
+    @Column(name = "recall_reason", length = 500)
+    private String recallReason;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private RequestStatus status;
@@ -100,6 +103,10 @@ public class LeaveRequestEntity {
 
     public void updateStatus(RequestStatus status) {
         this.status = status;
+    }
+
+    public void updateRecallReason(String recallReason) {
+        this.recallReason = recallReason;
     }
 
 }
