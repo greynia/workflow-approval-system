@@ -42,6 +42,7 @@ export default function AdminRequestDetailPage() {
     stepType: {
       DEPUTY: t("DeputyLabel"),
       MANAGER: t("ManagerLabel"),
+      RECALL: t("RecallLabel"),
     } satisfies Record<ApprovalStepType, string>,
     stepStatus: {
       PENDING: t("StepStatus.PENDING"),

@@ -24,10 +24,10 @@ export interface AiReviewResponse {
   errorCode: string | null;
   createdAt: string;
 }
-export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED" | "PENDING_RECALL";
 export type StepStatus = "PENDING" | "APPROVED" | "REJECTED" | "SKIPPED";
 export type ActionType = "APPROVE" | "REJECT";
-export type ApprovalStepType = "DEPUTY" | "MANAGER";
+export type ApprovalStepType = "DEPUTY" | "MANAGER" | "RECALL";
 export type LeaveRequestStage =
   | "WAITING_DEPUTY"
   | "WAITING_MANAGER"
@@ -105,4 +105,40 @@ export interface LeaveBalanceResponse {
   quotaMinutes: number;
   usedMinutes: number;
   remainingMinutes: number;
+}
+
+export interface AdminLeaveBalance {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  leaveType: LeaveType;
+  quotaMinutes: number;
+  usedMinutes: number;
+  remainingMinutes: number;
+  updatedAt: string;
+}
+
+export interface AdjustLeaveBalanceRequest {
+  quotaMinutes: number;
+  reason: string;
+}
+
+export interface InitYearBalancesRequest {
+  year: number;
+}
+
+export interface YearInitResult {
+  initialized: number;
+  skipped: number;
+}
+
+export interface AdminLeaveBalanceFilters {
+  year: number;
+  employeeId?: number;
+  page: number;
+  size: number;
+}
+
+export interface LeaveRecallRequest {
+  reason: string;
 }

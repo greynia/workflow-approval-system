@@ -40,6 +40,7 @@ export default function RequestsPage() {
     APPROVED: t("StatusLabel.APPROVED"),
     REJECTED: t("StatusLabel.REJECTED"),
     CANCELLED: t("StatusLabel.CANCELLED"),
+    PENDING_RECALL: t("StatusLabel.PENDING_RECALL"),
   };
 
   const columns: ColumnDef<LeaveRequestSummary>[] = [

@@ -12,12 +12,14 @@ public final class RolePermissions {
             Permission.REQUEST_VIEW, Permission.REQUEST_CREATE, Permission.REQUEST_EDIT, Permission.REQUEST_DELETE,
             Permission.APPROVAL_VIEW, Permission.APPROVAL_APPROVE,
             Permission.EMPLOYEE_VIEW, Permission.BALANCE_VIEW, Permission.AUDIT_VIEW,
-            Permission.LEAVE_BALANCE_MANAGE
+            Permission.LEAVE_BALANCE_MANAGE,
+            Permission.RECALL_MANAGE
         ),
         UserRole.MANAGER, List.of(
             Permission.REQUEST_VIEW, Permission.REQUEST_CREATE, Permission.REQUEST_EDIT,
             Permission.APPROVAL_VIEW, Permission.APPROVAL_APPROVE,
-            Permission.EMPLOYEE_VIEW, Permission.BALANCE_VIEW
+            Permission.EMPLOYEE_VIEW, Permission.BALANCE_VIEW,
+            Permission.RECALL_MANAGE
         ),
         UserRole.EMPLOYEE, List.of(
             Permission.REQUEST_VIEW, Permission.REQUEST_CREATE, Permission.REQUEST_EDIT,

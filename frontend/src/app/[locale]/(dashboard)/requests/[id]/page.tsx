@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
@@ -8,7 +9,9 @@ import LeaveService from "@/services/leave.service";
 import { useFormatDurationAsHours } from "@/lib/use-format-duration";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthority } from "@/hooks/useAuthority";
+import { useToastStore } from "@/stores/toast-store";
 import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
 import { Section } from "@/components/ui/section";
 import {
   DescriptionList,
@@ -17,6 +20,16 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   RequestTimeline,
   type RequestTimelineLabels,
@@ -35,10 +48,15 @@ export default function RequestDetailPage() {
   const pathname = usePathname();
   const requestId = Number(params.id);
   const isApprovalContext = pathname.startsWith("/approvals/");
-  const backHref = isApprovalContext ? "/approvals" : "/requests";
-  const backLabel = isApprovalContext ? t("BackToApprovals") : t("BackToRequests");
+  const isRecallContext = pathname.startsWith("/recalls/");
+  const backHref = isRecallContext ? "/recalls" : isApprovalContext ? "/approvals" : "/requests";
+  const backLabel = isRecallContext ? t("BackToRecalls") : isApprovalContext ? t("BackToApprovals") : t("BackToRequests");
   const { user } = useAuth();
+  const toast = useToastStore();
+  const queryClient = useQueryClient();
   const canViewAiReview = useAuthority(user?.permissions ?? [], ["approval.view"]);
+  const [showRecallDialog, setShowRecallDialog] = useState(false);
+  const [recallReason, setRecallReason] = useState("");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["requests", requestId],
@@ -46,11 +64,27 @@ export default function RequestDetailPage() {
     enabled: Number.isInteger(requestId) && requestId > 0,
   });
 
+  const recallMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      LeaveService.recall(id, { reason }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["requests", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+      toast.success(t("RecallSuccess"));
+      setShowRecallDialog(false);
+      setRecallReason("");
+    },
+    onError: () => {
+      toast.error(t("RecallError"));
+    },
+  });
+
   const timelineLabels: RequestTimelineLabels = {
     empty: t("TimelineEmpty"),
     stepType: {
       DEPUTY: t("DeputyLabel"),
       MANAGER: t("ManagerLabel"),
+      RECALL: t("RecallLabel"),
     } satisfies Record<ApprovalStepType, string>,
     stepStatus: {
       PENDING: t("StepStatus.PENDING"),
@@ -77,6 +111,10 @@ export default function RequestDetailPage() {
     );
   }
 
+  const isOwnRequest = data.applicantId === user?.employeeId;
+  const canRecall = data.status === "APPROVED" && isOwnRequest;
+  const isPendingRecall = data.status === "PENDING_RECALL";
+
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <PageHeader
@@ -85,7 +123,21 @@ export default function RequestDetailPage() {
         backHref={backHref}
         backLabel={backLabel}
         actions={
-          <StatusBadge status={data.status} label={t(`StatusLabel.${data.status}`)} />
+          <div className="flex items-center gap-2">
+            <StatusBadge status={data.status} label={t(`StatusLabel.${data.status}`)} />
+            {canRecall && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRecallDialog(true)}
+              >
+                {t("RecallButton")}
+              </Button>
+            )}
+            {isPendingRecall && isOwnRequest && (
+              <span className="text-muted-foreground text-sm">{t("RecallPending")}</span>
+            )}
+          </div>
         }
       />
 
@@ -118,6 +170,47 @@ export default function RequestDetailPage() {
           labels={timelineLabels}
         />
       </Section>
+
+      <Dialog
+        open={showRecallDialog}
+        onOpenChange={(open) => {
+          setShowRecallDialog(open);
+          if (!open) setRecallReason("");
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("RecallConfirmTitle")}</DialogTitle>
+            <DialogDescription>{t("RecallConfirmDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="recall-reason">{t("RecallReasonLabel")}</Label>
+            <Textarea
+              id="recall-reason"
+              value={recallReason}
+              onChange={(e) => setRecallReason(e.target.value)}
+              placeholder={t("RecallReasonPlaceholder")}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowRecallDialog(false)}
+              disabled={recallMutation.isPending}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => recallMutation.mutate({ id: requestId, reason: recallReason })}
+              disabled={recallMutation.isPending || recallReason.trim().length === 0}
+            >
+              {t("RecallButton")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

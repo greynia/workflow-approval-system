@@ -11,6 +11,7 @@ const LABELS: RequestTimelineLabels = {
   stepType: {
     DEPUTY: "Deputy",
     MANAGER: "Manager",
+    RECALL: "Recall",
   },
   stepStatus: {
     PENDING: "Pending",

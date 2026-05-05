@@ -31,6 +31,7 @@ import com.eva.workflow.approval.application.exception.ForbiddenApplicationExcep
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
 import com.eva.workflow.approval.application.request.event.LeaveRequestCreatedEvent;
 import com.eva.workflow.approval.common.AuditEntityTypes;
+import com.eva.workflow.approval.common.enums.ApprovalStepType;
 import com.eva.workflow.approval.common.enums.StepStatus;
 import com.eva.workflow.approval.common.enums.RequestStatus;
 import com.eva.workflow.approval.common.enums.UserRole;
@@ -227,7 +228,7 @@ public class LeaveRequestApplicationService {
     }
 
     @Transactional
-    public void recallRequest(AuthenticatedEmployee authenticatedEmployee, Long requestId) {
+    public void recallRequest(AuthenticatedEmployee authenticatedEmployee, Long requestId, String recallReason) {
         LeaveRequestEntity leaveRequest = leaveRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundApplicationException("Leave request not found"));
         if (!leaveRequest.getApplicant().getId().equals(authenticatedEmployee.employeeId())) {
@@ -236,18 +237,33 @@ public class LeaveRequestApplicationService {
         if (!RequestStatus.APPROVED.equals(leaveRequest.getStatus())) {
             throw new BadRequestApplicationException("Only approved leave requests can be recalled");
         }
-        leaveRequest.updateStatus(RequestStatus.CANCELLED);
-        leaveBalanceService.refundBalance(
-                leaveRequest.getApplicant().getId(),
-                leaveRequest.getType(),
-                leaveRequest.getStartTime().getYear(),
-                leaveRequest.getDurationMinutes()
+
+        EmployeeEntity applicant = leaveRequest.getApplicant();
+        List<Long> managerChainIds = managerChainResolver.resolveEligibleManagerChainIds(applicant);
+        if (managerChainIds.isEmpty()) {
+            throw new BadRequestApplicationException("No direct manager found for applicant");
+        }
+        EmployeeEntity directManager = employeeRepository.findById(managerChainIds.get(0))
+                .orElseThrow(() -> new ResourceNotFoundApplicationException("Direct manager not found"));
+
+        leaveRequest.updateStatus(RequestStatus.PENDING_RECALL);
+        leaveRequest.updateRecallReason(recallReason);
+
+        int nextStepOrder = approvalStepRepository.findByLeaveRequestId(requestId).stream()
+                .mapToInt(ApprovalStepEntity::getStepOrder)
+                .max()
+                .orElse(0) + 1;
+
+        ApprovalStepEntity recallStep = ApprovalStepEntity.create(
+                leaveRequest, nextStepOrder, directManager, ApprovalStepType.RECALL, StepStatus.PENDING
         );
+        approvalStepRepository.save(recallStep);
+
         auditLogService.log(
                 AuditEntityTypes.LEAVE_REQUEST,
                 leaveRequest.getId(),
-                "RECALL",
-                leaveRequest.getApplicant(),
+                "RECALL_REQUESTED",
+                applicant,
                 buildCancelAuditDetail(leaveRequest)
         );
     }

@@ -1,12 +1,18 @@
 import ApiService from "@/lib/api-service";
 import type {
+  AdminLeaveBalance,
+  AdminLeaveBalanceFilters,
+  AdjustLeaveBalanceRequest,
   AiReviewResponse,
   CreateLeaveRequest,
+  InitYearBalancesRequest,
   LeaveBalanceResponse,
   LeaveCalculationResponse,
+  LeaveRecallRequest,
   LeaveRequestDetail,
   LeaveRequestSummary,
   PendingRequestCountResponse,
+  YearInitResult,
 } from "@/types/leave";
 import type { PageResponse } from "@/types/common";
 
@@ -71,6 +77,40 @@ const LeaveService = {
       url: "/requests/balance",
       method: "GET",
       params: year ? { year } : undefined,
+    });
+  },
+
+  recall(id: number, data: LeaveRecallRequest): Promise<void> {
+    return ApiService.fetchData({
+      url: `/requests/${id}/recall`,
+      method: "PATCH",
+      data,
+    });
+  },
+
+  getAdminBalances(
+    filters: AdminLeaveBalanceFilters
+  ): Promise<PageResponse<AdminLeaveBalance>> {
+    return ApiService.fetchData({
+      url: "/admin/leave-balances",
+      method: "GET",
+      params: filters,
+    });
+  },
+
+  adjustBalance(id: number, data: AdjustLeaveBalanceRequest): Promise<void> {
+    return ApiService.fetchData({
+      url: `/admin/leave-balances/${id}`,
+      method: "PATCH",
+      data,
+    });
+  },
+
+  initYearBalances(data: InitYearBalancesRequest): Promise<YearInitResult> {
+    return ApiService.fetchData<YearInitResult, InitYearBalancesRequest>({
+      url: "/admin/leave-balances/year-init",
+      method: "POST",
+      data,
     });
   },
 };

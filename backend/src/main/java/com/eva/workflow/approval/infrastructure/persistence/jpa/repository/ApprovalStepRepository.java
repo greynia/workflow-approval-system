@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.eva.workflow.approval.common.enums.ApprovalStepType;
 import com.eva.workflow.approval.common.enums.StepStatus;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.ApprovalStepEntity;
 
@@ -21,6 +22,7 @@ public interface ApprovalStepRepository extends JpaRepository<ApprovalStepEntity
             join fetch step.approver approver
             where step.approver.id = :approverId
               and step.status = :status
+              and step.stepType <> com.eva.workflow.approval.common.enums.ApprovalStepType.RECALL
               and not exists (
                   select 1
                   from ApprovalStepEntity previousStep
@@ -65,10 +67,41 @@ public interface ApprovalStepRepository extends JpaRepository<ApprovalStepEntity
     boolean existsByLeaveRequestIdAndApproverId(Long leaveRequestId, Long approverId);
 
     @Query("""
+            select step
+            from ApprovalStepEntity step
+            join fetch step.leaveRequest leaveRequest
+            join fetch leaveRequest.applicant applicant
+            join fetch step.approver
+            where step.approver.id = :approverId
+              and step.stepType = :stepType
+              and step.status = :status
+            order by step.createdAt asc
+            """)
+    List<ApprovalStepEntity> findByApproverIdAndStepTypeAndStatus(
+            @Param("approverId") Long approverId,
+            @Param("stepType") ApprovalStepType stepType,
+            @Param("status") StepStatus status
+    );
+
+    @Query("""
+            select count(step)
+            from ApprovalStepEntity step
+            where step.approver.id = :approverId
+              and step.stepType = :stepType
+              and step.status = :status
+            """)
+    long countByApproverIdAndStepTypeAndStatus(
+            @Param("approverId") Long approverId,
+            @Param("stepType") ApprovalStepType stepType,
+            @Param("status") StepStatus status
+    );
+
+    @Query("""
             select count(step)
             from ApprovalStepEntity step
             where step.approver.id = :approverId
               and step.status = :status
+              and step.stepType <> com.eva.workflow.approval.common.enums.ApprovalStepType.RECALL
               and not exists (
                   select 1
                   from ApprovalStepEntity previousStep

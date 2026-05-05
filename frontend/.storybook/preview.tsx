@@ -2,9 +2,14 @@ import type { Preview } from "@storybook/nextjs-vite"
 import { withThemeByClassName } from "@storybook/addon-themes"
 import { INITIAL_VIEWPORTS } from "storybook/viewport"
 import { NextIntlClientProvider } from "next-intl"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import en from "../src/i18n/messages/en.json"
 import zhTW from "../src/i18n/messages/zh-TW.json"
 import "../src/app/globals.css"
+
+const storybookQueryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+})
 
 const messagesByLocale: Record<string, typeof en> = {
   en,
@@ -34,9 +39,11 @@ const preview: Preview = {
         (context.globals.locale as string | undefined) ?? "zh-TW"
       const messages = messagesByLocale[locale] ?? messagesByLocale["zh-TW"]
       return (
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Story />
-        </NextIntlClientProvider>
+        <QueryClientProvider client={storybookQueryClient}>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Story />
+          </NextIntlClientProvider>
+        </QueryClientProvider>
       )
     },
     withThemeByClassName({

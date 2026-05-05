@@ -3,11 +3,12 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { BarChart3, CheckSquare, FileText, Settings, Workflow } from "lucide-react";
+import { BarChart3, CheckSquare, FileText, RotateCcw, Settings, Workflow } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import AuthService from "@/services/auth.service";
 import ApprovalService from "@/services/approval.service";
 import LeaveService from "@/services/leave.service";
+import RecallService from "@/services/recall.service";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore, useUIStoreHydrated } from "@/stores/ui-store";
 import { AppShell } from "@/components/layout/app-shell";
@@ -24,6 +25,7 @@ const ROLE_VISIBILITY: Record<string, UserRole[]> = {
   requests: ["EMPLOYEE", "MANAGER", "ADMIN"],
   approvals: ["EMPLOYEE", "MANAGER", "ADMIN"],
   balances: ["EMPLOYEE", "MANAGER", "ADMIN"],
+  recalls: ["MANAGER", "ADMIN"],
   audit: ["ADMIN"],
 };
 
@@ -70,6 +72,8 @@ export default function DashboardLayout({
   }, [pathname, closeSidebar]);
 
   const shouldLoadPendingCount = user?.role != null;
+  const shouldLoadRecallCount = user?.role === "MANAGER" || user?.role === "ADMIN";
+
   const { data: pendingApprovalCount } = useQuery({
     queryKey: ["approvals", "pending", "count"],
     queryFn: ApprovalService.getPendingCount,
@@ -79,6 +83,11 @@ export default function DashboardLayout({
     queryKey: ["requests", "pending", "count"],
     queryFn: LeaveService.getPendingCount,
     enabled: shouldLoadPendingCount,
+  });
+  const { data: pendingRecallCount } = useQuery({
+    queryKey: ["recalls", "pending", "count"],
+    queryFn: RecallService.getPendingCount,
+    enabled: shouldLoadRecallCount,
   });
 
   const role = user?.role;
@@ -110,6 +119,14 @@ export default function DashboardLayout({
         visibility: ROLE_VISIBILITY.balances,
       },
       {
+        id: "recalls",
+        label: t("Sidebar.PendingRecalls"),
+        href: "/recalls",
+        icon: RotateCcw,
+        badge: pendingRecallCount?.count ?? null,
+        visibility: ROLE_VISIBILITY.recalls,
+      },
+      {
         id: "audit",
         label: t("Sidebar.AuditLog"),
         href: "/admin/audit-logs",
@@ -126,7 +143,7 @@ export default function DashboardLayout({
         icon: item.icon,
         badge: item.badge,
       }));
-  }, [role, t, pendingApprovalCount, pendingRequestCount]);
+  }, [role, t, pendingApprovalCount, pendingRequestCount, pendingRecallCount]);
 
   const brand = (
     <Link
