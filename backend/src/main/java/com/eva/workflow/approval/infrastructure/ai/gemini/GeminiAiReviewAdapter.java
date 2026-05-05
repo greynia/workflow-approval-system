@@ -1,4 +1,4 @@
-package com.eva.workflow.approval.infrastructure.ai.ollama;
+package com.eva.workflow.approval.infrastructure.ai.gemini;
 
 import java.time.Duration;
 import java.util.List;
@@ -23,14 +23,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class OllamaAiReviewAdapter implements AiReviewPort {
+public class GeminiAiReviewAdapter implements AiReviewPort {
 
-    private static final Logger log = LoggerFactory.getLogger(OllamaAiReviewAdapter.class);
-    private static final String PROMPT_VERSION = "v2";
+    private static final Logger log = LoggerFactory.getLogger(GeminiAiReviewAdapter.class);
+    private static final String PROMPT_VERSION = "v1";
+    private static final String API_PATH = "/v1beta/models/{model}:generateContent";
 
-    private final OllamaProperties properties;
+    private final GeminiProperties properties;
     private final ObjectMapper objectMapper;
-    private final WebClient ollamaWebClient;
+    private final WebClient geminiWebClient;
 
     @Override
     public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
@@ -38,14 +39,15 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
         String prompt = AiReviewPromptBuilder.buildPrompt(snapshot, flags, locale);
 
         Map<String, Object> requestBody = Map.of(
-                "model", properties.model(),
-                "messages", List.of(Map.of("role", "user", "content", prompt)),
-                "stream", false,
-                "format", "json"
+                "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
+                "generationConfig", Map.of("responseMimeType", "application/json")
         );
 
-        String raw = ollamaWebClient.post()
-                .uri("/api/chat")
+        String raw = geminiWebClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path(API_PATH)
+                        .queryParam("key", properties.apiKey())
+                        .build(properties.model()))
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(String.class)
@@ -56,17 +58,23 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
         return parseResponse(raw, latencyMs);
     }
 
-    private AiReviewResult parseResponse(String raw, int latencyMs) {
+    AiReviewResult parseResponse(String raw, int latencyMs) {
         try {
             JsonNode root = objectMapper.readTree(raw);
-            String content = root.path("message").path("content").asText();
+            String content = root.path("candidates")
+                    .get(0)
+                    .path("content")
+                    .path("parts")
+                    .get(0)
+                    .path("text")
+                    .asText();
+
             if (content == null || content.isBlank()) {
-                throw new IllegalArgumentException("Missing message content");
+                throw new IllegalArgumentException("Missing content in Gemini response");
             }
             JsonNode result = objectMapper.readTree(content);
 
-            int tokenUsage = root.path("prompt_eval_count").asInt(0)
-                    + root.path("eval_count").asInt(0);
+            int tokenUsage = root.path("usageMetadata").path("totalTokenCount").asInt(0);
 
             return new AiReviewResult(
                     AiReviewJsonParser.requiredText(result, "summary", AiReviewJsonParser.MAX_SUMMARY_LENGTH),
@@ -74,10 +82,10 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
                     AiReviewJsonParser.parseRiskReasons(result.path("riskReasons")),
                     AiReviewJsonParser.parseEnum(result, "recommendation", AiRecommendation.class),
                     AiReviewJsonParser.requiredText(result, "recommendationReason", AiReviewJsonParser.MAX_RECOMMENDATION_REASON_LENGTH),
-                    properties.model(), PROMPT_VERSION, AiProvider.LOCAL, tokenUsage, latencyMs
+                    properties.model(), PROMPT_VERSION, AiProvider.GEMINI, tokenUsage, latencyMs
             );
         } catch (Exception e) {
-            log.warn("Failed to parse Ollama response: {}", e.getMessage());
+            log.warn("Failed to parse Gemini response: {}", e.getMessage());
             throw new RuntimeException("AI_PARSE_ERROR");
         }
     }
