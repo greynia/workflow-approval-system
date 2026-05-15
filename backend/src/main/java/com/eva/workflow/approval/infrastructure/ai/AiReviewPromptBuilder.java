@@ -1,7 +1,14 @@
 package com.eva.workflow.approval.infrastructure.ai;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import com.eva.workflow.approval.common.enums.LeaveType;
+import com.eva.workflow.approval.common.enums.UserRole;
 import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
 
@@ -9,7 +16,50 @@ public final class AiReviewPromptBuilder {
 
     private static final int WORK_MINUTES_PER_DAY = 480;
 
+    /**
+     * Content hash of the active prompt template, computed once at class init.
+     * Locale coverage: fingerprints both "en" and "zh" — any new locale branch
+     * inside buildPrompt must be appended here, otherwise localized changes
+     * could ship without bumping the version.
+     */
+    public static final String PROMPT_VERSION_HASH;
+
+    static {
+        ReviewSnapshot fingerprint = new ReviewSnapshot(
+                0L,
+                LeaveType.ANNUAL,
+                LocalDateTime.of(2026, 1, 1, 9, 0),
+                LocalDateTime.of(2026, 1, 1, 17, 0),
+                480,
+                "fingerprint",
+                Instant.EPOCH,
+                0L,
+                365L,
+                UserRole.EMPLOYEE,
+                "Engineering",
+                0,
+                1
+        );
+        String en = buildPrompt(fingerprint, List.of(), "en");
+        String zh = buildPrompt(fingerprint, List.of(), "zh");
+        PROMPT_VERSION_HASH = sha256First8(en + "\u0000" + zh);
+    }
+
     private AiReviewPromptBuilder() {}
+
+    private static String sha256First8(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(16);
+            for (int i = 0; i < 4; i++) {
+                hex.append(String.format("%02x", digest[i]));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        }
+    }
 
     public static String buildPrompt(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
         boolean zh = locale != null && locale.toLowerCase().startsWith("zh");

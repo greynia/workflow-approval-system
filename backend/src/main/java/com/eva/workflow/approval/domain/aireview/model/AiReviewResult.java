@@ -15,7 +15,11 @@ public record AiReviewResult(
         String modelName,
         String promptVersion,
         AiProvider provider,
+        int inputTokens,
+        int outputTokens,
         int tokenUsage,
-        int latencyMs
+        int latencyMs,
+        boolean isFallback,
+        List<AiReviewAttempt> attempts
 ) {
 }

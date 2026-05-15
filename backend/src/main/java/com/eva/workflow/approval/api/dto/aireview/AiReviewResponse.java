@@ -19,6 +19,11 @@ public record AiReviewResponse(
         String modelName,
         String promptVersion,
         AiProvider provider,
+        Integer inputTokens,
+        Integer outputTokens,
+        Integer tokenUsage,
+        Integer latencyMs,
+        Boolean isFallback,
         String errorCode,
         Instant createdAt
 ) {

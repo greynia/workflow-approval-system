@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.RiskLevel;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
 import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
@@ -26,12 +27,21 @@ import lombok.RequiredArgsConstructor;
 public class GeminiAiReviewAdapter implements AiReviewPort {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiAiReviewAdapter.class);
-    private static final String PROMPT_VERSION = "v1";
     private static final String API_PATH = "/v1beta/models/{model}:generateContent";
 
     private final GeminiProperties properties;
     private final ObjectMapper objectMapper;
     private final WebClient geminiWebClient;
+
+    @Override
+    public AiProvider provider() {
+        return AiProvider.GEMINI;
+    }
+
+    @Override
+    public String modelName() {
+        return properties.model();
+    }
 
     @Override
     public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
@@ -74,7 +84,13 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
             }
             JsonNode result = objectMapper.readTree(content);
 
-            int tokenUsage = root.path("usageMetadata").path("totalTokenCount").asInt(0);
+            JsonNode usage = root.path("usageMetadata");
+            int inputTokens = usage.path("promptTokenCount").asInt(0);
+            int outputTokens = usage.path("candidatesTokenCount").asInt(0);
+            int tokenUsage = inputTokens + outputTokens;
+
+            AiReviewAttempt attempt = new AiReviewAttempt(
+                    AiProvider.GEMINI, properties.model(), latencyMs, true, null);
 
             return new AiReviewResult(
                     AiReviewJsonParser.requiredText(result, "summary", AiReviewJsonParser.MAX_SUMMARY_LENGTH),
@@ -82,7 +98,15 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
                     AiReviewJsonParser.parseRiskReasons(result.path("riskReasons")),
                     AiReviewJsonParser.parseEnum(result, "recommendation", AiRecommendation.class),
                     AiReviewJsonParser.requiredText(result, "recommendationReason", AiReviewJsonParser.MAX_RECOMMENDATION_REASON_LENGTH),
-                    properties.model(), PROMPT_VERSION, AiProvider.GEMINI, tokenUsage, latencyMs
+                    properties.model(),
+                    AiReviewPromptBuilder.PROMPT_VERSION_HASH,
+                    AiProvider.GEMINI,
+                    inputTokens,
+                    outputTokens,
+                    tokenUsage,
+                    latencyMs,
+                    false,
+                    List.of(attempt)
             );
         } catch (Exception e) {
             log.warn("Failed to parse Gemini response: {}", e.getMessage());

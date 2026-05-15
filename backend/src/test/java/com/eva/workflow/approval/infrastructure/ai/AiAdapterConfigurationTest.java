@@ -22,6 +22,7 @@ import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.LeaveType;
 import com.eva.workflow.approval.common.enums.RiskLevel;
 import com.eva.workflow.approval.common.enums.UserRole;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
 import com.eva.workflow.approval.domain.aireview.service.AiReviewPort;
@@ -115,6 +116,7 @@ class AiAdapterConfigurationTest {
     }
 
     private AiReviewResult localResult() {
+        AiReviewAttempt attempt = new AiReviewAttempt(AiProvider.LOCAL, "llama3.1:8b", 600, true, null);
         return new AiReviewResult(
                 "local summary",
                 RiskLevel.LOW,
@@ -124,12 +126,17 @@ class AiAdapterConfigurationTest {
                 "llama3.1:8b",
                 "v2",
                 AiProvider.LOCAL,
+                30,
+                50,
                 80,
-                600
+                600,
+                false,
+                List.of(attempt)
         );
     }
 
     private AiReviewResult geminiResult() {
+        AiReviewAttempt attempt = new AiReviewAttempt(AiProvider.GEMINI, "gemini-2.0-flash-lite", 500, true, null);
         return new AiReviewResult(
                 "gemini summary",
                 RiskLevel.LOW,
@@ -139,8 +146,12 @@ class AiAdapterConfigurationTest {
                 "gemini-2.0-flash-lite",
                 "v1",
                 AiProvider.GEMINI,
+                40,
+                60,
                 100,
-                500
+                500,
+                false,
+                List.of(attempt)
         );
     }
 

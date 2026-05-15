@@ -25,8 +25,9 @@ import com.eva.workflow.approval.common.enums.AiReviewStatus;
 import com.eva.workflow.approval.common.enums.LeaveType;
 import com.eva.workflow.approval.common.enums.RiskLevel;
 import com.eva.workflow.approval.common.enums.UserRole;
-import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
+import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
 import com.eva.workflow.approval.domain.aireview.service.AiHardRuleEngine;
 import com.eva.workflow.approval.domain.aireview.service.AiReviewPort;
@@ -70,16 +71,15 @@ class AiReviewOrchestratorTest {
     void reviewDoesNotLetAiDowngradeHighHardRuleRisk() {
         ReviewSnapshot snapshot = snapshotWithNewHireRisk();
         when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
-        when(aiReviewPort.review(any(), any(), any())).thenReturn(new AiReviewResult(
+        when(aiReviewPort.review(any(), any(), any())).thenReturn(leafResult(
                 "AI summary",
                 RiskLevel.LOW,
                 List.of("AI says low risk"),
                 AiRecommendation.APPROVE,
                 "AI recommends approval",
-                "test-model",
-                "v1",
                 AiProvider.LOCAL,
-                0,
+                40,
+                60,
                 100
         ));
         when(aiReviewRepository.save(any(AiReviewEntity.class)))
@@ -97,6 +97,12 @@ class AiReviewOrchestratorTest {
         assertThat(completedReview.getRiskReasonsJson())
                 .contains("AI says low risk")
                 .contains("New hire requests more than 1 workday of leave");
+        assertThat(completedReview.getInputTokens()).isEqualTo(40);
+        assertThat(completedReview.getOutputTokens()).isEqualTo(60);
+        assertThat(completedReview.getTokenUsage()).isEqualTo(100);
+        assertThat(completedReview.getLatencyMs()).isEqualTo(100);
+        assertThat(completedReview.isFallback()).isFalse();
+        assertThat(completedReview.getAttemptsJson()).contains("LOCAL");
     }
 
     @Test
@@ -122,21 +128,22 @@ class AiReviewOrchestratorTest {
         assertThat(completedReview.getPromptVersion()).isEqualTo("rule-low-v1");
         assertThat(completedReview.getProvider()).isEqualTo(AiProvider.RULE_ENGINE);
         assertThat(completedReview.getRawAiResultJson()).isNull();
+        assertThat(completedReview.getAttemptsJson()).contains("RULE_ENGINE");
+        assertThat(completedReview.isFallback()).isFalse();
     }
 
     @Test
     void reviewDeduplicatesAiRiskReasonAgainstLocalizedHardRuleReason() {
         ReviewSnapshot snapshot = snapshotWithNewHireShortLeaveRisk();
         when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
-        when(aiReviewPort.review(any(), any(), any())).thenReturn(new AiReviewResult(
+        when(aiReviewPort.review(any(), any(), any())).thenReturn(leafResult(
                 "AI summary",
                 RiskLevel.MEDIUM,
                 List.of("新進員工在到職90天內申請請假"),
                 AiRecommendation.REVIEW_CAREFULLY,
                 "AI recommends careful review",
-                "test-model",
-                "v1",
                 AiProvider.LOCAL,
+                0,
                 0,
                 100
         ));
@@ -173,6 +180,8 @@ class AiReviewOrchestratorTest {
         assertThat(completedReview.getProvider()).isEqualTo(AiProvider.RULE_ENGINE);
         assertThat(completedReview.getPromptVersion()).isEqualTo("rule-fallback-v1");
         assertThat(completedReview.getRawAiResultJson()).isNull();
+        assertThat(completedReview.isFallback()).isFalse();
+        assertThat(completedReview.getAttemptsJson()).contains("RULE_ENGINE");
         assertThat(completedReview.getRiskReasonsJson())
                 .isEqualTo("[\"新進員工在到職 90 天內申請請假\"]");
         assertThat(completedReview.getSummary()).contains("AI 文字分析暫時不可用");
@@ -226,6 +235,36 @@ class AiReviewOrchestratorTest {
         assertThat(failedReview.getStatus()).isEqualTo(AiReviewStatus.FAILED);
         assertThat(failedReview.getErrorCode()).isEqualTo(AiReviewErrorCode.RULE_ENGINE_FAILED.name());
         assertThat(failedReview.getProvider()).isEqualTo(AiProvider.RULE_ENGINE);
+    }
+
+    private AiReviewResult leafResult(
+            String summary,
+            RiskLevel riskLevel,
+            List<String> riskReasons,
+            AiRecommendation recommendation,
+            String recommendationReason,
+            AiProvider provider,
+            int inputTokens,
+            int outputTokens,
+            int latencyMs
+    ) {
+        AiReviewAttempt attempt = new AiReviewAttempt(provider, "test-model", latencyMs, true, null);
+        return new AiReviewResult(
+                summary,
+                riskLevel,
+                riskReasons,
+                recommendation,
+                recommendationReason,
+                "test-model",
+                "v1",
+                provider,
+                inputTokens,
+                outputTokens,
+                inputTokens + outputTokens,
+                latencyMs,
+                false,
+                List.of(attempt)
+        );
     }
 
     private ReviewSnapshot snapshotWithNewHireRisk() {

@@ -14,6 +14,7 @@ import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.AiReviewErrorCode;
 import com.eva.workflow.approval.common.enums.LeaveType;
 import com.eva.workflow.approval.common.enums.RiskLevel;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
 import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
@@ -82,8 +83,12 @@ public class AiReviewOrchestrator {
                     finalResult.modelName(),
                     finalResult.promptVersion(),
                     finalResult.provider(),
+                    finalResult.inputTokens(),
+                    finalResult.outputTokens(),
                     finalResult.tokenUsage(),
-                    finalResult.latencyMs()
+                    finalResult.latencyMs(),
+                    finalResult.isFallback(),
+                    toJson(finalResult.attempts())
             );
             aiReviewRepository.save(entity);
             log.info("AI review completed for requestId={} risk={}", requestId, finalResult.riskLevel());
@@ -139,8 +144,12 @@ public class AiReviewOrchestrator {
                 result.modelName(),
                 result.promptVersion(),
                 result.provider(),
+                result.inputTokens(),
+                result.outputTokens(),
                 result.tokenUsage(),
-                result.latencyMs()
+                result.latencyMs(),
+                result.isFallback(),
+                result.attempts()
         );
     }
 
@@ -148,6 +157,7 @@ public class AiReviewOrchestrator {
         boolean zh = isTraditionalChinese(locale);
         String duration = formatDuration(snapshot.durationMinutes(), zh);
         String leaveType = formatLeaveType(snapshot.leaveType(), zh);
+        List<AiReviewAttempt> attempts = List.of(ruleEngineAttempt());
 
         if (zh) {
             return new AiReviewResult(
@@ -160,7 +170,11 @@ public class AiReviewOrchestrator {
                     "rule-low-v1",
                     AiProvider.RULE_ENGINE,
                     0,
-                    0
+                    0,
+                    0,
+                    0,
+                    false,
+                    attempts
             );
         }
 
@@ -174,8 +188,16 @@ public class AiReviewOrchestrator {
                 "rule-low-v1",
                 AiProvider.RULE_ENGINE,
                 0,
-                0
+                0,
+                0,
+                0,
+                false,
+                attempts
         );
+    }
+
+    private AiReviewAttempt ruleEngineAttempt() {
+        return new AiReviewAttempt(AiProvider.RULE_ENGINE, RULE_ENGINE_MODEL, 0, true, null);
     }
 
     private AiReviewResult buildHardRuleFallbackResult(
@@ -192,6 +214,8 @@ public class AiReviewOrchestrator {
                 .map(HardRuleFlag::humanReadable)
                 .toList();
 
+        List<AiReviewAttempt> attempts = List.of(ruleEngineAttempt());
+
         if (zh) {
             return new AiReviewResult(
                     "此申請命中需注意的請假規則，AI 文字分析暫時不可用，以下依系統規則產生審核摘要。",
@@ -203,7 +227,11 @@ public class AiReviewOrchestrator {
                     "rule-fallback-v1",
                     AiProvider.RULE_ENGINE,
                     0,
-                    0
+                    0,
+                    0,
+                    0,
+                    false,
+                    attempts
             );
         }
 
@@ -217,7 +245,11 @@ public class AiReviewOrchestrator {
                 "rule-fallback-v1",
                 AiProvider.RULE_ENGINE,
                 0,
-                0
+                0,
+                0,
+                0,
+                false,
+                attempts
         );
     }
 

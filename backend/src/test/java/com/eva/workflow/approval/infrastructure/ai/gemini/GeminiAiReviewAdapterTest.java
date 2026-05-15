@@ -11,7 +11,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.RiskLevel;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
+import com.eva.workflow.approval.infrastructure.ai.AiReviewPromptBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class GeminiAiReviewAdapterTest {
@@ -27,7 +29,11 @@ class GeminiAiReviewAdapterTest {
                   }]
                 }
               }],
-              "usageMetadata": { "totalTokenCount": 150 }
+              "usageMetadata": {
+                "promptTokenCount": 100,
+                "candidatesTokenCount": 50,
+                "totalTokenCount": 150
+              }
             }
             """;
 
@@ -40,7 +46,11 @@ class GeminiAiReviewAdapterTest {
                   }]
                 }
               }],
-              "usageMetadata": { "totalTokenCount": 200 }
+              "usageMetadata": {
+                "promptTokenCount": 140,
+                "candidatesTokenCount": 60,
+                "totalTokenCount": 200
+              }
             }
             """;
 
@@ -51,18 +61,40 @@ class GeminiAiReviewAdapterTest {
     }
 
     @Test
-    void parseResponse_low_risk_approve() {
+    void parseResponse_splits_input_and_output_tokens() {
         AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450);
 
-        assertThat(result.summary()).contains("Annual leave");
-        assertThat(result.riskLevel()).isEqualTo(RiskLevel.LOW);
-        assertThat(result.riskReasons()).isEmpty();
-        assertThat(result.recommendation()).isEqualTo(AiRecommendation.APPROVE);
-        assertThat(result.provider()).isEqualTo(AiProvider.GEMINI);
-        assertThat(result.modelName()).isEqualTo("gemini-2.0-flash-lite");
-        assertThat(result.promptVersion()).isEqualTo("v1");
+        assertThat(result.inputTokens()).isEqualTo(100);
+        assertThat(result.outputTokens()).isEqualTo(50);
         assertThat(result.tokenUsage()).isEqualTo(150);
         assertThat(result.latencyMs()).isEqualTo(450);
+    }
+
+    @Test
+    void parseResponse_emits_single_attempt_marked_not_fallback() {
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450);
+
+        assertThat(result.isFallback()).isFalse();
+        assertThat(result.attempts()).hasSize(1);
+        AiReviewAttempt attempt = result.attempts().get(0);
+        assertThat(attempt.provider()).isEqualTo(AiProvider.GEMINI);
+        assertThat(attempt.modelName()).isEqualTo("gemini-2.0-flash-lite");
+        assertThat(attempt.latencyMs()).isEqualTo(450);
+        assertThat(attempt.success()).isTrue();
+        assertThat(attempt.errorMessage()).isNull();
+    }
+
+    @Test
+    void parseResponse_uses_prompt_version_hash() {
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450);
+
+        assertThat(result.promptVersion()).isEqualTo(AiReviewPromptBuilder.PROMPT_VERSION_HASH);
+        assertThat(result.provider()).isEqualTo(AiProvider.GEMINI);
+        assertThat(result.modelName()).isEqualTo("gemini-2.0-flash-lite");
+        assertThat(result.riskLevel()).isEqualTo(RiskLevel.LOW);
+        assertThat(result.recommendation()).isEqualTo(AiRecommendation.APPROVE);
+        assertThat(result.summary()).contains("Annual leave");
+        assertThat(result.riskReasons()).isEmpty();
     }
 
     @Test
@@ -72,6 +104,8 @@ class GeminiAiReviewAdapterTest {
         assertThat(result.riskLevel()).isEqualTo(RiskLevel.MEDIUM);
         assertThat(result.riskReasons()).containsExactly("5 leaves in 30 days");
         assertThat(result.recommendation()).isEqualTo(AiRecommendation.REVIEW_CAREFULLY);
+        assertThat(result.inputTokens()).isEqualTo(140);
+        assertThat(result.outputTokens()).isEqualTo(60);
         assertThat(result.tokenUsage()).isEqualTo(200);
     }
 
