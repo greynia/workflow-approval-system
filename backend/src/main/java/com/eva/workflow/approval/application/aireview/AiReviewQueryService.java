@@ -52,6 +52,11 @@ public class AiReviewQueryService {
                 entity.getModelName(),
                 entity.getPromptVersion(),
                 entity.getProvider(),
+                entity.getInputTokens(),
+                entity.getOutputTokens(),
+                entity.getTokenUsage(),
+                entity.getLatencyMs(),
+                entity.isFallback(),
                 entity.getErrorCode(),
                 entity.getCreatedAt()
         );

@@ -12,6 +12,7 @@ import org.testcontainers.utility.DockerImageName;
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.RiskLevel;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
 import com.eva.workflow.approval.domain.aireview.service.AiReviewPort;
 
@@ -27,18 +28,26 @@ public class TestcontainersConfiguration {
 	@Bean
 	@Primary
 	AiReviewPort testAiReviewPort() {
-		return (snapshot, flags, locale) -> new AiReviewResult(
-				"Test AI review summary",
-				RiskLevel.LOW,
-				List.of(),
-				AiRecommendation.APPROVE,
-				"Test AI review recommendation",
-				"test-ai-review-port",
-				"test",
-				AiProvider.LOCAL,
-				0,
-				0
-		);
+		return (snapshot, flags, locale) -> {
+			AiReviewAttempt attempt = new AiReviewAttempt(
+					AiProvider.LOCAL, "test-ai-review-port", 0, true, null);
+			return new AiReviewResult(
+					"Test AI review summary",
+					RiskLevel.LOW,
+					List.of(),
+					AiRecommendation.APPROVE,
+					"Test AI review recommendation",
+					"test-ai-review-port",
+					"test",
+					AiProvider.LOCAL,
+					0,
+					0,
+					0,
+					0,
+					false,
+					List.of(attempt)
+			);
+		};
 	}
 
 }

@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.RiskLevel;
+import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
 import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
@@ -26,11 +27,20 @@ import lombok.RequiredArgsConstructor;
 public class OllamaAiReviewAdapter implements AiReviewPort {
 
     private static final Logger log = LoggerFactory.getLogger(OllamaAiReviewAdapter.class);
-    private static final String PROMPT_VERSION = "v2";
 
     private final OllamaProperties properties;
     private final ObjectMapper objectMapper;
     private final WebClient ollamaWebClient;
+
+    @Override
+    public AiProvider provider() {
+        return AiProvider.LOCAL;
+    }
+
+    @Override
+    public String modelName() {
+        return properties.model();
+    }
 
     @Override
     public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
@@ -56,7 +66,7 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
         return parseResponse(raw, latencyMs);
     }
 
-    private AiReviewResult parseResponse(String raw, int latencyMs) {
+    AiReviewResult parseResponse(String raw, int latencyMs) {
         try {
             JsonNode root = objectMapper.readTree(raw);
             String content = root.path("message").path("content").asText();
@@ -65,8 +75,12 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
             }
             JsonNode result = objectMapper.readTree(content);
 
-            int tokenUsage = root.path("prompt_eval_count").asInt(0)
-                    + root.path("eval_count").asInt(0);
+            int inputTokens = root.path("prompt_eval_count").asInt(0);
+            int outputTokens = root.path("eval_count").asInt(0);
+            int tokenUsage = inputTokens + outputTokens;
+
+            AiReviewAttempt attempt = new AiReviewAttempt(
+                    AiProvider.LOCAL, properties.model(), latencyMs, true, null);
 
             return new AiReviewResult(
                     AiReviewJsonParser.requiredText(result, "summary", AiReviewJsonParser.MAX_SUMMARY_LENGTH),
@@ -74,7 +88,15 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
                     AiReviewJsonParser.parseRiskReasons(result.path("riskReasons")),
                     AiReviewJsonParser.parseEnum(result, "recommendation", AiRecommendation.class),
                     AiReviewJsonParser.requiredText(result, "recommendationReason", AiReviewJsonParser.MAX_RECOMMENDATION_REASON_LENGTH),
-                    properties.model(), PROMPT_VERSION, AiProvider.LOCAL, tokenUsage, latencyMs
+                    properties.model(),
+                    AiReviewPromptBuilder.PROMPT_VERSION_HASH,
+                    AiProvider.LOCAL,
+                    inputTokens,
+                    outputTokens,
+                    tokenUsage,
+                    latencyMs,
+                    false,
+                    List.of(attempt)
             );
         } catch (Exception e) {
             log.warn("Failed to parse Ollama response: {}", e.getMessage());

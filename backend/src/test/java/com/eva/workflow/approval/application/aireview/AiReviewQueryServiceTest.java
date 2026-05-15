@@ -79,7 +79,11 @@ class AiReviewQueryServiceTest {
                 "v1",
                 AiProvider.LOCAL,
                 0,
-                100
+                0,
+                0,
+                100,
+                false,
+                "[]"
         );
         when(aiReviewRepository.findByRequestId(10L)).thenReturn(Optional.of(review));
 
