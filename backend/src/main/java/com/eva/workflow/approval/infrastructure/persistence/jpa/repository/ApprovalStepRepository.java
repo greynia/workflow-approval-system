@@ -49,6 +49,17 @@ public interface ApprovalStepRepository extends JpaRepository<ApprovalStepEntity
     List<ApprovalStepEntity> findByLeaveRequestId(Long leaveRequestId);
 
     @Query("""
+            select step
+            from ApprovalStepEntity step
+            join fetch step.approver
+            where step.leaveRequest.id = :leaveRequestId
+            order by step.stepOrder asc
+            """)
+    List<ApprovalStepEntity> findByLeaveRequestIdWithApproverOrderByStepOrderAsc(
+            @Param("leaveRequestId") Long leaveRequestId
+    );
+
+    @Query("""
             select s from ApprovalStepEntity s
             join fetch s.approver
             where s.leaveRequest.id in :requestIds
