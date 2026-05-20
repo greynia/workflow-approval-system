@@ -24,7 +24,8 @@ public final class RolePermissions {
         UserRole.EMPLOYEE, List.of(
             Permission.REQUEST_VIEW, Permission.REQUEST_CREATE, Permission.REQUEST_EDIT,
             Permission.EMPLOYEE_VIEW, Permission.BALANCE_VIEW
-        )
+        ),
+        UserRole.AI_AGENT, List.of()
     );
 
     public static List<String> of(UserRole role) {
