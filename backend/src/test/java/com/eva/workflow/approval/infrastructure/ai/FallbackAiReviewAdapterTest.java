@@ -38,7 +38,7 @@ class FallbackAiReviewAdapterTest {
         return new AiReviewResult(
                 "leaf summary", RiskLevel.LOW, List.of(),
                 AiRecommendation.APPROVE, "looks good",
-                model, "promptv1", provider,
+                model, "promptv1", null, provider,
                 40, 30, 70, latency, false, List.of(leafAttempt)
         );
     }

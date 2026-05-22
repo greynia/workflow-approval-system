@@ -257,6 +257,7 @@ class AiReviewOrchestratorTest {
                 recommendationReason,
                 "test-model",
                 "v1",
+                null,
                 provider,
                 inputTokens,
                 outputTokens,

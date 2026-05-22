@@ -32,7 +32,6 @@ import com.eva.workflow.approval.common.enums.AiReviewStatus;
 import com.eva.workflow.approval.common.enums.LeaveType;
 import com.eva.workflow.approval.common.enums.RequestStatus;
 import com.eva.workflow.approval.common.enums.RiskLevel;
-import com.eva.workflow.approval.infrastructure.ai.AiReviewPromptBuilder;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.AiReviewEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.EmployeeEntity;
 import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.LeaveRequestEntity;
@@ -86,7 +85,7 @@ class AdminAiStatsIntegrationTest {
 
         mockMvc.perform(get("/api/admin/ai/stats").cookie(adminCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.currentPromptVersion").value(AiReviewPromptBuilder.PROMPT_VERSION_HASH))
+                .andExpect(jsonPath("$.currentPromptVersion").value("v1"))
                 .andExpect(jsonPath("$.totalReviews").value(greaterThanOrEqualTo(7)))
                 .andExpect(jsonPath("$.fallbackCount").value(greaterThanOrEqualTo(2)))
                 .andExpect(jsonPath("$.byProvider.GEMINI.count").value(greaterThanOrEqualTo(6)))
@@ -199,6 +198,7 @@ class AdminAiStatsIntegrationTest {
                 null,
                 "seed-model",
                 "seed-hash",
+                null,
                 provider,
                 inputTokens,
                 outputTokens,

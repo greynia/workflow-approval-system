@@ -17,7 +17,8 @@ import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
 import com.eva.workflow.approval.domain.aireview.service.AiReviewPort;
 import com.eva.workflow.approval.infrastructure.ai.AiReviewJsonParser;
-import com.eva.workflow.approval.infrastructure.ai.AiReviewPromptBuilder;
+import com.eva.workflow.approval.infrastructure.ai.PromptTemplateResolver;
+import com.eva.workflow.approval.infrastructure.ai.RenderedPrompt;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,6 +33,7 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
     private final GeminiProperties properties;
     private final ObjectMapper objectMapper;
     private final WebClient geminiWebClient;
+    private final PromptTemplateResolver promptTemplateResolver;
 
     @Override
     public AiProvider provider() {
@@ -46,10 +48,10 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
     @Override
     public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
         long start = System.currentTimeMillis();
-        String prompt = AiReviewPromptBuilder.buildPrompt(snapshot, flags, locale);
+        RenderedPrompt rendered = promptTemplateResolver.resolveAndRender(snapshot, flags, locale, provider());
 
         Map<String, Object> requestBody = Map.of(
-                "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
+                "contents", List.of(Map.of("parts", List.of(Map.of("text", rendered.text())))),
                 "generationConfig", Map.of("responseMimeType", "application/json")
         );
 
@@ -65,10 +67,10 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
                 .block();
 
         int latencyMs = (int) (System.currentTimeMillis() - start);
-        return parseResponse(raw, latencyMs);
+        return parseResponse(raw, latencyMs, rendered);
     }
 
-    AiReviewResult parseResponse(String raw, int latencyMs) {
+    AiReviewResult parseResponse(String raw, int latencyMs, RenderedPrompt rendered) {
         try {
             JsonNode root = objectMapper.readTree(raw);
             String content = root.path("candidates")
@@ -99,7 +101,8 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
                     AiReviewJsonParser.parseEnum(result, "recommendation", AiRecommendation.class),
                     AiReviewJsonParser.requiredText(result, "recommendationReason", AiReviewJsonParser.MAX_RECOMMENDATION_REASON_LENGTH),
                     properties.model(),
-                    AiReviewPromptBuilder.PROMPT_VERSION_HASH,
+                    rendered.version(),
+                    rendered.templateId(),
                     AiProvider.GEMINI,
                     inputTokens,
                     outputTokens,

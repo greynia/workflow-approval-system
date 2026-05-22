@@ -65,6 +65,7 @@ public class FallbackAiReviewAdapter implements AiReviewPort {
                 leaf.recommendationReason(),
                 leaf.modelName(),
                 leaf.promptVersion(),
+                leaf.promptTemplateId(),
                 leaf.provider(),
                 leaf.inputTokens(),
                 leaf.outputTokens(),

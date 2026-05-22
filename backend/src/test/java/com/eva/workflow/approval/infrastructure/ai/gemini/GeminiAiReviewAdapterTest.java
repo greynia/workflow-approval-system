@@ -13,12 +13,15 @@ import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.RiskLevel;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
-import com.eva.workflow.approval.infrastructure.ai.AiReviewPromptBuilder;
+import com.eva.workflow.approval.infrastructure.ai.PromptTemplateResolver;
+import com.eva.workflow.approval.infrastructure.ai.RenderedPrompt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class GeminiAiReviewAdapterTest {
 
     private GeminiAiReviewAdapter adapter;
+
+    private static final RenderedPrompt RENDERED = new RenderedPrompt("prompt-text", 7L, "v-test");
 
     private static final String VALID_RESPONSE = """
             {
@@ -57,12 +60,13 @@ class GeminiAiReviewAdapterTest {
     @BeforeEach
     void setUp() {
         GeminiProperties props = new GeminiProperties("test-api-key", "gemini-2.0-flash-lite", 30);
-        adapter = new GeminiAiReviewAdapter(props, new ObjectMapper(), mock(WebClient.class));
+        adapter = new GeminiAiReviewAdapter(
+                props, new ObjectMapper(), mock(WebClient.class), mock(PromptTemplateResolver.class));
     }
 
     @Test
     void parseResponse_splits_input_and_output_tokens() {
-        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450);
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450, RENDERED);
 
         assertThat(result.inputTokens()).isEqualTo(100);
         assertThat(result.outputTokens()).isEqualTo(50);
@@ -72,7 +76,7 @@ class GeminiAiReviewAdapterTest {
 
     @Test
     void parseResponse_emits_single_attempt_marked_not_fallback() {
-        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450);
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450, RENDERED);
 
         assertThat(result.isFallback()).isFalse();
         assertThat(result.attempts()).hasSize(1);
@@ -85,10 +89,11 @@ class GeminiAiReviewAdapterTest {
     }
 
     @Test
-    void parseResponse_uses_prompt_version_hash() {
-        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450);
+    void parseResponse_carries_rendered_prompt_provenance() {
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 450, RENDERED);
 
-        assertThat(result.promptVersion()).isEqualTo(AiReviewPromptBuilder.PROMPT_VERSION_HASH);
+        assertThat(result.promptVersion()).isEqualTo("v-test");
+        assertThat(result.promptTemplateId()).isEqualTo(7L);
         assertThat(result.provider()).isEqualTo(AiProvider.GEMINI);
         assertThat(result.modelName()).isEqualTo("gemini-2.0-flash-lite");
         assertThat(result.riskLevel()).isEqualTo(RiskLevel.LOW);
@@ -99,7 +104,7 @@ class GeminiAiReviewAdapterTest {
 
     @Test
     void parseResponse_medium_risk_review_carefully() {
-        AiReviewResult result = adapter.parseResponse(MEDIUM_RISK_RESPONSE, 600);
+        AiReviewResult result = adapter.parseResponse(MEDIUM_RISK_RESPONSE, 600, RENDERED);
 
         assertThat(result.riskLevel()).isEqualTo(RiskLevel.MEDIUM);
         assertThat(result.riskReasons()).containsExactly("5 leaves in 30 days");
@@ -119,7 +124,7 @@ class GeminiAiReviewAdapterTest {
                 }
                 """;
 
-        assertThatThrownBy(() -> adapter.parseResponse(malformedResponse, 100))
+        assertThatThrownBy(() -> adapter.parseResponse(malformedResponse, 100, RENDERED))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("AI_PARSE_ERROR");
     }

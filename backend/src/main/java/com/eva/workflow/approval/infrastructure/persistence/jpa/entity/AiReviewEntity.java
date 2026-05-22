@@ -77,6 +77,9 @@ public class AiReviewEntity {
     @Column(name = "prompt_version", length = 20)
     private String promptVersion;
 
+    @Column(name = "prompt_template_id")
+    private Long promptTemplateId;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private AiProvider provider;
@@ -130,6 +133,7 @@ public class AiReviewEntity {
             String rawAiResultJson,
             String modelName,
             String promptVersion,
+            Long promptTemplateId,
             AiProvider provider,
             Integer inputTokens,
             Integer outputTokens,
@@ -149,6 +153,7 @@ public class AiReviewEntity {
         this.rawAiResultJson = rawAiResultJson;
         this.modelName = modelName;
         this.promptVersion = promptVersion;
+        this.promptTemplateId = promptTemplateId;
         this.provider = provider;
         this.inputTokens = inputTokens;
         this.outputTokens = outputTokens;

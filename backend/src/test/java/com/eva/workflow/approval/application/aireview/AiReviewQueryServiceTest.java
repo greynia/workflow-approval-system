@@ -77,6 +77,7 @@ class AiReviewQueryServiceTest {
                 "{\"summary\":\"AI summary\"}",
                 "test-model",
                 "v1",
+                null,
                 AiProvider.LOCAL,
                 0,
                 0,

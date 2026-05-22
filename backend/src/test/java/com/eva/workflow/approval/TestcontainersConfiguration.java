@@ -39,6 +39,7 @@ public class TestcontainersConfiguration {
 					"Test AI review recommendation",
 					"test-ai-review-port",
 					"test",
+					null,
 					AiProvider.LOCAL,
 					0,
 					0,
