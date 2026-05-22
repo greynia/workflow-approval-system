@@ -59,7 +59,8 @@ class GeminiAiReviewAdapterTest {
 
     @BeforeEach
     void setUp() {
-        GeminiProperties props = new GeminiProperties("test-api-key", "gemini-2.0-flash-lite", 30);
+        GeminiProperties props = new GeminiProperties(
+                "test-api-key", "gemini-2.0-flash-lite", "text-embedding-004", 30);
         adapter = new GeminiAiReviewAdapter(
                 props, new ObjectMapper(), mock(WebClient.class), mock(PromptTemplateResolver.class));
     }

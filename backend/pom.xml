@@ -35,6 +35,13 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
+			<!-- pgvector support: maps Postgres `vector` columns to float[] via @JdbcTypeCode(SqlTypes.VECTOR).
+			     Not version-managed by the Spring Boot BOM, so pin to the managed Hibernate version. -->
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-vector</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
