@@ -17,7 +17,8 @@ import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
 import com.eva.workflow.approval.domain.aireview.service.AiReviewPort;
 import com.eva.workflow.approval.infrastructure.ai.AiReviewJsonParser;
-import com.eva.workflow.approval.infrastructure.ai.AiReviewPromptBuilder;
+import com.eva.workflow.approval.infrastructure.ai.PromptTemplateResolver;
+import com.eva.workflow.approval.infrastructure.ai.RenderedPrompt;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,6 +32,7 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
     private final OllamaProperties properties;
     private final ObjectMapper objectMapper;
     private final WebClient ollamaWebClient;
+    private final PromptTemplateResolver promptTemplateResolver;
 
     @Override
     public AiProvider provider() {
@@ -45,11 +47,11 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
     @Override
     public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
         long start = System.currentTimeMillis();
-        String prompt = AiReviewPromptBuilder.buildPrompt(snapshot, flags, locale);
+        RenderedPrompt rendered = promptTemplateResolver.resolveAndRender(snapshot, flags, locale, provider());
 
         Map<String, Object> requestBody = Map.of(
                 "model", properties.model(),
-                "messages", List.of(Map.of("role", "user", "content", prompt)),
+                "messages", List.of(Map.of("role", "user", "content", rendered.text())),
                 "stream", false,
                 "format", "json"
         );
@@ -63,10 +65,10 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
                 .block();
 
         int latencyMs = (int) (System.currentTimeMillis() - start);
-        return parseResponse(raw, latencyMs);
+        return parseResponse(raw, latencyMs, rendered);
     }
 
-    AiReviewResult parseResponse(String raw, int latencyMs) {
+    AiReviewResult parseResponse(String raw, int latencyMs, RenderedPrompt rendered) {
         try {
             JsonNode root = objectMapper.readTree(raw);
             String content = root.path("message").path("content").asText();
@@ -89,7 +91,8 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
                     AiReviewJsonParser.parseEnum(result, "recommendation", AiRecommendation.class),
                     AiReviewJsonParser.requiredText(result, "recommendationReason", AiReviewJsonParser.MAX_RECOMMENDATION_REASON_LENGTH),
                     properties.model(),
-                    AiReviewPromptBuilder.PROMPT_VERSION_HASH,
+                    rendered.version(),
+                    rendered.templateId(),
                     AiProvider.LOCAL,
                     inputTokens,
                     outputTokens,

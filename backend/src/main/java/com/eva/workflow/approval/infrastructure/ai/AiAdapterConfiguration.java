@@ -27,8 +27,9 @@ public class AiAdapterConfiguration {
     public OllamaAiReviewAdapter ollamaAiReviewAdapter(
             OllamaProperties ollamaProperties,
             ObjectMapper objectMapper,
-            WebClient ollamaWebClient) {
-        return new OllamaAiReviewAdapter(ollamaProperties, objectMapper, ollamaWebClient);
+            WebClient ollamaWebClient,
+            PromptTemplateResolver promptTemplateResolver) {
+        return new OllamaAiReviewAdapter(ollamaProperties, objectMapper, ollamaWebClient, promptTemplateResolver);
     }
 
     @Bean
@@ -36,8 +37,9 @@ public class AiAdapterConfiguration {
     public GeminiAiReviewAdapter geminiAiReviewAdapter(
             GeminiProperties geminiProperties,
             ObjectMapper objectMapper,
-            @Qualifier("geminiWebClient") WebClient geminiWebClient) {
-        return new GeminiAiReviewAdapter(geminiProperties, objectMapper, geminiWebClient);
+            @Qualifier("geminiWebClient") WebClient geminiWebClient,
+            PromptTemplateResolver promptTemplateResolver) {
+        return new GeminiAiReviewAdapter(geminiProperties, objectMapper, geminiWebClient, promptTemplateResolver);
     }
 
     @Bean

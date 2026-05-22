@@ -14,6 +14,7 @@ public record AiReviewResult(
         String recommendationReason,
         String modelName,
         String promptVersion,
+        Long promptTemplateId,
         AiProvider provider,
         int inputTokens,
         int outputTokens,

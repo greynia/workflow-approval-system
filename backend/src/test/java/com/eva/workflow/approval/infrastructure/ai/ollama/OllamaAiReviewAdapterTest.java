@@ -12,12 +12,15 @@ import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.RiskLevel;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
-import com.eva.workflow.approval.infrastructure.ai.AiReviewPromptBuilder;
+import com.eva.workflow.approval.infrastructure.ai.PromptTemplateResolver;
+import com.eva.workflow.approval.infrastructure.ai.RenderedPrompt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class OllamaAiReviewAdapterTest {
 
     private OllamaAiReviewAdapter adapter;
+
+    private static final RenderedPrompt RENDERED = new RenderedPrompt("prompt-text", 7L, "v-test");
 
     private static final String VALID_RESPONSE = """
             {
@@ -32,12 +35,13 @@ class OllamaAiReviewAdapterTest {
     @BeforeEach
     void setUp() {
         OllamaProperties props = new OllamaProperties("http://localhost:11434", "llama3.1", 30);
-        adapter = new OllamaAiReviewAdapter(props, new ObjectMapper(), mock(WebClient.class));
+        adapter = new OllamaAiReviewAdapter(
+                props, new ObjectMapper(), mock(WebClient.class), mock(PromptTemplateResolver.class));
     }
 
     @Test
     void parseResponse_splits_input_and_output_tokens() {
-        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 750);
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 750, RENDERED);
 
         assertThat(result.inputTokens()).isEqualTo(120);
         assertThat(result.outputTokens()).isEqualTo(80);
@@ -47,7 +51,7 @@ class OllamaAiReviewAdapterTest {
 
     @Test
     void parseResponse_emits_single_attempt_marked_not_fallback() {
-        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 750);
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 750, RENDERED);
 
         assertThat(result.isFallback()).isFalse();
         assertThat(result.attempts()).hasSize(1);
@@ -60,10 +64,11 @@ class OllamaAiReviewAdapterTest {
     }
 
     @Test
-    void parseResponse_uses_prompt_version_hash() {
-        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 750);
+    void parseResponse_carries_rendered_prompt_provenance() {
+        AiReviewResult result = adapter.parseResponse(VALID_RESPONSE, 750, RENDERED);
 
-        assertThat(result.promptVersion()).isEqualTo(AiReviewPromptBuilder.PROMPT_VERSION_HASH);
+        assertThat(result.promptVersion()).isEqualTo("v-test");
+        assertThat(result.promptTemplateId()).isEqualTo(7L);
         assertThat(result.provider()).isEqualTo(AiProvider.LOCAL);
         assertThat(result.riskLevel()).isEqualTo(RiskLevel.LOW);
         assertThat(result.recommendation()).isEqualTo(AiRecommendation.APPROVE);
