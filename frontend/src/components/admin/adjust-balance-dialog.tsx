@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import LeaveService from "@/services/leave.service";
@@ -31,13 +31,18 @@ export function AdjustBalanceDialog({ open, balance, onClose, onSuccess }: Props
 
   const [quotaDays, setQuotaDays] = useState("");
   const [reason, setReason] = useState("");
+  const [trackedBalance, setTrackedBalance] = useState<AdminLeaveBalance | null>(null);
 
-  useEffect(() => {
+  // Reset the form whenever a different balance is selected. Done during render
+  // (React's "adjusting state on a prop change" pattern) rather than in an effect,
+  // which would trip react-hooks/set-state-in-effect and add an extra render pass.
+  if (balance !== trackedBalance) {
+    setTrackedBalance(balance);
     if (balance) {
       setQuotaDays(String(balance.quotaMinutes / MINUTES_PER_DAY));
       setReason("");
     }
-  }, [balance]);
+  }
 
   const mutation = useMutation({
     mutationFn: ({
