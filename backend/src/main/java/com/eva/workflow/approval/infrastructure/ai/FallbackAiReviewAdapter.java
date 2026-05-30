@@ -24,7 +24,8 @@ public class FallbackAiReviewAdapter implements AiReviewPort {
     }
 
     @Override
-    public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
+    public AiReviewResult review(
+            ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale, String policyContext) {
         int cumulativeMs = 0;
         List<AiReviewAttempt> attempts = new ArrayList<>();
         RuntimeException lastException = null;
@@ -32,7 +33,7 @@ public class FallbackAiReviewAdapter implements AiReviewPort {
         for (AiReviewPort adapter : chain) {
             long start = System.currentTimeMillis();
             try {
-                AiReviewResult leaf = adapter.review(snapshot, flags, locale);
+                AiReviewResult leaf = adapter.review(snapshot, flags, locale, policyContext);
                 int ms = (int) (System.currentTimeMillis() - start);
                 cumulativeMs += ms;
                 attempts.add(new AiReviewAttempt(
@@ -72,7 +73,8 @@ public class FallbackAiReviewAdapter implements AiReviewPort {
                 leaf.tokenUsage(),
                 cumulativeMs,
                 attempts.size() > 1,
-                List.copyOf(attempts)
+                List.copyOf(attempts),
+                leaf.policyReferences()
         );
     }
 

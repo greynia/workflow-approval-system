@@ -39,36 +39,36 @@ class FallbackAiReviewAdapterTest {
                 "leaf summary", RiskLevel.LOW, List.of(),
                 AiRecommendation.APPROVE, "looks good",
                 model, "promptv1", null, provider,
-                40, 30, 70, latency, false, List.of(leafAttempt)
+                40, 30, 70, latency, false, List.of(leafAttempt), List.of()
         );
     }
 
     @Test
     void primary_succeeds_records_one_attempt_no_fallback() {
         AiReviewResult primaryLeaf = leafResult(AiProvider.GEMINI, "gemini-test", 500);
-        when(primary.review(any(), any(), any())).thenReturn(primaryLeaf);
+        when(primary.review(any(), any(), any(), any())).thenReturn(primaryLeaf);
         FallbackAiReviewAdapter adapter = new FallbackAiReviewAdapter(List.of(primary, fallback));
 
-        AiReviewResult result = adapter.review(snapshot(), List.of(), "en");
+        AiReviewResult result = adapter.review(snapshot(), List.of(), "en", "");
 
         assertThat(result.isFallback()).isFalse();
         assertThat(result.attempts()).hasSize(1);
         assertThat(result.attempts().get(0).provider()).isEqualTo(AiProvider.GEMINI);
         assertThat(result.attempts().get(0).success()).isTrue();
         assertThat(result.summary()).isEqualTo("leaf summary");
-        verify(fallback, never()).review(any(), any(), any());
+        verify(fallback, never()).review(any(), any(), any(), any());
     }
 
     @Test
     void primary_fails_fallback_succeeds_records_two_attempts_isFallback_true() {
-        when(primary.review(any(), any(), any())).thenThrow(new RuntimeException("primary timeout"));
+        when(primary.review(any(), any(), any(), any())).thenThrow(new RuntimeException("primary timeout"));
         when(primary.provider()).thenReturn(AiProvider.GEMINI);
         when(primary.modelName()).thenReturn("gemini-test");
         AiReviewResult fallbackLeaf = leafResult(AiProvider.LOCAL, "ollama-test", 700);
-        when(fallback.review(any(), any(), any())).thenReturn(fallbackLeaf);
+        when(fallback.review(any(), any(), any(), any())).thenReturn(fallbackLeaf);
         FallbackAiReviewAdapter adapter = new FallbackAiReviewAdapter(List.of(primary, fallback));
 
-        AiReviewResult result = adapter.review(snapshot(), List.of(), "en");
+        AiReviewResult result = adapter.review(snapshot(), List.of(), "en", "");
 
         assertThat(result.isFallback()).isTrue();
         assertThat(result.attempts()).hasSize(2);
@@ -90,20 +90,20 @@ class FallbackAiReviewAdapterTest {
     @Test
     void all_adapters_fail_rethrows_last_exception() {
         RuntimeException lastException = new RuntimeException("all providers down");
-        when(primary.review(any(), any(), any())).thenThrow(new RuntimeException("primary down"));
-        when(fallback.review(any(), any(), any())).thenThrow(lastException);
+        when(primary.review(any(), any(), any(), any())).thenThrow(new RuntimeException("primary down"));
+        when(fallback.review(any(), any(), any(), any())).thenThrow(lastException);
         FallbackAiReviewAdapter adapter = new FallbackAiReviewAdapter(List.of(primary, fallback));
 
-        assertThatThrownBy(() -> adapter.review(snapshot(), List.of(), "en"))
+        assertThatThrownBy(() -> adapter.review(snapshot(), List.of(), "en", ""))
                 .isEqualTo(lastException);
     }
 
     @Test
     void single_adapter_in_chain_still_wraps_with_one_attempt() {
-        when(primary.review(any(), any(), any())).thenReturn(leafResult(AiProvider.LOCAL, "ollama-test", 600));
+        when(primary.review(any(), any(), any(), any())).thenReturn(leafResult(AiProvider.LOCAL, "ollama-test", 600));
         FallbackAiReviewAdapter adapter = new FallbackAiReviewAdapter(List.of(primary));
 
-        AiReviewResult result = adapter.review(snapshot(), List.of(), "en");
+        AiReviewResult result = adapter.review(snapshot(), List.of(), "en", "");
 
         assertThat(result.isFallback()).isFalse();
         assertThat(result.attempts()).hasSize(1);

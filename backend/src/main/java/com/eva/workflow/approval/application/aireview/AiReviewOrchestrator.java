@@ -3,12 +3,16 @@ package com.eva.workflow.approval.application.aireview;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.eva.workflow.approval.application.policy.PolicyRetrieval;
+import com.eva.workflow.approval.application.policy.PolicyRetrievalService;
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.AiReviewErrorCode;
@@ -17,6 +21,7 @@ import com.eva.workflow.approval.common.enums.RiskLevel;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewAttempt;
 import com.eva.workflow.approval.domain.aireview.model.AiReviewResult;
 import com.eva.workflow.approval.domain.aireview.model.HardRuleFlag;
+import com.eva.workflow.approval.domain.aireview.model.PolicyReference;
 import com.eva.workflow.approval.domain.aireview.model.ReviewSnapshot;
 import com.eva.workflow.approval.domain.aireview.service.AiHardRuleEngine;
 import com.eva.workflow.approval.domain.aireview.service.AiReviewPort;
@@ -40,6 +45,7 @@ public class AiReviewOrchestrator {
     private final AiReviewPort aiReviewPort;
     private final AiReviewRepository aiReviewRepository;
     private final ObjectMapper objectMapper;
+    private final Optional<PolicyRetrievalService> policyRetrievalService;
 
     public void review(Long requestId) {
         review(requestId, "en");
@@ -66,10 +72,17 @@ public class AiReviewOrchestrator {
         }
 
         try {
-            ProviderReview providerReview = flags.isEmpty()
-                    ? new ProviderReview(buildLowRiskResult(snapshot, locale), null)
-                    : reviewWithFallback(snapshot, flags, locale, requestId);
-            AiReviewResult finalResult = enforceHardRuleFloor(providerReview.result(), flags);
+            List<PolicyReference> policyReferences = List.of();
+            ProviderReview providerReview;
+            if (flags.isEmpty()) {
+                providerReview = new ProviderReview(buildLowRiskResult(snapshot, locale), null);
+            } else {
+                PolicyRetrievalResult policy = retrievePolicy(snapshot, flags, locale);
+                policyReferences = policy.references();
+                providerReview = reviewWithFallback(snapshot, flags, locale, policy.context(), requestId);
+            }
+            AiReviewResult finalResult =
+                    enforceHardRuleFloor(providerReview.result(), flags, policyReferences);
 
             entity.markCompleted(
                     finalResult.summary(),
@@ -89,7 +102,8 @@ public class AiReviewOrchestrator {
                     finalResult.tokenUsage(),
                     finalResult.latencyMs(),
                     finalResult.isFallback(),
-                    toJson(finalResult.attempts())
+                    toJson(finalResult.attempts()),
+                    toJson(finalResult.policyReferences())
             );
             aiReviewRepository.save(entity);
             log.info("AI review completed for requestId={} risk={}", requestId, finalResult.riskLevel());
@@ -115,10 +129,11 @@ public class AiReviewOrchestrator {
             ReviewSnapshot snapshot,
             List<HardRuleFlag> flags,
             String locale,
+            String policyContext,
             Long requestId
     ) {
         try {
-            AiReviewResult result = aiReviewPort.review(snapshot, flags, locale);
+            AiReviewResult result = aiReviewPort.review(snapshot, flags, locale, policyContext);
             return new ProviderReview(result, toJson(result));
         } catch (Exception e) {
             log.warn("AI provider failed for requestId={}, using deterministic fallback: {}", requestId, e.getMessage());
@@ -126,7 +141,55 @@ public class AiReviewOrchestrator {
         }
     }
 
-    private AiReviewResult enforceHardRuleFloor(AiReviewResult result, List<HardRuleFlag> flags) {
+    /**
+     * Retrieves company-policy excerpts relevant to the triggered hard-rule flags. Best-effort:
+     * absent when no retrieval service is wired (no Gemini key) and empty on any failure, so the
+     * review always proceeds. Runs only on the LLM path (flags present).
+     */
+    private PolicyRetrievalResult retrievePolicy(
+            ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
+        if (policyRetrievalService.isEmpty()) {
+            return PolicyRetrievalResult.EMPTY;
+        }
+        try {
+            String query = buildPolicyQuery(snapshot, flags, locale);
+            // locale null = search across all stored policy locales (the policy doc is zh-only today).
+            PolicyRetrieval retrieval = policyRetrievalService.get().retrieve(query, null, null);
+            List<PolicyReference> references = retrieval.matches().stream()
+                    .map(m -> new PolicyReference(
+                            m.section(), m.source(), m.chunkIndex(), m.content(), m.score()))
+                    .toList();
+            return new PolicyRetrievalResult(formatPolicyContext(references), references);
+        } catch (Exception e) {
+            log.warn("Policy retrieval failed; proceeding without policy context: {}", e.getMessage());
+            return PolicyRetrievalResult.EMPTY;
+        }
+    }
+
+    private String buildPolicyQuery(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
+        boolean zh = isTraditionalChinese(locale);
+        String leaveType = formatLeaveType(snapshot.leaveType(), zh);
+        String flagText = flags.stream()
+                .map(HardRuleFlag::humanReadable)
+                .collect(Collectors.joining(" "));
+        return (leaveType + " " + flagText).trim();
+    }
+
+    /** Renders retrieved clauses into the {@code {{policyContext}}} prompt slot, or empty when none. */
+    private String formatPolicyContext(List<PolicyReference> references) {
+        if (references.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(
+                "Company Policy Excerpts (authoritative basis for this review):\n");
+        for (PolicyReference ref : references) {
+            sb.append("- [").append(ref.section()).append("] ").append(ref.content()).append("\n");
+        }
+        return sb.append("\n").toString();
+    }
+
+    private AiReviewResult enforceHardRuleFloor(
+            AiReviewResult result, List<HardRuleFlag> flags, List<PolicyReference> policyReferences) {
         RiskLevel hardRuleRiskLevel = hardRuleEngine.highestRiskLevel(flags);
         RiskLevel riskLevel = max(result.riskLevel(), hardRuleRiskLevel);
         List<String> riskReasons = mergeRiskReasons(result.riskReasons(), flags, riskLevel);
@@ -151,7 +214,8 @@ public class AiReviewOrchestrator {
                 result.tokenUsage(),
                 result.latencyMs(),
                 result.isFallback(),
-                result.attempts()
+                result.attempts(),
+                policyReferences
         );
     }
 
@@ -177,7 +241,8 @@ public class AiReviewOrchestrator {
                     0,
                     0,
                     false,
-                    attempts
+                    attempts,
+                    List.of()
             );
         }
 
@@ -196,7 +261,8 @@ public class AiReviewOrchestrator {
                 0,
                 0,
                 false,
-                attempts
+                attempts,
+                List.of()
         );
     }
 
@@ -236,7 +302,8 @@ public class AiReviewOrchestrator {
                     0,
                     0,
                     false,
-                    attempts
+                    attempts,
+                    List.of()
             );
         }
 
@@ -255,7 +322,8 @@ public class AiReviewOrchestrator {
                 0,
                 0,
                 false,
-                attempts
+                attempts,
+                List.of()
         );
     }
 
@@ -384,5 +452,9 @@ public class AiReviewOrchestrator {
     }
 
     private record ProviderReview(AiReviewResult result, String rawAiResultJson) {
+    }
+
+    private record PolicyRetrievalResult(String context, List<PolicyReference> references) {
+        static final PolicyRetrievalResult EMPTY = new PolicyRetrievalResult("", List.of());
     }
 }

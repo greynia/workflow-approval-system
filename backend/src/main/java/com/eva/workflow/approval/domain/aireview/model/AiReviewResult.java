@@ -21,6 +21,7 @@ public record AiReviewResult(
         int tokenUsage,
         int latencyMs,
         boolean isFallback,
-        List<AiReviewAttempt> attempts
+        List<AiReviewAttempt> attempts,
+        List<PolicyReference> policyReferences
 ) {
 }

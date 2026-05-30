@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eva.workflow.approval.api.dto.aireview.AiReviewResponse;
 import com.eva.workflow.approval.api.dto.aireview.HardRuleFlagResponse;
+import com.eva.workflow.approval.api.dto.aireview.PolicyReferenceResponse;
 import com.eva.workflow.approval.application.auth.AuthenticatedEmployee;
 import com.eva.workflow.approval.application.exception.ForbiddenApplicationException;
 import com.eva.workflow.approval.application.exception.ResourceNotFoundApplicationException;
@@ -57,9 +58,21 @@ public class AiReviewQueryService {
                 entity.getTokenUsage(),
                 entity.getLatencyMs(),
                 entity.isFallback(),
+                parsePolicyReferences(entity.getPolicyReferencesJson()),
                 entity.getErrorCode(),
                 entity.getCreatedAt()
         );
+    }
+
+    private List<PolicyReferenceResponse> parsePolicyReferences(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<PolicyReferenceResponse>>() {});
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     private List<String> parseRiskReasons(String json) {

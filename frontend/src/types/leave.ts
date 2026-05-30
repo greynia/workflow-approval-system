@@ -10,6 +10,14 @@ export interface HardRuleFlag {
   humanReadable: string;
 }
 
+export interface PolicyReference {
+  section: string;
+  source: string;
+  chunkIndex: number;
+  content: string;
+  score: number;
+}
+
 export interface AiReviewResponse {
   status: AiReviewStatus;
   summary: string | null;
@@ -21,6 +29,7 @@ export interface AiReviewResponse {
   modelName: string | null;
   promptVersion: string | null;
   provider: AiProvider | null;
+  policyReferences: PolicyReference[];
   errorCode: string | null;
   createdAt: string;
 }

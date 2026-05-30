@@ -3,6 +3,7 @@ package com.eva.workflow.approval.infrastructure.persistence.jpa.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,7 +11,9 @@ import com.eva.workflow.approval.infrastructure.persistence.jpa.entity.PolicyChu
 
 public interface PolicyChunkRepository extends JpaRepository<PolicyChunkEntity, Long> {
 
-    boolean existsByLocaleAndContentHash(String locale, String contentHash);
+    @Modifying
+    @Query("DELETE FROM PolicyChunkEntity p WHERE p.locale = :locale")
+    int deleteByLocale(@Param("locale") String locale);
 
     /**
      * Top-{@code topK} chunks ordered by cosine distance to the query vector.
@@ -19,6 +22,8 @@ public interface PolicyChunkRepository extends JpaRepository<PolicyChunkEntity, 
      */
     @Query(value = """
             SELECT section AS section,
+                   source AS source,
+                   chunk_index AS chunkIndex,
                    content AS content,
                    1 - (embedding <=> CAST(:vec AS vector)) AS score
             FROM policy_chunks

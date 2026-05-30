@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.eva.workflow.approval.application.policy.PolicyMatch;
+import com.eva.workflow.approval.application.policy.PolicyRetrieval;
+import com.eva.workflow.approval.application.policy.PolicyRetrievalService;
 import com.eva.workflow.approval.common.enums.AiProvider;
 import com.eva.workflow.approval.common.enums.AiRecommendation;
 import com.eva.workflow.approval.common.enums.AiReviewErrorCode;
@@ -49,6 +53,9 @@ class AiReviewOrchestratorTest {
     @Mock
     private AiReviewRepository aiReviewRepository;
 
+    @Mock
+    private PolicyRetrievalService policyRetrievalService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Captor
@@ -63,7 +70,8 @@ class AiReviewOrchestratorTest {
                 hardRuleEngine,
                 aiReviewPort,
                 aiReviewRepository,
-                objectMapper
+                objectMapper,
+                Optional.empty()
         );
     }
 
@@ -71,7 +79,7 @@ class AiReviewOrchestratorTest {
     void reviewDoesNotLetAiDowngradeHighHardRuleRisk() {
         ReviewSnapshot snapshot = snapshotWithNewHireRisk();
         when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
-        when(aiReviewPort.review(any(), any(), any())).thenReturn(leafResult(
+        when(aiReviewPort.review(any(), any(), any(), any())).thenReturn(leafResult(
                 "AI summary",
                 RiskLevel.LOW,
                 List.of("AI says low risk"),
@@ -118,7 +126,7 @@ class AiReviewOrchestratorTest {
         List<AiReviewEntity> savedReviews = reviewCaptor.getAllValues();
         AiReviewEntity completedReview = savedReviews.get(savedReviews.size() - 1);
 
-        verify(aiReviewPort, never()).review(any(), any(), any());
+        verify(aiReviewPort, never()).review(any(), any(), any(), any());
         assertThat(completedReview.getRiskLevel()).isEqualTo(RiskLevel.LOW);
         assertThat(completedReview.getRecommendation()).isEqualTo(AiRecommendation.APPROVE);
         assertThat(completedReview.getRiskReasonsJson()).isEqualTo("[]");
@@ -136,7 +144,7 @@ class AiReviewOrchestratorTest {
     void reviewDeduplicatesAiRiskReasonAgainstLocalizedHardRuleReason() {
         ReviewSnapshot snapshot = snapshotWithNewHireShortLeaveRisk();
         when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
-        when(aiReviewPort.review(any(), any(), any())).thenReturn(leafResult(
+        when(aiReviewPort.review(any(), any(), any(), any())).thenReturn(leafResult(
                 "AI summary",
                 RiskLevel.MEDIUM,
                 List.of("新進員工在到職90天內申請請假"),
@@ -165,7 +173,7 @@ class AiReviewOrchestratorTest {
     void reviewCompletesWithRuleEngineFallbackWhenAiProviderFails() {
         ReviewSnapshot snapshot = snapshotWithNewHireShortLeaveRisk();
         when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
-        when(aiReviewPort.review(any(), any(), any())).thenThrow(new RuntimeException("timeout"));
+        when(aiReviewPort.review(any(), any(), any(), any())).thenThrow(new RuntimeException("timeout"));
         when(aiReviewRepository.save(any(AiReviewEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -199,7 +207,7 @@ class AiReviewOrchestratorTest {
         List<AiReviewEntity> savedReviews = reviewCaptor.getAllValues();
         AiReviewEntity failedReview = savedReviews.get(savedReviews.size() - 1);
 
-        verify(aiReviewPort, never()).review(any(), any(), any());
+        verify(aiReviewPort, never()).review(any(), any(), any(), any());
         assertThat(failedReview.getStatus()).isEqualTo(AiReviewStatus.FAILED);
         assertThat(failedReview.getErrorCode()).isEqualTo(AiReviewErrorCode.SNAPSHOT_BUILD_FAILED.name());
         assertThat(failedReview.getProvider()).isNull();
@@ -219,7 +227,8 @@ class AiReviewOrchestratorTest {
                 throwingHardRuleEngine,
                 aiReviewPort,
                 aiReviewRepository,
-                objectMapper
+                objectMapper,
+                Optional.empty()
         );
         when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
         when(aiReviewRepository.save(any(AiReviewEntity.class)))
@@ -231,7 +240,7 @@ class AiReviewOrchestratorTest {
         List<AiReviewEntity> savedReviews = reviewCaptor.getAllValues();
         AiReviewEntity failedReview = savedReviews.get(savedReviews.size() - 1);
 
-        verify(aiReviewPort, never()).review(any(), any(), any());
+        verify(aiReviewPort, never()).review(any(), any(), any(), any());
         assertThat(failedReview.getStatus()).isEqualTo(AiReviewStatus.FAILED);
         assertThat(failedReview.getErrorCode()).isEqualTo(AiReviewErrorCode.RULE_ENGINE_FAILED.name());
         assertThat(failedReview.getProvider()).isEqualTo(AiProvider.RULE_ENGINE);
@@ -264,8 +273,55 @@ class AiReviewOrchestratorTest {
                 inputTokens + outputTokens,
                 latencyMs,
                 false,
-                List.of(attempt)
+                List.of(attempt),
+                List.of()
         );
+    }
+
+    @Test
+    void reviewInjectsRetrievedPolicyContextAndPersistsReferences() {
+        ReviewSnapshot snapshot = snapshotWithNewHireRisk();
+        AiReviewOrchestrator policyAwareOrchestrator = new AiReviewOrchestrator(
+                snapshotAssembler,
+                hardRuleEngine,
+                aiReviewPort,
+                aiReviewRepository,
+                objectMapper,
+                Optional.of(policyRetrievalService)
+        );
+        when(snapshotAssembler.assemble(10L)).thenReturn(snapshot);
+        when(policyRetrievalService.retrieve(any(), any(), any())).thenReturn(new PolicyRetrieval(
+                true, 5, 12,
+                List.of(new PolicyMatch(
+                        "新進員工請假限制", "leave-policy.zh.md", 0,
+                        "到職未滿九十日之新進員工請假將標記為高風險。", 0.9))));
+        when(aiReviewPort.review(any(), any(), any(), any())).thenReturn(leafResult(
+                "AI summary",
+                RiskLevel.LOW,
+                List.of(),
+                AiRecommendation.APPROVE,
+                "AI recommends approval",
+                AiProvider.LOCAL,
+                10,
+                10,
+                50
+        ));
+        when(aiReviewRepository.save(any(AiReviewEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        policyAwareOrchestrator.review(10L, "zh-TW");
+
+        ArgumentCaptor<String> policyContextCaptor = ArgumentCaptor.forClass(String.class);
+        verify(aiReviewPort).review(any(), any(), any(), policyContextCaptor.capture());
+        assertThat(policyContextCaptor.getValue())
+                .contains("Company Policy Excerpts")
+                .contains("新進員工請假限制");
+
+        org.mockito.Mockito.verify(aiReviewRepository, org.mockito.Mockito.times(2)).save(reviewCaptor.capture());
+        AiReviewEntity completedReview = reviewCaptor.getAllValues().get(1);
+        assertThat(completedReview.getPolicyReferencesJson())
+                .contains("新進員工請假限制")
+                .contains("leave-policy.zh.md");
     }
 
     private ReviewSnapshot snapshotWithNewHireRisk() {

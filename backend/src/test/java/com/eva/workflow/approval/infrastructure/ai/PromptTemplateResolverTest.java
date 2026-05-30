@@ -56,7 +56,7 @@ class PromptTemplateResolverTest {
                 eq("leave-review"), eq("en"), eq(AiProvider.GEMINI), eq(PromptTemplateStatus.ACTIVE)))
                 .thenReturn(Optional.of(modelSpecific));
 
-        RenderedPrompt rendered = resolver.resolveAndRender(snapshot, List.of(), "en", AiProvider.GEMINI);
+        RenderedPrompt rendered = resolver.resolveAndRender(snapshot, List.of(), "en", AiProvider.GEMINI, "");
 
         assertThat(rendered.templateId()).isEqualTo(11L);
         assertThat(rendered.version()).isEqualTo("v-gemini");
@@ -73,7 +73,7 @@ class PromptTemplateResolverTest {
                 eq("leave-review"), eq("en"), eq(PromptTemplateStatus.ACTIVE)))
                 .thenReturn(Optional.of(shared));
 
-        RenderedPrompt rendered = resolver.resolveAndRender(snapshot, List.of(), "en", AiProvider.GEMINI);
+        RenderedPrompt rendered = resolver.resolveAndRender(snapshot, List.of(), "en", AiProvider.GEMINI, "");
 
         assertThat(rendered.templateId()).isEqualTo(22L);
         assertThat(rendered.version()).isEqualTo("v-shared");
@@ -89,11 +89,11 @@ class PromptTemplateResolverTest {
                 eq("leave-review"), eq("en"), eq(PromptTemplateStatus.ACTIVE)))
                 .thenReturn(Optional.empty());
 
-        RenderedPrompt rendered = resolver.resolveAndRender(snapshot, List.of(), "en", AiProvider.LOCAL);
+        RenderedPrompt rendered = resolver.resolveAndRender(snapshot, List.of(), "en", AiProvider.LOCAL, "");
 
         assertThat(rendered.templateId()).isNull();
         assertThat(rendered.version()).isEqualTo(AiReviewPromptBuilder.PROMPT_VERSION_HASH);
-        assertThat(rendered.text()).isEqualTo(AiReviewPromptBuilder.buildPrompt(snapshot, List.of(), "en"));
+        assertThat(rendered.text()).isEqualTo(AiReviewPromptBuilder.buildPrompt(snapshot, List.of(), "en", ""));
     }
 
     private PromptTemplateEntity template(Long id, String version, String text) {

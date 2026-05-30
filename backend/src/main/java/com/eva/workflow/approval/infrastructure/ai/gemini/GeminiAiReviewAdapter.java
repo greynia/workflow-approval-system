@@ -46,9 +46,11 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
     }
 
     @Override
-    public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
+    public AiReviewResult review(
+            ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale, String policyContext) {
         long start = System.currentTimeMillis();
-        RenderedPrompt rendered = promptTemplateResolver.resolveAndRender(snapshot, flags, locale, provider());
+        RenderedPrompt rendered =
+                promptTemplateResolver.resolveAndRender(snapshot, flags, locale, provider(), policyContext);
 
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of("parts", List.of(Map.of("text", rendered.text())))),
@@ -109,7 +111,8 @@ public class GeminiAiReviewAdapter implements AiReviewPort {
                     tokenUsage,
                     latencyMs,
                     false,
-                    List.of(attempt)
+                    List.of(attempt),
+                    List.of()
             );
         } catch (Exception e) {
             log.warn("Failed to parse Gemini response: {}", e.getMessage());

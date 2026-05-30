@@ -29,6 +29,7 @@ const LABELS: AiReviewSummaryLabels = {
     INSUFFICIENT_INFORMATION: "Insufficient information",
   },
   recommendationReason: "Recommendation Reason",
+  policyReferences: "Related Policies",
   generatedAt: "Generated At",
 };
 
@@ -43,6 +44,7 @@ const BASE: AiReviewResponse = {
   modelName: "gemini-1.5-flash",
   promptVersion: "v3",
   provider: "GEMINI",
+  policyReferences: [],
   errorCode: null,
   createdAt: "2026-05-01T09:30:00Z",
 };
@@ -125,6 +127,42 @@ export const HighRisk: Story = {
             { code: "BLACKOUT_PERIOD", level: "HIGH", humanReadable: "Falls inside the year-end freeze window." },
           ],
           recommendationReason: "Quota and blackout period both violated.",
+        }}
+        labels={LABELS}
+      />
+    </Wrap>
+  ),
+};
+
+export const WithPolicyReferences: Story = {
+  render: () => (
+    <Wrap>
+      <AiReviewSummary
+        review={{
+          ...BASE,
+          riskLevel: "HIGH",
+          recommendation: "REVIEW_CAREFULLY",
+          summary:
+            "New employee requesting 2 days within the first 90 days; flagged as high risk per policy.",
+          hardRuleFlags: [
+            {
+              code: "NEW_EMPLOYEE_LEAVE",
+              level: "HIGH",
+              humanReadable: "New employee leave within probation period.",
+            },
+          ],
+          recommendationReason:
+            "Per the new-employee leave policy, escalate to the manager for careful review.",
+          policyReferences: [
+            {
+              section: "新進員工請假限制",
+              source: "leave-policy.zh.md",
+              chunkIndex: 0,
+              content:
+                "到職未滿九十日之新進員工，原則上不建議請假；申請連續超過一日之假別，系統將標記為高風險並提請主管特別留意。",
+              score: 0.91,
+            },
+          ],
         }}
         labels={LABELS}
       />
