@@ -85,7 +85,7 @@ class AdminAiStatsIntegrationTest {
 
         mockMvc.perform(get("/api/admin/ai/stats").cookie(adminCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.currentPromptVersion").value("v1"))
+                .andExpect(jsonPath("$.currentPromptVersion").value("v2"))
                 .andExpect(jsonPath("$.totalReviews").value(greaterThanOrEqualTo(7)))
                 .andExpect(jsonPath("$.fallbackCount").value(greaterThanOrEqualTo(2)))
                 .andExpect(jsonPath("$.byProvider.GEMINI.count").value(greaterThanOrEqualTo(6)))
@@ -205,7 +205,8 @@ class AdminAiStatsIntegrationTest {
                 inputTokens + outputTokens,
                 latencyMs,
                 isFallback,
-                attemptsJson
+                attemptsJson,
+                null
         );
         return aiReviewRepository.save(review);
     }

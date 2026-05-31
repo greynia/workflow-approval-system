@@ -54,8 +54,8 @@ class AiAdapterConfigurationTest {
 
     @Test
     void local_with_gemini_key_falls_back_to_gemini_when_ollama_fails() {
-        when(ollamaAdapter.review(any(), any(), any())).thenThrow(new RuntimeException("ollama down"));
-        when(geminiAdapter.review(any(), any(), any())).thenReturn(geminiResult());
+        when(ollamaAdapter.review(any(), any(), any(), any())).thenThrow(new RuntimeException("ollama down"));
+        when(geminiAdapter.review(any(), any(), any(), any())).thenReturn(geminiResult());
 
         AiReviewPort port = configuration.aiReviewPort(
                 "LOCAL",
@@ -64,15 +64,15 @@ class AiAdapterConfigurationTest {
                 ollamaAdapter
         );
 
-        AiReviewResult result = port.review(snapshot(), List.of(), "en");
+        AiReviewResult result = port.review(snapshot(), List.of(), "en", "");
 
         assertThat(result.provider()).isEqualTo(AiProvider.GEMINI);
     }
 
     @Test
     void gemini_with_fallback_enabled_falls_back_to_ollama_when_gemini_fails() {
-        when(geminiAdapter.review(any(), any(), any())).thenThrow(new RuntimeException("gemini down"));
-        when(ollamaAdapter.review(any(), any(), any())).thenReturn(localResult());
+        when(geminiAdapter.review(any(), any(), any(), any())).thenThrow(new RuntimeException("gemini down"));
+        when(ollamaAdapter.review(any(), any(), any(), any())).thenReturn(localResult());
 
         AiReviewPort port = configuration.aiReviewPort(
                 "GEMINI",
@@ -81,7 +81,7 @@ class AiAdapterConfigurationTest {
                 ollamaAdapter
         );
 
-        AiReviewResult result = port.review(snapshot(), List.of(), "en");
+        AiReviewResult result = port.review(snapshot(), List.of(), "en", "");
 
         assertThat(result.provider()).isEqualTo(AiProvider.LOCAL);
     }
@@ -100,7 +100,7 @@ class AiAdapterConfigurationTest {
 
     @Test
     void gemini_with_fallback_disabled_uses_gemini_only() {
-        when(geminiAdapter.review(any(), any(), any())).thenReturn(geminiResult());
+        when(geminiAdapter.review(any(), any(), any(), any())).thenReturn(geminiResult());
 
         AiReviewPort port = configuration.aiReviewPort(
                 "GEMINI",
@@ -109,10 +109,10 @@ class AiAdapterConfigurationTest {
                 ollamaAdapter
         );
 
-        AiReviewResult result = port.review(snapshot(), List.of(), "en");
+        AiReviewResult result = port.review(snapshot(), List.of(), "en", "");
 
         assertThat(result.provider()).isEqualTo(AiProvider.GEMINI);
-        verify(ollamaAdapter, never()).review(any(), any(), any());
+        verify(ollamaAdapter, never()).review(any(), any(), any(), any());
     }
 
     private AiReviewResult localResult() {
@@ -132,7 +132,8 @@ class AiAdapterConfigurationTest {
                 80,
                 600,
                 false,
-                List.of(attempt)
+                List.of(attempt),
+                List.of()
         );
     }
 
@@ -153,7 +154,8 @@ class AiAdapterConfigurationTest {
                 100,
                 500,
                 false,
-                List.of(attempt)
+                List.of(attempt),
+                List.of()
         );
     }
 

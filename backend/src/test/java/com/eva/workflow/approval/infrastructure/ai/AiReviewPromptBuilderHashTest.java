@@ -49,7 +49,7 @@ class AiReviewPromptBuilderHashTest {
     @Test
     void render_substitutes_all_placeholders() {
         String prompt = AiReviewPromptBuilder.render(
-                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(), "en");
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(), "en", "");
 
         assertThat(prompt).doesNotContain("{{");
         assertThat(prompt).contains("- Type: ANNUAL");
@@ -61,7 +61,7 @@ class AiReviewPromptBuilderHashTest {
     @Test
     void render_zh_uses_localized_data_formatting() {
         String prompt = AiReviewPromptBuilder.render(
-                AiReviewPromptBuilder.DEFAULT_TEMPLATE_ZH, SNAPSHOT, List.of(), "zh");
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_ZH, SNAPSHOT, List.of(), "zh", "");
 
         assertThat(prompt).doesNotContain("{{");
         assertThat(prompt).contains("Traditional Chinese");
@@ -77,7 +77,7 @@ class AiReviewPromptBuilderHashTest {
                 2L, 400L, UserRole.EMPLOYEE, "Engineering", 0, 1);
 
         String prompt = AiReviewPromptBuilder.render(
-                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, withBraces, List.of(), "en");
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, withBraces, List.of(), "en", "");
 
         // The reason's braces are left verbatim and not mistaken for placeholders.
         assertThat(prompt).contains("see {{department}} note and {{unknownToken}}");
@@ -89,7 +89,7 @@ class AiReviewPromptBuilderHashTest {
     void render_rejects_unknown_placeholder_in_template() {
         org.assertj.core.api.Assertions
                 .assertThatThrownBy(() -> AiReviewPromptBuilder.render(
-                        "prefix {{bogus}} suffix", SNAPSHOT, List.of(), "en"))
+                        "prefix {{bogus}} suffix", SNAPSHOT, List.of(), "en", ""))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("bogus");
     }
@@ -99,12 +99,26 @@ class AiReviewPromptBuilderHashTest {
         HardRuleFlag flag = new HardRuleFlag(
                 "NEW_HIRE_SHORT_LEAVE", RiskLevel.MEDIUM, "New hire requesting leave within 90 days");
         String withFlags = AiReviewPromptBuilder.render(
-                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(flag), "en");
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(flag), "en", "");
         String withoutFlags = AiReviewPromptBuilder.render(
-                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(), "en");
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(), "en", "");
 
         assertThat(withFlags).contains("Risk flags detected:");
         assertThat(withFlags).contains("[MEDIUM] New hire requesting leave within 90 days");
         assertThat(withoutFlags).doesNotContain("Risk flags detected:");
+    }
+
+    @Test
+    void render_includes_policy_context_when_present_and_omits_when_blank() {
+        String withPolicy = AiReviewPromptBuilder.render(
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(), "en",
+                "Company Policy Excerpts:\n- [Leave Limit] new hires need approval\n");
+        String withoutPolicy = AiReviewPromptBuilder.render(
+                AiReviewPromptBuilder.DEFAULT_TEMPLATE_EN, SNAPSHOT, List.of(), "en", "");
+
+        assertThat(withPolicy).contains("Company Policy Excerpts:");
+        assertThat(withPolicy).contains("[Leave Limit] new hires need approval");
+        assertThat(withoutPolicy).doesNotContain("Company Policy Excerpts:");
+        assertThat(withoutPolicy).doesNotContain("{{policyContext}}");
     }
 }

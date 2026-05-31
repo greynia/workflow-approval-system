@@ -3,6 +3,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import type {
   AiRecommendation,
+  PolicyReference,
   AiReviewResponse,
   RiskLevel,
 } from "@/types/leave";
@@ -21,6 +22,7 @@ export type AiReviewSummaryLabels = {
   recommendationLabel: string;
   recommendation: Record<AiRecommendation, string>;
   recommendationReason: string;
+  policyReferences: string;
   generatedAt: string;
 };
 
@@ -40,6 +42,10 @@ const RISK_VARIANT: Record<RiskLevel, React.ComponentProps<typeof Badge>["varian
 
 function normalizeRiskReason(reason: string): string {
   return reason.toLowerCase().replace(/[\s\p{P}]+/gu, "");
+}
+
+function policyReferenceKey(ref: PolicyReference): string {
+  return `${ref.source}-${ref.section}-${ref.chunkIndex}`;
 }
 
 function AiReviewSummary({
@@ -67,6 +73,7 @@ function AiReviewSummary({
   const additionalRiskReasons = review.riskReasons.filter(
     (reason) => !hardRuleReasonKeys.has(normalizeRiskReason(reason)),
   );
+  const policyReferences = review.policyReferences ?? [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -144,6 +151,27 @@ function AiReviewSummary({
         </div>
       ) : null}
 
+      {policyReferences.length > 0 ? (
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">
+            {labels.policyReferences}
+          </p>
+          <ul className="mt-1 flex flex-col gap-2">
+            {policyReferences.map((ref) => (
+              <li
+                key={policyReferenceKey(ref)}
+                className="border-l-2 border-info pl-2 text-sm text-foreground"
+              >
+                <span className="font-medium">{ref.section}</span>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {ref.content}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <p className="text-xs text-muted-foreground">
         {labels.generatedAt} {formatDate(review.createdAt)}
         {review.modelName ? ` · ${review.modelName}` : ""}
@@ -152,4 +180,4 @@ function AiReviewSummary({
   );
 }
 
-export { AiReviewSummary };
+export { AiReviewSummary, policyReferenceKey };

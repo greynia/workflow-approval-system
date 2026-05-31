@@ -45,9 +45,11 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
     }
 
     @Override
-    public AiReviewResult review(ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale) {
+    public AiReviewResult review(
+            ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale, String policyContext) {
         long start = System.currentTimeMillis();
-        RenderedPrompt rendered = promptTemplateResolver.resolveAndRender(snapshot, flags, locale, provider());
+        RenderedPrompt rendered =
+                promptTemplateResolver.resolveAndRender(snapshot, flags, locale, provider(), policyContext);
 
         Map<String, Object> requestBody = Map.of(
                 "model", properties.model(),
@@ -99,7 +101,8 @@ public class OllamaAiReviewAdapter implements AiReviewPort {
                     tokenUsage,
                     latencyMs,
                     false,
-                    List.of(attempt)
+                    List.of(attempt),
+                    List.of()
             );
         } catch (Exception e) {
             log.warn("Failed to parse Ollama response: {}", e.getMessage());

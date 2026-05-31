@@ -38,6 +38,12 @@ public class PolicyChunkEntity {
     @Column(nullable = false, length = 200)
     private String section;
 
+    @Column(nullable = false, length = 200)
+    private String source;
+
+    @Column(name = "chunk_index", nullable = false)
+    private int chunkIndex;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
@@ -58,6 +64,8 @@ public class PolicyChunkEntity {
     public static PolicyChunkEntity create(
             String locale,
             String section,
+            String source,
+            int chunkIndex,
             String content,
             String contentHash,
             float[] embedding,
@@ -66,6 +74,8 @@ public class PolicyChunkEntity {
         PolicyChunkEntity entity = new PolicyChunkEntity();
         entity.locale = locale;
         entity.section = section;
+        entity.source = source;
+        entity.chunkIndex = chunkIndex;
         entity.content = content;
         entity.contentHash = contentHash;
         entity.embedding = embedding;

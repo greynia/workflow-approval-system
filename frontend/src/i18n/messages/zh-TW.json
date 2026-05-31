@@ -284,6 +284,7 @@
           "INSUFFICIENT_INFORMATION": "資訊不足，無法給出建議"
         },
         "RecommendationReason": "建議理由",
+        "PolicyReferences": "相關制度",
         "GeneratedAt": "分析時間",
         "Model": "模型"
       },

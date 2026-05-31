@@ -103,6 +103,10 @@ public class AiReviewEntity {
     @Column(name = "attempts_json", columnDefinition = "jsonb")
     private String attemptsJson;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "policy_references_json", columnDefinition = "jsonb")
+    private String policyReferencesJson;
+
     @Column(name = "error_code", length = 60)
     private String errorCode;
 
@@ -140,7 +144,8 @@ public class AiReviewEntity {
             Integer tokenUsage,
             Integer latencyMs,
             boolean isFallback,
-            String attemptsJson
+            String attemptsJson,
+            String policyReferencesJson
     ) {
         this.status = AiReviewStatus.COMPLETED;
         this.summary = summary;
@@ -161,6 +166,7 @@ public class AiReviewEntity {
         this.latencyMs = latencyMs;
         this.isFallback = isFallback;
         this.attemptsJson = attemptsJson;
+        this.policyReferencesJson = policyReferencesJson;
     }
 
     public void markFailed(AiReviewErrorCode errorCode, AiProvider provider) {

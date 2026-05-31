@@ -24,6 +24,7 @@ public record AiReviewResponse(
         Integer tokenUsage,
         Integer latencyMs,
         Boolean isFallback,
+        List<PolicyReferenceResponse> policyReferences,
         String errorCode,
         Instant createdAt
 ) {

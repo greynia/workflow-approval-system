@@ -7,6 +7,10 @@ package com.eva.workflow.approval.infrastructure.persistence.jpa.repository;
 public interface PolicyChunkMatchRow {
     String getSection();
 
+    String getSource();
+
+    int getChunkIndex();
+
     String getContent();
 
     double getScore();

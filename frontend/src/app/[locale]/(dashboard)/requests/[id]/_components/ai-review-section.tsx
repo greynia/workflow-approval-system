@@ -51,6 +51,7 @@ export function AiReviewSection({ requestId }: AiReviewSectionProps) {
       INSUFFICIENT_INFORMATION: tAi("Recommendation.INSUFFICIENT_INFORMATION"),
     } satisfies Record<AiRecommendation, string>,
     recommendationReason: tAi("RecommendationReason"),
+    policyReferences: tAi("PolicyReferences"),
     generatedAt: tAi("GeneratedAt"),
   };
 

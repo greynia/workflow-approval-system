@@ -84,7 +84,8 @@ class AiReviewQueryServiceTest {
                 0,
                 100,
                 false,
-                "[]"
+                "[]",
+                "[{\"section\":\"新進員工請假限制\",\"source\":\"leave-policy.zh.md\",\"chunkIndex\":0,\"content\":\"到職未滿九十日請假將標記為高風險\",\"score\":0.9}]"
         );
         when(aiReviewRepository.findByRequestId(10L)).thenReturn(Optional.of(review));
 
@@ -94,6 +95,11 @@ class AiReviewQueryServiceTest {
         assertThat(response.hardRuleFlags().get(0).code()).isEqualTo("NEW_HIRE_SHORT_LEAVE");
         assertThat(response.hardRuleFlags().get(0).level()).isEqualTo(RiskLevel.MEDIUM);
         assertThat(response.hardRuleFlags().get(0).humanReadable()).isEqualTo("新進員工在到職 90 天內申請請假");
+        assertThat(response.policyReferences()).singleElement().satisfies(ref -> {
+            assertThat(ref.section()).isEqualTo("新進員工請假限制");
+            assertThat(ref.source()).isEqualTo("leave-policy.zh.md");
+            assertThat(ref.chunkIndex()).isEqualTo(0);
+        });
     }
 
     @Test

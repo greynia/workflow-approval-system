@@ -1,6 +1,7 @@
 package com.eva.workflow.approval.infrastructure.ai.gemini;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.eva.workflow.approval.domain.policy.service.EmbeddingPort;
+import com.eva.workflow.approval.domain.policy.service.EmbeddingTaskType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,10 +42,12 @@ public class GeminiEmbeddingAdapter implements EmbeddingPort {
 
     @Override
     public float[] embed(String text) {
-        Map<String, Object> requestBody = Map.of(
-                "model", "models/" + properties.embeddingModel(),
-                "content", Map.of("parts", List.of(Map.of("text", text)))
-        );
+        return embed(text, null);
+    }
+
+    @Override
+    public float[] embed(String text, EmbeddingTaskType taskType) {
+        Map<String, Object> requestBody = buildRequestBody(text, taskType);
 
         String raw = geminiWebClient.post()
                 .uri(uriBuilder -> uriBuilder
@@ -67,6 +71,16 @@ public class GeminiEmbeddingAdapter implements EmbeddingPort {
     @Override
     public String modelName() {
         return properties.embeddingModel();
+    }
+
+    Map<String, Object> buildRequestBody(String text, EmbeddingTaskType taskType) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", "models/" + properties.embeddingModel());
+        body.put("content", Map.of("parts", List.of(Map.of("text", text))));
+        if (taskType != null) {
+            body.put("taskType", taskType.name());
+        }
+        return body;
     }
 
     float[] parseEmbedding(String raw) {

@@ -38,7 +38,8 @@ public class PromptTemplateResolver {
     }
 
     public RenderedPrompt resolveAndRender(
-            ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale, AiProvider provider) {
+            ReviewSnapshot snapshot, List<HardRuleFlag> flags, String locale, AiProvider provider,
+            String policyContext) {
         String normalizedLocale = normalizeLocale(locale);
 
         PromptTemplateEntity template = repository
@@ -51,11 +52,12 @@ public class PromptTemplateResolver {
         if (template == null) {
             log.warn("No active prompt template for name={} locale={} provider={}; using in-code default",
                     LEAVE_REVIEW, normalizedLocale, provider);
-            String text = AiReviewPromptBuilder.buildPrompt(snapshot, flags, locale);
+            String text = AiReviewPromptBuilder.buildPrompt(snapshot, flags, locale, policyContext);
             return new RenderedPrompt(text, null, AiReviewPromptBuilder.PROMPT_VERSION_HASH);
         }
 
-        String text = AiReviewPromptBuilder.render(template.getTemplateText(), snapshot, flags, locale);
+        String text = AiReviewPromptBuilder.render(
+                template.getTemplateText(), snapshot, flags, locale, policyContext);
         return new RenderedPrompt(text, template.getId(), template.getVersion());
     }
 

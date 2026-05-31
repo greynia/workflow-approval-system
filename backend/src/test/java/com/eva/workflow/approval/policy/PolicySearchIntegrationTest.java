@@ -35,7 +35,7 @@ class PolicySearchIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void privilegedCallerGetsRankedPolicyMatches() throws Exception {
+    void privilegedCallerGetsRerankedPolicyMatches() throws Exception {
         Cookie adminCookie = loginAndGetCookie("admin@example.com", "AdminPass123!");
 
         mockMvc.perform(get("/api/ai/policy-search")
@@ -44,15 +44,18 @@ class PolicySearchIntegrationTest {
                         .cookie(adminCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.topK").value(3))
+                .andExpect(jsonPath("$.reranked").value(true))
                 .andExpect(jsonPath("$.matches.length()").value(lessThanOrEqualTo(3)))
                 .andExpect(jsonPath("$.matches.length()").value(greaterThanOrEqualTo(1)))
-                // Most character-overlap with the query → ranked first by cosine similarity.
+                // Highest character-overlap with the query → reranked first.
                 .andExpect(jsonPath("$.matches[0].section").value("新進員工請假限制"))
-                .andExpect(jsonPath("$.matches[0].score").value(greaterThanOrEqualTo(0.0)));
+                .andExpect(jsonPath("$.matches[0].source").value("leave-policy.zh.md"))
+                .andExpect(jsonPath("$.matches[0].chunkIndex").value(0))
+                .andExpect(jsonPath("$.matches[0].score").value(greaterThanOrEqualTo(0.5)));
     }
 
     @Test
-    void topKIsClampedToMax() throws Exception {
+    void topKIsClampedToFinalTopK() throws Exception {
         Cookie adminCookie = loginAndGetCookie("admin@example.com", "AdminPass123!");
 
         mockMvc.perform(get("/api/ai/policy-search")
@@ -60,7 +63,20 @@ class PolicySearchIntegrationTest {
                         .param("topK", "999")
                         .cookie(adminCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.topK").value(20));
+                .andExpect(jsonPath("$.topK").value(5))
+                .andExpect(jsonPath("$.matches.length()").value(lessThanOrEqualTo(5)));
+    }
+
+    @Test
+    void irrelevantQueryYieldsNoMatchesAfterMinScore() throws Exception {
+        Cookie adminCookie = loginAndGetCookie("admin@example.com", "AdminPass123!");
+
+        mockMvc.perform(get("/api/ai/policy-search")
+                        .param("query", "披薩義大利麵漢堡薯條可樂")
+                        .cookie(adminCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reranked").value(true))
+                .andExpect(jsonPath("$.matches.length()").value(0));
     }
 
     @Test
