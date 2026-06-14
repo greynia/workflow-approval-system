@@ -1,0 +1,18 @@
+# Copy this file to application-local.properties for local development.
+# Do not commit application-local.properties.
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/mydatabase
+spring.datasource.username=user
+spring.datasource.password=psw
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+app.jwt.secret=replace-with-a-local-secret-key-at-least-32-bytes
+app.jwt.expiration-seconds=3600
+app.jwt.refresh-expiration-seconds=604800
+
+# Override CORS for local dev if needed
+# app.cors.allowed-origins=http://localhost:3000
+# app.cors.allowed-methods=GET,POST,PUT,PATCH,DELETE,OPTIONS
+# app.cors.allowed-headers=*
+# app.cors.exposed-headers=X-Request-ID
+# app.cors.allow-credentials=true

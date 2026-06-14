@@ -1,0 +1,435 @@
+{
+  "Common": {
+    "Button": {
+      "Submit": "送出",
+      "Cancel": "取消",
+      "Delete": "刪除",
+      "Edit": "修改",
+      "Search": "搜尋",
+      "Clear": "清除"
+    },
+    "Notification": {
+      "ServerError": "伺服器錯誤",
+      "NetworkError": "網路連線失敗，請確認網路狀態",
+      "LoginSuccess": "登入成功",
+      "LogoutSuccess": "已登出",
+      "Forbidden": "您沒有權限執行此操作"
+    },
+    "Duration": {
+      "day": " 天",
+      "hour": " 小時",
+      "min": " 分"
+    },
+    "UnsavedChanges": {
+      "Title": "尚未儲存的變更",
+      "Description": "本頁有尚未儲存的變更，若現在離開將會遺失，是否確定要離開？",
+      "Stay": "留在此頁",
+      "Leave": "確定離開"
+    }
+  },
+  "Auth": {
+    "Login": {
+      "Title": "Workflow Approval System",
+      "Subtitle": "登入以繼續",
+      "BrandTitle": "Workflow Approval System",
+      "BrandTagline": "簡化請假流程，加速簽核決策。",
+      "Heading": "登入",
+      "Email": "電子郵件",
+      "Password": "密碼",
+      "EmailPlaceholder": "name@company.com",
+      "Submit": "登入",
+      "Loading": "登入中...",
+      "Errors": {
+        "EmailRequired": "請輸入電子郵件",
+        "EmailInvalid": "電子郵件格式不正確",
+        "PasswordRequired": "請輸入密碼",
+        "PasswordTooShort": "密碼至少需 8 個字元"
+      }
+    }
+  },
+  "Home": {
+    "Welcome": "歡迎回來",
+    "Placeholder": "儀表板建置中，請稍候"
+  },
+  "Sidebar": {
+    "MyRequests": "我的申請",
+    "PendingApprovals": "待簽核",
+    "LeaveBalances": "我的假別餘額",
+    "PendingRecalls": "銷假審核",
+    "AuditLog": "審計紀錄"
+  },
+  "Approvals": {
+    "List": {
+      "Title": "待簽核清單",
+      "Description": "顯示目前需要你處理的簽核項目",
+      "Empty": "目前沒有待簽核項目",
+      "Error": "載入待簽核資料失敗",
+      "Table": {
+        "Applicant": "申請人",
+        "LeaveType": "假別",
+        "DateRange": "日期",
+        "Days": "時數",
+        "Step": "階段",
+        "Actions": "操作"
+      },
+      "StepLabel": {
+        "DEPUTY": "代理人確認",
+        "MANAGER": "主管審核",
+        "RECALL": "銷假審核"
+      },
+      "ApproveButton": "核准",
+      "RejectButton": "退回",
+      "DeputyApproveButton": "同意代理",
+      "DeputyRejectButton": "拒絕代理",
+      "ApproveSuccess": "已核准",
+      "RejectSuccess": "已退回",
+      "DeputyApproveSuccess": "已同意代理",
+      "DeputyRejectSuccess": "已拒絕代理",
+      "ActionError": "操作失敗，請稍後再試",
+      "ApproveDialog": {
+        "Title": "確認核准",
+        "Description": "確定要核准此請假申請嗎？",
+        "Confirm": "確認核准",
+        "Cancel": "取消"
+      },
+      "RejectDialog": {
+        "Title": "退回申請",
+        "Description": "請填寫退回原因，申請人會看到此說明。",
+        "CommentLabel": "退回原因",
+        "CommentPlaceholder": "請說明退回原因（必填）",
+        "CommentRequired": "請填寫退回原因",
+        "Confirm": "確認退回",
+        "Cancel": "取消"
+      },
+      "DeputyApproveDialog": {
+        "Title": "同意擔任代理人",
+        "Description": "你將在此同事請假期間代理其工作；同意後流程會繼續送往主管審核。",
+        "Confirm": "同意代理",
+        "Cancel": "取消"
+      },
+      "DeputyRejectDialog": {
+        "Title": "拒絕擔任代理人",
+        "Description": "申請人會被要求重新指定其他代理人。",
+        "CommentLabel": "原因",
+        "CommentPlaceholder": "請說明無法代理的原因（必填）",
+        "CommentRequired": "請填寫原因",
+        "Confirm": "拒絕代理",
+        "Cancel": "取消"
+      },
+      "LeaveType": {
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      }
+    }
+  },
+  "Header": {
+    "OpenSidebar": "開啟側邊欄",
+    "SignOut": "登出",
+    "Role": {
+      "ADMIN": "系統管理員",
+      "MANAGER": "部門主管",
+      "EMPLOYEE": "員工"
+    }
+  },
+  "Error": {
+    "INVALID_CREDENTIALS": "帳號或密碼錯誤",
+    "UNAUTHORIZED": "請先登入",
+    "VALIDATION_ERROR": "欄位驗證失敗",
+    "INTERNAL_SERVER_ERROR": "系統發生錯誤，請稍後再試",
+    "RESOURCE_NOT_FOUND": "找不到指定資源",
+    "DEPUTY_ON_LEAVE": "代理人在請假期間內已有請假申請，請重新選擇",
+    "APPLICANT_ON_LEAVE": "你在相同期間內已有請假申請，無法重複送出",
+    "INVALID_DURATION_UNIT": "請假時間需以 30 分鐘為單位",
+    "UNSUPPORTED_EMPLOYEE_SCHEDULE": "目前尚未支援此班表類型的自動請假試算",
+    "BAD_REQUEST": "欄位驗證失敗，請確認輸入",
+    "INSUFFICIENT_LEAVE_BALANCE": "假期餘額不足，無法送出申請",
+    "Default": "操作失敗"
+  },
+  "NotFound": {
+    "Title": "找不到頁面",
+    "Description": "這個頁面還沒實作，或是連結失效了。",
+    "BackHome": "回首頁"
+  },
+  "Requests": {
+    "List": {
+      "Title": "我的申請",
+      "NewButton": "新增請假單",
+      "Empty": "目前沒有請假申請",
+      "Error": "載入失敗，請稍後再試",
+      "Table": {
+        "Type": "假別",
+        "DateRange": "日期",
+        "Days": "時數",
+        "Status": "狀態",
+        "CreatedAt": "申請日期"
+      },
+      "LeaveType": {
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "StatusLabel": {
+        "PENDING": "審核中",
+        "APPROVED": "已核准",
+        "REJECTED": "已退回",
+        "CANCELLED": "已取消",
+        "PENDING_RECALL": "銷假審核中"
+      }
+    },
+    "New": {
+      "Title": "新增請假單",
+      "Fields": {
+        "Type": "假別",
+        "StartDate": "起始日期",
+        "EndDate": "結束日期",
+        "Days": "合計時數",
+        "Reason": "事由",
+        "DeputyId": "代理人"
+      },
+      "TypeOptions": {
+        "Placeholder": "請選擇假別",
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "Placeholders": {
+        "Reason": "請說明請假事由（選填，最多 1000 字）",
+        "DeputyId": "選擇代理人",
+        "DeputySearch": "輸入姓名或工號搜尋代理人",
+        "DeputyDateRequired": "請先選擇起訖日期",
+        "DeputyLoading": "可選代理人查詢中...",
+        "DeputyNoResults": "找不到符合條件的代理人"
+      },
+      "SelectedDeputy": "已選代理人：{deputy}",
+      "DeputyAutoCleared": "原先選擇的代理人在此時段已不可用，請重新選擇。",
+      "Submit": "送出",
+      "Submitting": "送出中...",
+      "AllDay": "套用全天 09:00-18:00",
+      "Cancel": "取消",
+      "Success": "請假單已送出",
+      "BalanceHint": "目前{leaveType}剩餘 {remaining}，已使用 {used} / 年度額度 {quota}",
+      "Errors": {
+        "TypeRequired": "請選擇假別",
+        "StartDateRequired": "請選擇起始日期",
+        "EndDateRequired": "請選擇結束日期",
+        "EndDateBeforeStart": "結束日期不可早於起始日期",
+        "DaysMin": "請假時間至少需 30 分鐘",
+        "DeputyRequired": "請選擇代理人",
+        "InvalidTimeUnit": "時間需設定在整點或半點（:00 或 :30）"
+      }
+    },
+    "Detail": {
+      "BackToRequests": "我的申請",
+      "BackToApprovals": "待簽核",
+      "BackToRecalls": "銷假審核",
+      "Title": "申請詳情",
+      "Error": "載入申請詳情失敗",
+      "TimelineTitle": "簽核歷程",
+      "TimelineEmpty": "目前尚未建立簽核步驟",
+      "NoDeputy": "未指定代理人",
+      "NoReason": "未填寫事由",
+      "Fields": {
+        "Applicant": "申請人",
+        "DateRange": "請假日期",
+        "Deputy": "代理人",
+        "SubmittedAt": "送出時間",
+        "Reason": "事由"
+      },
+      "LeaveType": {
+        "ANNUAL": "特休",
+        "SICK": "病假",
+        "PERSONAL": "事假",
+        "OTHER": "其他"
+      },
+      "StatusLabel": {
+        "PENDING": "審核中",
+        "APPROVED": "已核准",
+        "REJECTED": "已退回",
+        "CANCELLED": "已取消",
+        "PENDING_RECALL": "銷假審核中"
+      },
+      "StepStatus": {
+        "PENDING": "待簽核",
+        "APPROVED": "已核准",
+        "REJECTED": "已退回",
+        "SKIPPED": "已略過"
+      },
+      "DeputyLabel": "代理人",
+      "ManagerLabel": "主管",
+      "RecallLabel": "銷假",
+      "AiReview": {
+        "Title": "AI 審核摘要",
+        "Disclaimer": "（僅供參考）",
+        "Unavailable": "無資料",
+        "Pending": "AI 分析中，請稍候...",
+        "Failed": "AI 分析暫時不可用",
+        "Summary": "摘要",
+        "RiskLevel": {
+          "Label": "風險等級",
+          "LOW": "低風險",
+          "MEDIUM": "中風險",
+          "HIGH": "高風險"
+        },
+        "HardRuleFlags": "規則命中",
+        "RiskReasons": "其他注意事項",
+        "Recommendation": {
+          "Label": "建議",
+          "APPROVE": "建議核准",
+          "REVIEW_CAREFULLY": "建議審慎評估",
+          "ESCALATE": "建議呈報上級",
+          "INSUFFICIENT_INFORMATION": "資訊不足，無法給出建議"
+        },
+        "RecommendationReason": "建議理由",
+        "PolicyReferences": "相關制度",
+        "GeneratedAt": "分析時間",
+        "Model": "模型"
+      },
+      "RecallButton": "申請銷假",
+      "RecallConfirmTitle": "申請銷假",
+      "RecallConfirmDesc": "提出銷假申請後，直屬主管將審核此申請。審核通過後假期配額將自動退還。",
+      "RecallReasonLabel": "銷假原因",
+      "RecallReasonPlaceholder": "請說明銷假原因（必填）",
+      "RecallSuccess": "銷假申請已送出，等待主管審核",
+      "RecallError": "申請失敗，請稍後再試",
+      "RecallPending": "銷假審核中",
+      "Cancel": "取消"
+    }
+  },
+  "Recalls": {
+    "Title": "銷假審核",
+    "Description": "審核員工提出的銷假申請",
+    "Empty": "目前沒有待處理的銷假申請",
+    "Error": "載入銷假申請失敗",
+    "ApproveButton": "核准銷假",
+    "RejectButton": "拒絕",
+    "ApproveSuccess": "已核准銷假，假期配額已退還",
+    "RejectSuccess": "已拒絕銷假，申請單維持核准狀態",
+    "ActionError": "操作失敗，請稍後再試",
+    "LeaveType": {
+      "ANNUAL": "年假",
+      "SICK": "病假",
+      "PERSONAL": "事假",
+      "OTHER": "其他"
+    },
+    "Table": {
+      "Applicant": "申請人",
+      "LeaveType": "假別",
+      "DateRange": "請假日期",
+      "Duration": "時數",
+      "RecallReason": "銷假原因"
+    },
+    "ApproveDialog": {
+      "Title": "確認核准銷假",
+      "Description": "核准後假期配額將自動退還，原請假申請將設為已取消。",
+      "Confirm": "確認核准",
+      "Cancel": "取消"
+    },
+    "RejectDialog": {
+      "Title": "拒絕銷假申請",
+      "Description": "拒絕後，原請假申請維持核准狀態。",
+      "CommentLabel": "拒絕原因",
+      "CommentPlaceholder": "請說明拒絕原因（必填）",
+      "CommentRequired": "請填寫拒絕原因",
+      "Confirm": "確認拒絕",
+      "Cancel": "取消"
+    }
+  },
+  "AuditLog": {
+    "Title": "審計紀錄",
+    "Description": "查詢系統所有重要操作的完整歷史",
+    "Empty": "目前沒有符合條件的審計紀錄",
+    "Error": "載入審計紀錄失敗",
+    "Filter": {
+      "EntityType": "資源類型",
+      "Action": "操作行為",
+      "ActorName": "操作者姓名",
+      "CreatedFrom": "操作開始時間",
+      "CreatedTo": "操作結束時間",
+      "Placeholder": {
+        "EntityType": "全部類型",
+        "Action": "全部行為",
+        "ActorName": "輸入姓名關鍵字..."
+      },
+      "EntityTypeOption": {
+        "LEAVE_REQUEST": "請假申請"
+      },
+      "ActionOption": {
+        "CREATE": "建立",
+        "APPROVE": "核准",
+        "REJECT": "退回",
+        "CANCEL": "取消"
+      }
+    },
+    "Table": {
+      "Time": "操作時間",
+      "Actor": "操作人",
+      "Action": "操作行為",
+      "EntityType": "資源類型",
+      "EntityId": "資源 ID",
+      "Detail": "詳情"
+    },
+    "Drawer": {
+      "Title": "操作詳情",
+      "Close": "關閉",
+      "Fields": {
+        "Time": "操作時間",
+        "Actor": "操作人",
+        "Action": "操作行為",
+        "EntityType": "資源類型",
+        "EntityId": "資源 ID",
+        "Detail": "詳細資訊"
+      },
+      "ViewRequest": "查看申請單"
+    },
+    "Pagination": {
+      "Previous": "上一頁",
+      "Next": "下一頁",
+      "PageInfo": "第 {current} 頁，共 {total} 頁（{count} 筆）"
+    }
+  },
+  "Balances": {
+    "Title": "我的假別餘額",
+    "Description": "查看 {year} 年各假別的總額度、已使用與剩餘時數",
+    "Error": "載入假別餘額失敗",
+    "Empty": "本年度尚無假別餘額紀錄",
+    "UsageRate": "使用率",
+    "Table": {
+      "LeaveType": "假別",
+      "Quota": "年度額度",
+      "Used": "已使用",
+      "Remaining": "剩餘"
+    }
+  },
+  "Admin": {
+    "LeaveBalance": {
+      "Title": "假期配額管理",
+      "InitYear": "初始化年度配額",
+      "InitConfirmTitle": "確認初始化",
+      "InitConfirmDesc": "將為 {year} 年度所有員工建立初始配額（已存在者跳過）",
+      "InitSuccess": "初始化完成：{initialized} 筆新增，{skipped} 筆跳過",
+      "InitError": "初始化失敗，請稍後再試",
+      "AdjustTitle": "調整配額",
+      "AdjustError": "調整失敗，請稍後再試",
+      "Error": "載入配額資料失敗",
+      "Empty": "目前無配額資料",
+      "Fields": {
+        "Employee": "員工",
+        "LeaveType": "假別",
+        "Quota": "配額（天）",
+        "Used": "已用",
+        "Remaining": "餘額",
+        "UpdatedAt": "更新時間",
+        "Reason": "調整原因"
+      },
+      "Actions": {
+        "Adjust": "調整",
+        "Submit": "確認調整",
+        "Cancel": "取消"
+      }
+    }
+  }
+}

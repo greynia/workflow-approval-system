@@ -1,0 +1,435 @@
+{
+  "Common": {
+    "Button": {
+      "Submit": "Submit",
+      "Cancel": "Cancel",
+      "Delete": "Delete",
+      "Edit": "Edit",
+      "Search": "Search",
+      "Clear": "Clear"
+    },
+    "Notification": {
+      "ServerError": "Server Error",
+      "NetworkError": "Network connection failed. Please check your network.",
+      "LoginSuccess": "Signed in successfully",
+      "LogoutSuccess": "Signed out",
+      "Forbidden": "You don't have permission to perform this action"
+    },
+    "Duration": {
+      "day": "d",
+      "hour": "h",
+      "min": "m"
+    },
+    "UnsavedChanges": {
+      "Title": "Unsaved changes",
+      "Description": "You have unsaved changes on this page. If you leave now, the changes will be lost.",
+      "Stay": "Stay on page",
+      "Leave": "Leave anyway"
+    }
+  },
+  "Auth": {
+    "Login": {
+      "Title": "Workflow Approval System",
+      "Subtitle": "Sign in to continue",
+      "BrandTitle": "Workflow Approval System",
+      "BrandTagline": "Streamline leave requests and accelerate approval decisions.",
+      "Heading": "Sign in",
+      "Email": "Email",
+      "Password": "Password",
+      "EmailPlaceholder": "name@company.com",
+      "Submit": "Sign in",
+      "Loading": "Signing in...",
+      "Errors": {
+        "EmailRequired": "Email is required",
+        "EmailInvalid": "Please enter a valid email address",
+        "PasswordRequired": "Password is required",
+        "PasswordTooShort": "Password must be at least 8 characters"
+      }
+    }
+  },
+  "Home": {
+    "Welcome": "Welcome back",
+    "Placeholder": "Dashboard is under construction"
+  },
+  "Sidebar": {
+    "MyRequests": "My Requests",
+    "PendingApprovals": "Pending Approvals",
+    "LeaveBalances": "Leave Balances",
+    "PendingRecalls": "Recall Approvals",
+    "AuditLog": "Audit Log"
+  },
+  "Approvals": {
+    "List": {
+      "Title": "Pending Approvals",
+      "Description": "Items currently waiting for your review",
+      "Empty": "No pending approvals",
+      "Error": "Failed to load pending approvals",
+      "Table": {
+        "Applicant": "Applicant",
+        "LeaveType": "Leave Type",
+        "DateRange": "Date Range",
+        "Days": "Duration",
+        "Step": "Step",
+        "Actions": "Actions"
+      },
+      "StepLabel": {
+        "DEPUTY": "Deputy Confirmation",
+        "MANAGER": "Manager Review",
+        "RECALL": "Recall Review"
+      },
+      "ApproveButton": "Approve",
+      "RejectButton": "Reject",
+      "DeputyApproveButton": "Accept",
+      "DeputyRejectButton": "Decline",
+      "ApproveSuccess": "Approved",
+      "RejectSuccess": "Rejected",
+      "DeputyApproveSuccess": "Deputy role accepted",
+      "DeputyRejectSuccess": "Deputy role declined",
+      "ActionError": "Action failed. Please try again.",
+      "ApproveDialog": {
+        "Title": "Confirm Approval",
+        "Description": "Are you sure you want to approve this leave request?",
+        "Confirm": "Approve",
+        "Cancel": "Cancel"
+      },
+      "RejectDialog": {
+        "Title": "Reject Request",
+        "Description": "Please provide a reason. The applicant will see this comment.",
+        "CommentLabel": "Reason",
+        "CommentPlaceholder": "Enter rejection reason (required)",
+        "CommentRequired": "Please enter a rejection reason",
+        "Confirm": "Reject",
+        "Cancel": "Cancel"
+      },
+      "DeputyApproveDialog": {
+        "Title": "Accept Deputy Role",
+        "Description": "You will cover this colleague's work during their leave. The request then moves to manager review.",
+        "Confirm": "Accept",
+        "Cancel": "Cancel"
+      },
+      "DeputyRejectDialog": {
+        "Title": "Decline Deputy Role",
+        "Description": "The applicant will be asked to choose another deputy.",
+        "CommentLabel": "Reason",
+        "CommentPlaceholder": "Explain why you cannot cover (required)",
+        "CommentRequired": "Please enter a reason",
+        "Confirm": "Decline",
+        "Cancel": "Cancel"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      }
+    }
+  },
+  "Header": {
+    "OpenSidebar": "Open sidebar",
+    "SignOut": "Sign out",
+    "Role": {
+      "ADMIN": "Administrator",
+      "MANAGER": "Manager",
+      "EMPLOYEE": "Employee"
+    }
+  },
+  "Error": {
+    "INVALID_CREDENTIALS": "Invalid email or password",
+    "UNAUTHORIZED": "Please sign in first",
+    "VALIDATION_ERROR": "Validation failed",
+    "INTERNAL_SERVER_ERROR": "An unexpected error occurred. Please try again later.",
+    "RESOURCE_NOT_FOUND": "Resource not found",
+    "DEPUTY_ON_LEAVE": "The selected deputy has overlapping leave. Please choose someone else.",
+    "APPLICANT_ON_LEAVE": "You already have a leave request during the selected period.",
+    "INVALID_DURATION_UNIT": "Leave duration must use 30-minute increments.",
+    "UNSUPPORTED_EMPLOYEE_SCHEDULE": "This employee schedule type is not supported yet.",
+    "BAD_REQUEST": "Validation failed. Please check your input.",
+    "INSUFFICIENT_LEAVE_BALANCE": "Insufficient leave balance for this request.",
+    "Default": "Operation failed"
+  },
+  "NotFound": {
+    "Title": "Page not found",
+    "Description": "This page has not been implemented, or the link is broken.",
+    "BackHome": "Back to home"
+  },
+  "Requests": {
+    "List": {
+      "Title": "My Requests",
+      "NewButton": "New Request",
+      "Empty": "No leave requests yet",
+      "Error": "Failed to load. Please try again.",
+      "Table": {
+        "Type": "Type",
+        "DateRange": "Date Range",
+        "Days": "Duration",
+        "Status": "Status",
+        "CreatedAt": "Submitted"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "StatusLabel": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "PENDING_RECALL": "Recall Pending"
+      }
+    },
+    "New": {
+      "Title": "New Leave Request",
+      "Fields": {
+        "Type": "Leave Type",
+        "StartDate": "Start Date",
+        "EndDate": "End Date",
+        "Days": "Calculated Duration",
+        "Reason": "Reason",
+        "DeputyId": "Deputy"
+      },
+      "TypeOptions": {
+        "Placeholder": "Select leave type",
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "Placeholders": {
+        "Reason": "Describe the reason (optional, max 1000 characters)",
+        "DeputyId": "Select deputy",
+        "DeputySearch": "Search by name or employee no.",
+        "DeputyDateRequired": "Select the date range first",
+        "DeputyLoading": "Loading available deputies...",
+        "DeputyNoResults": "No matching deputies found"
+      },
+      "SelectedDeputy": "Selected deputy: {deputy}",
+      "DeputyAutoCleared": "The previously selected deputy is no longer available for this time range. Please select another.",
+      "Submit": "Submit",
+      "Submitting": "Submitting...",
+      "AllDay": "Apply full day 09:00-18:00",
+      "Cancel": "Cancel",
+      "Success": "Leave request submitted",
+      "BalanceHint": "Remaining {leaveType}: {remaining}, used {used} / annual quota {quota}",
+      "Errors": {
+        "TypeRequired": "Please select a leave type",
+        "StartDateRequired": "Please select a start date",
+        "EndDateRequired": "Please select an end date",
+        "EndDateBeforeStart": "End date cannot be before start date",
+        "DaysMin": "Leave duration must be at least 30 minutes",
+        "DeputyRequired": "Please select a deputy",
+        "InvalidTimeUnit": "Time must be on a :00 or :30 boundary"
+      }
+    },
+    "Detail": {
+      "BackToRequests": "My Requests",
+      "BackToApprovals": "Pending Approvals",
+      "BackToRecalls": "Recall Approvals",
+      "Title": "Request Detail",
+      "Error": "Failed to load request detail",
+      "TimelineTitle": "Approval Timeline",
+      "TimelineEmpty": "No approval steps yet",
+      "NoDeputy": "No deputy assigned",
+      "NoReason": "No reason provided",
+      "Fields": {
+        "Applicant": "Applicant",
+        "DateRange": "Leave Dates",
+        "Deputy": "Deputy",
+        "SubmittedAt": "Submitted At",
+        "Reason": "Reason"
+      },
+      "LeaveType": {
+        "ANNUAL": "Annual Leave",
+        "SICK": "Sick Leave",
+        "PERSONAL": "Personal Leave",
+        "OTHER": "Other"
+      },
+      "StatusLabel": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "PENDING_RECALL": "Recall Pending"
+      },
+      "StepStatus": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SKIPPED": "Skipped"
+      },
+      "DeputyLabel": "Deputy",
+      "ManagerLabel": "Manager",
+      "RecallLabel": "Recall",
+      "AiReview": {
+        "Title": "AI Review Summary",
+        "Disclaimer": "(For reference only)",
+        "Unavailable": "Unavailable",
+        "Pending": "AI analysis in progress, please wait...",
+        "Failed": "AI analysis temporarily unavailable",
+        "Summary": "Summary",
+        "RiskLevel": {
+          "Label": "Risk Level",
+          "LOW": "Low Risk",
+          "MEDIUM": "Medium Risk",
+          "HIGH": "High Risk"
+        },
+        "HardRuleFlags": "Rules Triggered",
+        "RiskReasons": "Additional Notes",
+        "Recommendation": {
+          "Label": "Recommendation",
+          "APPROVE": "Recommended: Approve",
+          "REVIEW_CAREFULLY": "Recommended: Review Carefully",
+          "ESCALATE": "Recommended: Escalate",
+          "INSUFFICIENT_INFORMATION": "Insufficient information"
+        },
+        "RecommendationReason": "Recommendation Reason",
+        "PolicyReferences": "Related Policies",
+        "GeneratedAt": "Generated At",
+        "Model": "Model"
+      },
+      "RecallButton": "Apply for Recall",
+      "RecallConfirmTitle": "Apply for Leave Recall",
+      "RecallConfirmDesc": "Your direct manager will review this recall request. Quota will be refunded upon approval.",
+      "RecallReasonLabel": "Recall Reason",
+      "RecallReasonPlaceholder": "Please state the reason for recall (required)",
+      "RecallSuccess": "Recall request submitted, awaiting manager review",
+      "RecallError": "Request failed, please try again",
+      "RecallPending": "Recall pending review",
+      "Cancel": "Cancel"
+    }
+  },
+  "Recalls": {
+    "Title": "Recall Approvals",
+    "Description": "Review leave recall requests submitted by employees",
+    "Empty": "No pending recall requests",
+    "Error": "Failed to load recall requests",
+    "ApproveButton": "Approve Recall",
+    "RejectButton": "Reject",
+    "ApproveSuccess": "Recall approved, leave quota has been refunded",
+    "RejectSuccess": "Recall rejected, original leave remains approved",
+    "ActionError": "Action failed, please try again",
+    "LeaveType": {
+      "ANNUAL": "Annual Leave",
+      "SICK": "Sick Leave",
+      "PERSONAL": "Personal Leave",
+      "OTHER": "Other"
+    },
+    "Table": {
+      "Applicant": "Applicant",
+      "LeaveType": "Leave Type",
+      "DateRange": "Date Range",
+      "Duration": "Duration",
+      "RecallReason": "Recall Reason"
+    },
+    "ApproveDialog": {
+      "Title": "Confirm Recall Approval",
+      "Description": "Upon approval, the leave quota will be refunded and the original request will be cancelled.",
+      "Confirm": "Confirm Approval",
+      "Cancel": "Cancel"
+    },
+    "RejectDialog": {
+      "Title": "Reject Recall Request",
+      "Description": "Upon rejection, the original leave request remains approved.",
+      "CommentLabel": "Rejection Reason",
+      "CommentPlaceholder": "Please state the rejection reason (required)",
+      "CommentRequired": "Rejection reason is required",
+      "Confirm": "Confirm Rejection",
+      "Cancel": "Cancel"
+    }
+  },
+  "AuditLog": {
+    "Title": "Audit Log",
+    "Description": "View the complete history of all system operations",
+    "Empty": "No audit records match the current filters",
+    "Error": "Failed to load audit log",
+    "Filter": {
+      "EntityType": "Entity Type",
+      "Action": "Action",
+      "ActorName": "Actor Name",
+      "CreatedFrom": "From (Operation Time)",
+      "CreatedTo": "To (Operation Time)",
+      "Placeholder": {
+        "EntityType": "All types",
+        "Action": "All actions",
+        "ActorName": "Search by name..."
+      },
+      "EntityTypeOption": {
+        "LEAVE_REQUEST": "Leave Request"
+      },
+      "ActionOption": {
+        "CREATE": "Create",
+        "APPROVE": "Approve",
+        "REJECT": "Reject",
+        "CANCEL": "Cancel"
+      }
+    },
+    "Table": {
+      "Time": "Time",
+      "Actor": "Actor",
+      "Action": "Action",
+      "EntityType": "Entity Type",
+      "EntityId": "Entity ID",
+      "Detail": "Detail"
+    },
+    "Drawer": {
+      "Title": "Operation Detail",
+      "Close": "Close",
+      "Fields": {
+        "Time": "Timestamp",
+        "Actor": "Actor",
+        "Action": "Action",
+        "EntityType": "Entity Type",
+        "EntityId": "Entity ID",
+        "Detail": "Detail"
+      },
+      "ViewRequest": "View Request"
+    },
+    "Pagination": {
+      "Previous": "Previous",
+      "Next": "Next",
+      "PageInfo": "Page {current} of {total} ({count} records)"
+    }
+  },
+  "Balances": {
+    "Title": "Leave Balances",
+    "Description": "View quota, used time, and remaining balance for {year}",
+    "Error": "Failed to load leave balances",
+    "Empty": "No leave balance records for this year",
+    "UsageRate": "Usage",
+    "Table": {
+      "LeaveType": "Leave Type",
+      "Quota": "Quota",
+      "Used": "Used",
+      "Remaining": "Remaining"
+    }
+  },
+  "Admin": {
+    "LeaveBalance": {
+      "Title": "Leave Quota Management",
+      "InitYear": "Initialize Year Balances",
+      "InitConfirmTitle": "Confirm Initialization",
+      "InitConfirmDesc": "This will create initial balances for all employees in {year}. Existing records will be skipped.",
+      "InitSuccess": "Done: {initialized} created, {skipped} skipped",
+      "InitError": "Initialization failed, please try again",
+      "AdjustTitle": "Adjust Quota",
+      "AdjustError": "Adjustment failed, please try again",
+      "Error": "Failed to load quota data",
+      "Empty": "No quota records found",
+      "Fields": {
+        "Employee": "Employee",
+        "LeaveType": "Leave Type",
+        "Quota": "Quota (Days)",
+        "Used": "Used",
+        "Remaining": "Remaining",
+        "UpdatedAt": "Updated At",
+        "Reason": "Adjustment Reason"
+      },
+      "Actions": {
+        "Adjust": "Adjust",
+        "Submit": "Confirm",
+        "Cancel": "Cancel"
+      }
+    }
+  }
+}
