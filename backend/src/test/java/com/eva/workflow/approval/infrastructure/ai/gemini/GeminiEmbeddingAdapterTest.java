@@ -20,7 +20,7 @@ class GeminiEmbeddingAdapterTest {
     @BeforeEach
     void setUp() {
         GeminiProperties props = new GeminiProperties(
-                "test-api-key", "gemini-2.5-flash-lite", "text-embedding-004", 30);
+                "test-api-key", "gemini-2.5-flash-lite", "gemini-embedding-001", 30);
         adapter = new GeminiEmbeddingAdapter(props, new ObjectMapper(), mock(WebClient.class));
     }
 
@@ -42,7 +42,7 @@ class GeminiEmbeddingAdapterTest {
 
     @Test
     void exposes_model_name_and_dimension() {
-        assertThat(adapter.modelName()).isEqualTo("text-embedding-004");
+        assertThat(adapter.modelName()).isEqualTo("gemini-embedding-001");
         assertThat(adapter.dimension()).isEqualTo(768);
     }
 
@@ -50,8 +50,9 @@ class GeminiEmbeddingAdapterTest {
     void buildRequestBody_includes_taskType_when_present() {
         Map<String, Object> body = adapter.buildRequestBody("hello", EmbeddingTaskType.RETRIEVAL_DOCUMENT);
 
-        assertThat(body).containsEntry("model", "models/text-embedding-004");
+        assertThat(body).containsEntry("model", "models/gemini-embedding-001");
         assertThat(body).containsEntry("taskType", "RETRIEVAL_DOCUMENT");
+        assertThat(body).containsEntry("outputDimensionality", 768);
     }
 
     @Test

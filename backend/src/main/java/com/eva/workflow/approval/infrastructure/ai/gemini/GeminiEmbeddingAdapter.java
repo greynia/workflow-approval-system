@@ -16,7 +16,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Embeds text via Gemini's {@code text-embedding-004} model. Only wired when a Gemini
+ * Embeds text via Gemini's {@code gemini-embedding-001} model, with the output pinned to
+ * 768 dims to match the {@code vector(768)} policy_chunks column. Only wired when a Gemini
  * API key is configured (same condition as {@link GeminiWebClientConfig}); tests provide
  * a deterministic offline {@link EmbeddingPort} instead.
  */
@@ -80,6 +81,8 @@ public class GeminiEmbeddingAdapter implements EmbeddingPort {
         if (taskType != null) {
             body.put("taskType", taskType.name());
         }
+        // gemini-embedding-001 defaults to 3072 dims; pin to the policy_chunks vector(768).
+        body.put("outputDimensionality", DIMENSION);
         return body;
     }
 

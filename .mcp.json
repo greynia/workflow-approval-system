@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "workflow": {
-      "command": "agent/.venv/Scripts/python.exe",
-      "args": ["-m", "agent.mcp_server"]
+      "command": "uv",
+      "args": ["--directory", "agent", "run", "python", "-m", "agent.mcp_server"]
     }
   }
 }
