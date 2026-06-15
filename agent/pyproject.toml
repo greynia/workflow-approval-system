@@ -1,0 +1,45 @@
+[project]
+name = "workflow-approval-agent"
+version = "0.1.0"
+description = "Governed LLM agent (LangGraph + MCP) for the workflow-approval-system leave review."
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "python-dotenv>=1.0",
+    "pyyaml>=6.0",
+    # --- agent stack (used from Phase 2 onward) ---
+    "mcp>=1.2",
+    "langgraph>=0.2",
+    "langchain-google-genai>=2.0",
+    "langchain-mcp-adapters>=0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+# Phase 0 connectivity check: `agent-smoke --request-id 1`
+agent-smoke = "agent.smoke:main"
+# Phase 2+ full review: `agent-review --request-id 1`
+agent-review = "agent.run_review:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "evals"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

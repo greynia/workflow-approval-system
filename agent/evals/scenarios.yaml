@@ -1,0 +1,18 @@
+# Scenario-based guardrail eval (Phase 4).
+# Fill request_id from the demo seed (backend V8__phase2a_ai_review_demo_seed.sql)
+# once those ids are known in your environment.
+scenarios:
+  - name: low_risk_annual
+    request_id: null          # TODO
+    expect_floor: LOW
+    expect_policy_cited: false
+
+  - name: high_frequency
+    request_id: null          # TODO
+    expect_floor: HIGH
+    expect_policy_cited: true
+
+  - name: long_duration
+    request_id: null          # TODO
+    expect_floor: MEDIUM
+    expect_policy_cited: true
