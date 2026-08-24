@@ -245,6 +245,46 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!--
+					Assertions compare against the English messages bundle, so the tests
+					must not inherit the developer's platform locale. Without this the
+					same suite passes on an en_US CI runner and fails on a zh-TW laptop.
+					Locale.getDefault() is resolved at JVM start, so this has to be a -D
+					on the forked JVM rather than a systemPropertyVariables entry.
+					-->
+					<argLine>-Duser.language=en -Duser.country=US</argLine>
+					<systemPropertyVariables>
+						<!--
+						Two production conditionals leak into the integration tests, and
+						both have to be satisfied for the context to be usable:
+
+						1. AiAdapterConfiguration.aiReviewPort() fails fast when
+						   app.ai.provider=GEMINI and no key is configured. That happens
+						   while the context is being built - before the @Primary
+						   AiReviewPort stub in TestcontainersConfiguration can win an
+						   injection point. @Primary picks a winner among beans; it does
+						   not stop the losing bean from being created.
+						2. AiPolicyController is @ConditionalOnProperty on the same key,
+						   so without it /api/ai/policy-search is never mapped and
+						   PolicySearchIntegrationTest gets 500s from the static-resource
+						   fallback.
+
+						The key below is a placeholder that only satisfies the
+						conditionals - no request ever reaches Google, because the
+						deterministic stubs in TestcontainersConfiguration are what get
+						injected. LOCAL additionally keeps the production chain pointed
+						at Ollama. Production configuration is unchanged: still GEMINI,
+						still a real key from APP_AI_GEMINI_API_KEY.
+						-->
+						<app.ai.provider>LOCAL</app.ai.provider>
+						<app.ai.gemini.api-key>test-placeholder-never-called</app.ai.gemini.api-key>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
