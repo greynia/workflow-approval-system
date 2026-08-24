@@ -85,23 +85,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      # uv, not pip: agent/uv.lock pins the toolchain, and the repo already
+      # documents `uv --directory agent sync`. Installing with pip would resolve
+      # `ruff>=0.5` to whatever is newest and fail on rules the lockfile never
+      # agreed to — CI must lint with the same version the author runs.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
+          cache-dependency-glob: agent/uv.lock
+          # requires-python is a floor (">=3.11"), and there is no
+          # .python-version, so uv would otherwise pick whatever interpreter it
+          # finds. Pin the declared minimum so CI tests the version we claim.
           python-version: '3.11'
-          cache: pip
-          cache-dependency-path: agent/pyproject.toml
 
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+      - name: Install (locked)
+        run: uv sync --frozen --extra dev
 
       - name: Lint
-        run: ruff check .
+        run: uv run ruff check .
 
       # pytest testpaths = ["tests", "evals"] — this also runs the hard-rule-floor
       # guardrail evals, so a regression that lets the LLM downgrade a risk level
       # fails the build rather than shipping silently.
       - name: Test and guardrail evals
-        run: pytest
+        run: uv run pytest
