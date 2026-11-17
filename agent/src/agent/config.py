@@ -23,9 +23,10 @@ class Settings(BaseSettings):
     agent_preferred_locale: str = "en"  # en | zh-TW
     request_timeout_seconds: float = 30.0
 
-    # LLM (used from Phase 2 onward)
+    # LLM for the agent node. Same default model as the backend's built-in review
+    # (backend application.properties: app.ai.gemini.model).
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-2.5-flash-lite"
 
 
 @lru_cache

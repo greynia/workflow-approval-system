@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 @dataclass
 class ToolCall:
     name: str
-    latency_ms: int
+    latency_ms: int | None  # None when the call ran inside the agent and was not timed
     ok: bool
     error: str | None = None
 
@@ -25,7 +25,9 @@ class Trajectory:
     input_tokens: int = 0
     output_tokens: int = 0
 
-    def record(self, name: str, latency_ms: int, ok: bool, error: str | None = None) -> None:
+    def record(
+        self, name: str, latency_ms: int | None, ok: bool, error: str | None = None
+    ) -> None:
         self.tool_calls.append(ToolCall(name, latency_ms, ok, error))
 
     @property
