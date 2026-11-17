@@ -3,13 +3,20 @@
 Python agent that turns the leave-approval system's existing `AI_AGENT` tool
 surface into an autonomous, governed review agent.
 
-The agent (Gemini, via LangGraph ReAct) decides which tools to call, but it is
-sandwiched between two **deterministic nodes** so it can never bypass safety:
+The agent (Gemini, built with LangChain `create_agent`) decides which tools to call,
+but it is one node in a LangGraph `StateGraph`, sandwiched between two
+**deterministic nodes** so it can never bypass safety:
 
 ```
 START → evaluate_rules (always) → agent (LLM + MCP tools) → enforce_floor (always) → submit → END
         ─────────── authoritative floor ───────────────────  final = max(agent, floor)
 ```
+
+The edges are fixed, so the order is guaranteed by the graph rather than by the
+prompt. The agent is offered two read tools (`get_request_context`,
+`search_policy`); rule evaluation is not on its menu. If the agent raises, times
+out, loops past its step limit or answers in the wrong shape, the review falls
+back to the rule-only result.
 
 Full design: [`../docs/02_ai_agent_langgraph_mcp_plan.md`](../docs/02_ai_agent_langgraph_mcp_plan.md)
 
@@ -46,11 +53,15 @@ python -m agent.smoke --request-id 1
 python -m agent.mcp_server
 npx @modelcontextprotocol/inspector python -m agent.mcp_server
 
-# Unit tests for the deterministic safety gate (no backend needed)
+# Unit tests: the safety gate, the graph with a misbehaving fake agent, and the
+# agent wiring with a scripted model (no backend, no API key)
 pytest tests
 
-# Phase 2+ — full agent review (stub until the graph is wired)
+# Phase 2 — full agent review (needs the backend, AGENT_PASSWORD and GEMINI_API_KEY)
 python -m agent.run_review --request-id 1
+
+# Phase 4 — the same invariants on real runs; scenarios without a request_id are skipped
+pytest evals/test_guardrails.py
 ```
 
 > `policy-search` only exists if the backend has a Gemini API key configured
@@ -92,14 +103,22 @@ src/agent/
   nodes/
     evaluate_rules.py  deterministic #1 (authoritative floor)      [ready]
     enforce_floor.py   deterministic #3 (max + downgrade + I6)     [ready]
-    agent_node.py      Gemini ReAct loop                           [Phase 2 stub]
+    agent_node.py      Gemini tool loop (create_agent)             [wired, not run live]
     submit.py          emit (v1) / POST draft-review (v2)          [v1 ready / v2 Phase 5]
-  tools.py             MCP -> LangChain tools                      [Phase 2 stub]
-  graph.py             StateGraph wiring (ReviewState is real)     [Phase 2 stub]
-  run_review.py        full review CLI                             [Phase 2 stub]
-tests/                 deterministic-gate unit tests               [ready]
-evals/                 scenario guardrail eval                     [Phase 4 scaffold]
+  tools.py             MCP -> LangChain tools (one stdio session)  [ready]
+  graph.py             StateGraph: 4 nodes, fixed edges            [ready]
+  run_review.py        full review CLI                             [wired, not run live]
+tests/                 gate + graph guardrails + agent wiring      [ready]
+evals/                 scenario guardrail eval (real model)        [written, request_ids not filled]
 ```
 
-The deterministic backbone (`evaluate_rules`, `enforce_floor`) and its tests are
-already real — the safety guarantees do not depend on any unfinished agent code.
+What is and is not verified:
+
+- **Verified without a model** (`pytest tests`, runs in CI): with a fake agent that
+  answers LOW / APPROVE, throws, hangs or returns garbage, the final review is never
+  below the rule floor and degrades to the rule-only result; rules always run before
+  the agent; the MCP server starts over stdio and the agent is offered only its two
+  read tools; the `create_agent` loop is read back correctly using a scripted model.
+- **Not yet verified**: a run with a real Gemini model against a live backend. Whether
+  the model reliably calls `search_policy` and cites a source when flags are present is
+  what `evals/test_guardrails.py` measures once `scenarios.yaml` has request ids.
