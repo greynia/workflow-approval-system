@@ -1,0 +1,254 @@
+# 規章檢索評估題庫（檢索層）
+#
+# 用途：量「正確的條文有沒有被找出來、排第幾」，不評模型的回答。
+# 對象：backend 的兩階段檢索（pgvector 取候選 → Jina rerank → 低於 min-score 的丟掉 → 取前 final-top-k）。
+# 文件：backend/src/main/resources/policy/leave-policy.zh.md（12 個章節，每個章節一個 chunk）。
+#
+# 題目怎麼來的
+#   這個系統沒有使用者打字發問，查規章的只有兩條路，題型照這兩條路分：
+#   1. 系統內建審核：查詢是 AiReviewOrchestrator.buildPolicyQuery 拼出來的「假別＋命中的規則說明」。
+#      規則只有四條（AiHardRuleEngine），所以單一規則的查詢全部列舉（system、system_gap），
+#      多條規則同時命中與英文語系各取幾題（system_multi、system_en）。
+#   2. 外部 Agent 經 MCP 的 search_policy：查詢字串由 Agent 自己組，可能不是規章的用詞
+#      （paraphrase、confusable、multi_section、no_answer）。
+#   by_section 用詞接近原文，是確認檢索有在運作的基本題，分數高不代表檢索好。
+#
+# 限制
+#   規章只有 12 個章節，題數也少（每類 2～11 題），一題就能讓該類分數變動很多。
+#   數字適合用來比較「改之前和改之後」，不適合當成絕對的準確率。
+#
+# 欄位
+#   id             題號
+#   type           題型（分開算分）
+#   query          送進檢索的字串
+#   expected       應該命中的章節。match: any（預設）＝命中任一個就算對；match: all＝全部都要出現
+#   also_relevant  出現也合理、但不算分的章節
+#   expect_no_match  true＝規章沒有對應內容，rerank 後應該沒有任何結果（沒開 rerank 時這類題不算分）
+#   answer         規章裡的答案，之後做生成層評估時當標準答案
+#   note           出題時的考量
+#
+# 算分（retrieval_eval.py）
+#   Hit@k   前 k 筆有沒有命中 expected（看 k=1 和 k=3；final-top-k=5，看 k=5 太容易）
+#   MRR     命中的章節排第幾名，取倒數後平均（排第 1＝1，第 2＝0.5，沒中＝0）
+#   match: all 的題需要兩個以上的章節，Hit@1 一定是 0，看 Hit@3。
+
+document: leave-policy.zh.md
+sections:
+  - 特休假計算方式
+  - 病假規定
+  - 事假規定
+  - 提前申請天數
+  - 連續請假上限
+  - 職務代理人
+  - 新進員工請假限制
+  - 加班補休
+  - 婚假
+  - 喪假
+  - 審核流程與權責
+  - 請假紀錄與稽核
+
+questions:
+  # ── system：系統內建審核實際送出的查詢，單一規則命中，全部列舉 ──
+  # NEW_HIRE_SHORT_LEAVE（到職 90 天內、請假不超過 1 個工作天）× 四種假別
+  - {id: S01, type: system, query: "特休 新進員工在到職 90 天內申請請假", expected: [新進員工請假限制]}
+  - {id: S02, type: system, query: "病假 新進員工在到職 90 天內申請請假", expected: [新進員工請假限制]}
+  - {id: S03, type: system, query: "事假 新進員工在到職 90 天內申請請假", expected: [新進員工請假限制]}
+  - {id: S04, type: system, query: "其他假 新進員工在到職 90 天內申請請假", expected: [新進員工請假限制]}
+  # NEW_HIRE_LONG_LEAVE（到職 90 天內、請假超過 1 個工作天）× 四種假別
+  - {id: S05, type: system, query: "特休 新進員工申請超過 1 個工作天的請假", expected: [新進員工請假限制]}
+  - {id: S06, type: system, query: "病假 新進員工申請超過 1 個工作天的請假", expected: [新進員工請假限制]}
+  - {id: S07, type: system, query: "事假 新進員工申請超過 1 個工作天的請假", expected: [新進員工請假限制]}
+  - {id: S08, type: system, query: "其他假 新進員工申請超過 1 個工作天的請假", expected: [新進員工請假限制]}
+  # LONG_DURATION（事假、病假、其他假超過 3 天；特休不適用）
+  - id: S09
+    type: system
+    query: "病假 事假、病假或其他假超過 3 天"
+    expected: [病假規定]
+    also_relevant: [審核流程與權責, 提前申請天數, 連續請假上限]
+    note: 規則說明同時出現「事假」「病假」，容易把事假規定排到病假規定前面。
+  - id: S10
+    type: system
+    query: "事假 事假、病假或其他假超過 3 天"
+    expected: [事假規定]
+    also_relevant: [審核流程與權責, 提前申請天數, 連續請假上限]
+  - id: S11
+    type: system
+    query: "其他假 事假、病假或其他假超過 3 天"
+    expected: [提前申請天數, 審核流程與權責]
+    also_relevant: [連續請假上限]
+    note: 規章沒有「其他假」的專屬條文，只有跟天數有關的通則。
+
+  # ── system_gap：FREQUENT_LEAVE_30D。規章沒有「短期內頻繁請假」的條文，是知識庫的缺口 ──
+  # 這一類的分數只代表「退而求其次有沒有找到該假別的條文」，不代表檢索做得好不好。
+  - {id: G01, type: system_gap, query: "特休 過去 30 天內已申請 5 次以上請假", expected: [特休假計算方式]}
+  - {id: G02, type: system_gap, query: "病假 過去 30 天內已申請 5 次以上請假", expected: [病假規定]}
+  - {id: G03, type: system_gap, query: "事假 過去 30 天內已申請 5 次以上請假", expected: [事假規定]}
+  - id: G04
+    type: system_gap
+    query: "其他假 過去 30 天內已申請 5 次以上請假"
+    expect_no_match: true
+    note: 假別和規則在規章裡都沒有對應內容，理想結果是不塞任何條文給模型。
+
+  # ── system_multi：多條規則同時命中，每條有條文可依的規則都要找到對應章節 ──
+  - id: M01
+    type: system_multi
+    query: "病假 新進員工申請超過 1 個工作天的請假 事假、病假或其他假超過 3 天"
+    expected: [新進員工請假限制, 病假規定]
+    match: all
+  - id: M02
+    type: system_multi
+    query: "事假 新進員工申請超過 1 個工作天的請假 事假、病假或其他假超過 3 天"
+    expected: [新進員工請假限制, 事假規定]
+    match: all
+  - id: M03
+    type: system_multi
+    query: "病假 過去 30 天內已申請 5 次以上請假 新進員工申請超過 1 個工作天的請假 事假、病假或其他假超過 3 天"
+    expected: [新進員工請假限制, 病假規定]
+    match: all
+  - id: M04
+    type: system_multi
+    query: "事假 過去 30 天內已申請 5 次以上請假 新進員工申請超過 1 個工作天的請假 事假、病假或其他假超過 3 天"
+    expected: [新進員工請假限制, 事假規定]
+    match: all
+
+  # ── system_en：語系不是 zh 時，系統送出的是英文查詢，但規章只有中文 ──
+  - id: E01
+    type: system_en
+    query: "sick leave Personal, sick, or other leave exceeds 3 days"
+    expected: [病假規定]
+  - id: E02
+    type: system_en
+    query: "personal leave Personal, sick, or other leave exceeds 3 days"
+    expected: [事假規定]
+  - id: E03
+    type: system_en
+    query: "annual leave New hire requests more than 1 workday of leave"
+    expected: [新進員工請假限制]
+  - id: E04
+    type: system_en
+    query: "sick leave New hire requests leave within first 90 days"
+    expected: [新進員工請假限制]
+
+  # ── by_section：用詞接近原文的基本題 ──
+  - id: B01
+    type: by_section
+    query: "特休假未休完可以遞延到什麼時候？"
+    expected: [特休假計算方式]
+    answer: 得遞延至次年三月底，逾期未休視同放棄。
+  - id: B02
+    type: by_section
+    query: "連續請病假幾日以上須檢附診斷證明？"
+    expected: [病假規定]
+    answer: 連續三日（含）以上。
+  - id: B03
+    type: by_section
+    query: "請假日數達四日以上須於幾個工作日前提出？"
+    expected: [提前申請天數]
+    also_relevant: [審核流程與權責]
+    answer: 十個工作日前。
+  - id: B04
+    type: by_section
+    query: "職務代理人可以是申請人本人嗎？"
+    expected: [職務代理人]
+    answer: 不可以。
+  - id: B05
+    type: by_section
+    query: "祖父母喪亡給予幾日喪假？"
+    expected: [喪假]
+    answer: 六日。
+
+  # ── paraphrase：審核者的角度、不用規章的用詞（外部 Agent 自己組查詢時可能出現） ──
+  - id: P01
+    type: paraphrase
+    query: "申請人年資剛滿一年，他的年假額度有幾天？"
+    expected: [特休假計算方式]
+    answer: 七日。
+    note: 用「年假」不用「特休」。
+  - id: P02
+    type: paraphrase
+    query: "員工當天身體不舒服才臨時通知，事後再補單，這樣合規嗎？"
+    expected: [病假規定]
+    answer: 合規，當日上班前以電話或系統通報，返工後三日內補辦。
+    note: 沒有出現「病假」兩個字。
+  - id: P03
+    type: paraphrase
+    query: "這張假單要休一整週，卻是兩天前才送出，來得及嗎？"
+    expected: [提前申請天數]
+    answer: 來不及，四日以上須於十個工作日前提出。
+  - id: P04
+    type: paraphrase
+    query: "他找來代班的同事同一段時間也排了休假，可以嗎？"
+    expected: [職務代理人]
+    answer: 不可以，同一時段代理人不得同時請假。
+  - id: P05
+    type: paraphrase
+    query: "報到才兩個月的同仁要請兩天假，審核上要注意什麼？"
+    expected: [新進員工請假限制]
+    answer: 到職未滿九十日從嚴審核；連續超過一日會被標記為高風險。
+  - id: P06
+    type: paraphrase
+    query: "他想用上個月假日來上班的時數抵這次休假，放太久會失效嗎？"
+    expected: [加班補休]
+    answer: 可以換補休，三個月內休畢，逾期折算工資。
+  - id: P07
+    type: paraphrase
+    query: "同仁年底要辦婚禮，想把假拆成幾次放，可以嗎？"
+    expected: [婚假]
+    answer: 可以分次申請，登記或宴客日起六個月內休畢。
+  - id: P08
+    type: paraphrase
+    query: "這張假單之後查得到是誰核准的嗎？"
+    expected: [請假紀錄與稽核]
+    answer: 查得到，申請人、審核人、時間與決定都留存稽核紀錄。
+
+  # ── confusable：兩個章節有相同的數字或字眼 ──
+  - id: D01
+    type: confusable
+    query: "一次最多可以連續請幾天假？"
+    expected: [連續請假上限]
+    answer: 十四個日曆日。
+    note: 事假全年上限也是十四日，病假是三十日。
+  - id: D02
+    type: confusable
+    query: "事假一年最多可以請幾天？"
+    expected: [事假規定]
+    answer: 十四日。
+    note: 跟「連續請假上限」的十四日混淆。
+  - id: D03
+    type: confusable
+    query: "請四天以上的假需要誰核准？"
+    expected: [審核流程與權責]
+    also_relevant: [提前申請天數]
+    answer: 直屬主管審核，另需部門經理複核。
+    note: 「提前申請天數」也提到四日以上，但講的是多早申請，不是誰核准。
+  - id: D04
+    type: confusable
+    query: "臨時有急事要請事假，來不及三天前申請怎麼辦？"
+    expected: [事假規定]
+    also_relevant: [提前申請天數]
+    answer: 得事後補請，但須經主管同意。
+    note: 「提前申請天數」也有三個工作日前，但事後補請寫在事假規定。
+
+  # ── multi_section：一題要用到多個章節 ──
+  - id: X01
+    type: multi_section
+    query: "到職兩個月的新人想請五天事假，要注意哪些規定？"
+    expected: [新進員工請假限制, 事假規定, 提前申請天數]
+    match: all
+    also_relevant: [審核流程與權責, 職務代理人]
+  - id: X02
+    type: multi_section
+    query: "請一個禮拜病假，需要準備什麼、誰要簽核？"
+    expected: [病假規定, 審核流程與權責]
+    match: all
+    also_relevant: [職務代理人, 提前申請天數]
+
+  # ── no_answer：規章沒寫，rerank 後應該沒有結果 ──
+  - {id: N01, type: no_answer, query: "育嬰留職停薪可以申請多久？", expect_no_match: true}
+  - {id: N02, type: no_answer, query: "颱風天公司停班算什麼假？", expect_no_match: true}
+  - {id: N03, type: no_answer, query: "可以申請在家上班嗎？", expect_no_match: true}
+  - id: N04
+    type: no_answer
+    query: "生理假一個月可以請幾天？"
+    expect_no_match: true
+    note: 最容易誤判的一題，可能被拉到病假規定。
