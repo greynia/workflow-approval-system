@@ -56,6 +56,29 @@ python -m agent.run_review --request-id 1
 > `policy-search` only exists if the backend has a Gemini API key configured
 > (`@ConditionalOnProperty app.ai.gemini.api-key`); otherwise that one tool 404s.
 
+## Retrieval eval
+
+`evals/retrieval_eval.py` scores the policy search itself (which sections come back and in
+what order), not the LLM's answer. The questions in `evals/retrieval_questions.zh.yaml` mirror
+what actually reaches the search: every single-rule query the built-in review can build, plus
+paraphrased queries an external agent might send through `search_policy`. It reports Hit@1,
+Hit@3 and MRR per question type.
+
+```bash
+# Keyword (BM25) baseline — no backend, no API key
+python evals/retrieval_eval.py --mode keyword --save evals/results/keyword.json
+
+# The real search — needs a backend started with a Gemini key (plus a Jina key for rerank)
+python evals/retrieval_eval.py --mode backend --save evals/results/vector.json
+
+# Side-by-side comparison of saved runs
+python evals/retrieval_eval.py --compare evals/results/keyword.json evals/results/vector.json
+```
+
+Status: only the keyword baseline has been run ([`evals/results/keyword.md`](evals/results/keyword.md)).
+The backend mode has not been run against a live backend yet, so there are no numbers for the
+vector or reranked search.
+
 ## Layout & status
 
 ```
